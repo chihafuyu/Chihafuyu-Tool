@@ -1,0 +1,59 @@
+name: Auto Tag, Zip, & Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    name: Auto Release Pipeline
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate Auto Version Tag
+        run: echo "VERSION=v$(date +'%Y.%m.%d')-${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: Build Auto Changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v6
+        with:
+          mode: "COMMIT"
+          toTag: ${{ github.sha }}
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}\n\n#{{UNCATEGORIZED}}",
+              "categories": [
+                { "title": "## 🚀 Features", "labels": ["feat", "feature"] },
+                { "title": "## 🐛 Bug Fixes", "labels": ["fix", "bug"] },
+                { "title": "## 📚 Documentation", "labels": ["docs", "doc"] },
+                { "title": "## 🛠️ Maintenance", "labels": ["chore", "refactor", "style"] }
+              ],
+              "label_extractor": [
+                {
+                  "pattern": "^([a-zA-Z]+)(\\([a-zA-Z0-9_-]+\\))?(!)?: (.*)",
+                  "on_property": "title",
+                  "target": "$1"
+                }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create ZIP Archive
+        run: |
+          zip Chihafuyu-Patcher-${{ env.VERSION }}.zip chihafuyu-patcher.ps1 README.md
+
+      - name: Publish Automatic Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: "Release ${{ env.VERSION }}"
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: Chihafuyu-Patcher-${{ env.VERSION }}.zip
