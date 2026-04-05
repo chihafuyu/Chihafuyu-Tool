@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Patcher
 
-A straightforward PowerShell script to automate Android app patching utilizing the **Morphe CLI** and **Piko** ecosystems. 
+A straightforward PowerShell script to automate Android app patching utilizing the **Morphe** and **Piko** ecosystems via **Morphe CLI**. 
 
 Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or `Instagram`, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, and proper memory cleanup.
 
@@ -38,7 +38,7 @@ Before spinning up the script, make sure you have these ready:
 > **📱 File Format Support:**
 > While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 
-5. **MicroG-RE**: If you're patching YouTube and/or YouTube Music via Morphe, you'll need MicroG-RE on your device to log in. Grab it here [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
