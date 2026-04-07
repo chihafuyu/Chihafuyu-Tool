@@ -371,7 +371,21 @@ function Invoke-PatchingSession {
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     }
 
-    Write-Host "`n[STEP 11] Patching Sequence..." -ForegroundColor Yellow
+    Write-Host "`n[STEP 11] Bytecode Mode Configuration..." -ForegroundColor Yellow
+    $bytecodeMode = $null
+    if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
+        Write-Host "1. FULL       (Legacy: rebuilds all dex, slow, highest memory)"
+        Write-Host "2. STRIP_FAST (CLI Default: fastest, least memory, bigger APK)"
+        Write-Host "3. STRIP_SAFE (Manager Default: balanced speed, memory, and APK size)"
+        $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
+        $bytecodeMode = switch ($bcChoice) {
+            "1" { "FULL" }
+            "2" { "STRIP_FAST" }
+            "3" { "STRIP_SAFE" }
+        }
+    }
+
+    Write-Host "`n[STEP 12] Patching Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
     $tempLogFile = "Output\temp_patch_log.txt"
@@ -401,6 +415,7 @@ function Invoke-PatchingSession {
             
             $baseArgs = @("-jar", $cliRelPath, "patch", "--patches=$patchRelPath", "--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkRelative", "--purge")
             
+            if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
             if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
             
             if ($useCustomKeystore) { 
