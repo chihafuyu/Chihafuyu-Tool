@@ -385,7 +385,10 @@ function Invoke-PatchingSession {
         }
     }
 
-    Write-Host "`n[STEP 12] Patching Sequence..." -ForegroundColor Yellow
+    Write-Host "`n[STEP 12] Signing Configuration..." -ForegroundColor Yellow
+    $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
+
+    Write-Host "`n[STEP 13] Patching Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
     $tempLogFile = "Output\temp_patch_log.txt"
@@ -418,10 +421,14 @@ function Invoke-PatchingSession {
             if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
             if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
             
-            if ($useCustomKeystore) { 
-                $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
+            if ($disableSigning) {
+                $baseArgs += "--unsigned"
+            } else {
+                if ($useCustomKeystore) { 
+                    $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
+                }
+                if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             }
-            if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             
             $isArchSpecific = (Split-Path $app.TargetApk -Leaf) -match "(?i)(arm64|armeabi|v7a|v8a|x86|x86_64|mips|mips64|riscv64)"
             if ($app.name -eq "Reddit") { $isArchSpecific = $false }
