@@ -4,6 +4,10 @@ A straightforward PowerShell script to automate Android app patching utilizing t
 
 Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or `Instagram`, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, and proper memory cleanup.
 
+> [!IMPORTANT]
+> **📱 Root vs. Non-Root Devices**
+> Just a quick heads-up: I built and tested this script exclusively for **non-rooted** Android devices. While the actual patching process on your PC will work flawlessly either way, I can't guarantee how the patched apps will behave if you try to install them via root-specific methods (like system mounting). If you're rocking a rooted phone, you might need to tweak things on your end. You've been warned! ✌️
+
 ---
 
 ## ✨ Features
