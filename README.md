@@ -6,6 +6,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
+
 > Just a quick heads-up: I built and tested this script exclusively for **non-rooted** Android devices. While the actual patching process on your PC will work flawlessly either way, I can't guarantee how the patched apps will behave if you try to install them via root-specific methods (like system mounting). If you're rocking a rooted phone, you might need to tweak things on your end. You've been warned! ✌️
 
 ---
@@ -40,9 +41,10 @@ Before spinning up the script, make sure you have these ready:
 
 > [!NOTE]
 > **📱 File Format Support:**
+
 > While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 
-5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` from `Morphe` ecosystem, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
