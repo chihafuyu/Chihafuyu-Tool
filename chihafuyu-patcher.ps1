@@ -48,8 +48,8 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
 # Morphe
-$cfg_youtube_stable       = "20.45.36"
-$cfg_youtube_music_stable = "8.44.54"
+$cfg_youtube_stable       = "20.47.62"
+$cfg_youtube_music_stable = "8.47.56"
 $cfg_reddit_stable        = "2026.04.0"
 
 # Piko
