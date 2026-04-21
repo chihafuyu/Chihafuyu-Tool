@@ -494,19 +494,34 @@ function Invoke-PatchingSession {
                         Write-Host "  [i] Shredding residual temporary files (1-Pass Zero Fill)..." -ForegroundColor DarkGray
                         $tempFiles = Get-ChildItem -LiteralPath $expectedTempDir -Recurse -File -ErrorAction SilentlyContinue
                         
-                        if ($tempFiles.Count -gt 0) {
-                            Write-Host "      Overwriting $($tempFiles.Count) files with zeros..." -ForegroundColor DarkGray
+                        if ($null -ne $tempFiles -and $tempFiles.Count -gt 0) {
+                            Write-Host "      Overwriting $($tempFiles.Count) files safely (Buffered Stream)..." -ForegroundColor DarkGray
+                            
+                            # Initialize a 4MB buffer to prevent RAM exhaustion (OOM Exception) on large files
+                            $bufferSize = 4096 * 1024 
+                            $buffer = New-Object byte[] $bufferSize
+                            
                             foreach ($file in $tempFiles) {
+                                $stream = $null
                                 try {
+                                    # Strip Read-Only attribute to prevent UnauthorizedAccessException
+                                    if ($file.IsReadOnly) { $file.IsReadOnly = $false }
+                                    
                                     $size = $file.Length
                                     if ($size -gt 0) {
-                                        # Create a byte array of zeros matching the file size
-                                        $zeros = New-Object byte[] $size
-                                        # Overwrite the physical file blocks
-                                        [System.IO.File]::WriteAllBytes($file.FullName, $zeros)
+                                        $stream = [System.IO.File]::OpenWrite($file.FullName)
+                                        $written = 0L
+                                        while ($written -lt $size) {
+                                            $remaining = $size - $written
+                                            $toWrite = if ($remaining -gt $bufferSize) { $bufferSize } else { [int]$remaining }
+                                            $stream.Write($buffer, 0, $toWrite)
+                                            $written += $toWrite
+                                        }
+                                        $stream.Close()
                                     }
                                 } catch {
-                                    # Ignore files that are still strictly locked by the OS
+                                    # Gracefully ignore files that are strictly locked by the OS or JVM
+                                    if ($null -ne $stream) { $stream.Close() }
                                 }
                             }
                         }
