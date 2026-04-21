@@ -476,6 +476,14 @@ function Invoke-PatchingSession {
             
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
+            # Force cleanup of residual temp folders caused by upstream Windows file-lock bug
+            $expectedTempDir = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch-temporary-files"
+            if (Test-Path -LiteralPath $expectedTempDir) {
+                Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
+                Start-Sleep -Seconds 2 # Allow JVM to fully exit and OS to release file handles
+                Remove-Item -LiteralPath $expectedTempDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "  [!] Patching FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
                 if (-not $continueOnError) { break }
