@@ -425,8 +425,16 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 12] Signing Configuration..." -ForegroundColor Yellow
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
 
-    Write-Host "`n[STEP 13] Patching Sequence..." -ForegroundColor Yellow
+    Write-Host "`n[STEP 13] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
+    
+    $useSecureErase = $false
+    if ($isWindowsOS) {
+        Write-Host "  [i] Windows OS detected. Residual temp files will be swept automatically." -ForegroundColor DarkGray
+        Write-Host "      You can opt to securely erase them (1-Pass Zero Fill) to prevent recovery." -ForegroundColor DarkGray
+        Write-Host "      WARNING: Only use this on mechanical HDDs. Do NOT use on SSDs." -ForegroundColor Red
+        $useSecureErase = Get-YesNoPrompt "Enable Secure Erase for temp files?"
+    }
     
     $tempLogFile = "Output\temp_patch_log.txt"
     if (Test-Path $tempLogFile) { Remove-Item $tempLogFile -Force -ErrorAction Ignore }
@@ -476,12 +484,39 @@ function Invoke-PatchingSession {
             
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Force cleanup of residual temp folders caused by upstream Windows file-lock bug
-            $expectedTempDir = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch-temporary-files"
-            if (Test-Path -LiteralPath $expectedTempDir) {
-                Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
-                Start-Sleep -Seconds 2 # Allow JVM to fully exit and OS to release file handles
-                Remove-Item -LiteralPath $expectedTempDir -Recurse -Force -ErrorAction SilentlyContinue
+            # Post-patching temp folder cleanup (Windows upstream file-lock workaround)
+            if ($isWindowsOS) {
+                $expectedTempDir = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch-temporary-files"
+                if (Test-Path -LiteralPath $expectedTempDir) {
+                    Start-Sleep -Seconds 2 # Allow JVM to fully exit and OS to release file handles
+                    
+                    if ($useSecureErase) {
+                        Write-Host "  [i] Shredding residual temporary files (1-Pass Zero Fill)..." -ForegroundColor DarkGray
+                        $tempFiles = Get-ChildItem -LiteralPath $expectedTempDir -Recurse -File -ErrorAction SilentlyContinue
+                        
+                        if ($tempFiles.Count -gt 0) {
+                            Write-Host "      Overwriting $($tempFiles.Count) files with zeros..." -ForegroundColor DarkGray
+                            foreach ($file in $tempFiles) {
+                                try {
+                                    $size = $file.Length
+                                    if ($size -gt 0) {
+                                        # Create a byte array of zeros matching the file size
+                                        $zeros = New-Object byte[] $size
+                                        # Overwrite the physical file blocks
+                                        [System.IO.File]::WriteAllBytes($file.FullName, $zeros)
+                                    }
+                                } catch {
+                                    # Ignore files that are still strictly locked by the OS
+                                }
+                            }
+                        }
+                    } else {
+                        Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
+                    }
+                    
+                    # Remove the directory structure after wiping or sweeping
+                    Remove-Item -LiteralPath $expectedTempDir -Recurse -Force -ErrorAction SilentlyContinue
+                }
             }
 
             if ($LASTEXITCODE -ne 0) {
