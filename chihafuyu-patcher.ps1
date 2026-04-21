@@ -57,14 +57,27 @@ $cfg_x_stable             = "Any"
 $cfg_ig_stable            = "423.0.0.47.66"
 # ==============================================================================
 
-# Check for JDK 17
+# Check for JDK 21+ (LTS)
 try {
-    $null = & java -version 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "Java returned non-zero" }
+    $javaVerOutput = & java -version 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Java missing" }
+    
+    $regex = '"(?:1\.)?(\d+)'
+    $match = $javaVerOutput -match $regex
+    if ($match) {
+        $version = [int]$matches[1]
+        if ($version -lt 21) {
+            Clear-Host
+            Write-Host "[!] Java Development Kit (JDK) 21 or higher is required!" -ForegroundColor Red
+            Write-Host "    You currently have Java $version installed." -ForegroundColor Yellow
+            Write-Host "    Please upgrade to Azul Zulu or Eclipse Temurin JDK 21 and add it to PATH." -ForegroundColor Gray
+            exit 1
+        }
+    }
 } catch {
     Clear-Host
-    Write-Host "Java Development Kit (JDK) 17 is missing or misconfigured." -ForegroundColor Red
-    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 17 and add it to PATH." -ForegroundColor Gray
+    Write-Host "Java Development Kit (JDK) 21 is missing or misconfigured." -ForegroundColor Red
+    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 21 and add it to PATH." -ForegroundColor Gray
     exit 1
 }
 

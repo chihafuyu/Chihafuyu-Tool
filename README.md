@@ -6,7 +6,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
-
+>
 > Just a quick heads-up: I built and tested this script exclusively for **non-rooted** Android devices. While the actual patching process on your PC will work flawlessly either way, I can't guarantee how the patched apps will behave if you try to install them via root-specific methods (like system mounting). If you're rocking a rooted phone, you might need to tweak things on your end. You've been warned! ✌️
 
 ---
@@ -15,7 +15,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 - **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`) and Piko (`X/Twitter` and `Instagram`) workspaces in a single script.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
-- **🛡️ Environment Validation**: Checks for JDK 17 and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
+- **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔍 Smart APK Discovery**: Scans your `Input` folder and uses robust regex to find the right files and extract exact versions, ignoring messy build numbers.
 - **⚙️ Auto Architecture Detection**: Automatically detects if an APK is already architecture-specific (like `arm64-v8a`) and skips redundant library stripping.
 - **🔐 Secure Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to handle custom keystore passwords, instantly wiping them from RAM after use.
@@ -27,10 +27,10 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 Before spinning up the script, make sure you have these ready:
 
-1. **OS**: Windows 10 / 11 with PowerShell 5.1+ (PowerShell 7 is highly recommended — [Download it here](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)).
-2. **Java Development Kit (JDK) 17**: The CLI needs JDK 17 (a standard JRE won't cut it). Pick and install **JUST ONE** of these reliable builds:
-   * [Azul Zulu JDK 17](https://www.azul.com/downloads/?version=java-17-lts&package=jdk)
-   * **OR** [Eclipse Temurin JDK 17](https://adoptium.net/temurin/releases/?version=17)
+1. **OS**: Windows 10/11, macOS, or Linux. PowerShell 5.1+ is required for Windows (PowerShell 7+ is highly recommended). For macOS and Linux, you must install [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
+2. **Java Development Kit (JDK) 21**: The latest Morphe CLI requires JDK 21 (a standard JRE or older JDK 17 won't cut it). Pick and install **JUST ONE** of these reliable builds:
+   * [Azul Zulu JDK 21 (LTS)](https://www.azul.com/downloads/?version=java-21-lts&package=jdk)
+   * **OR** [Eclipse Temurin JDK 21 (LTS)](https://adoptium.net/temurin/releases/?version=21)
    
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
 3. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
@@ -41,10 +41,10 @@ Before spinning up the script, make sure you have these ready:
 
 > [!NOTE]
 > **📱 File Format Support:**
-
+>
 > While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 
-5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` from `Morphe` ecosystem, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
@@ -108,7 +108,8 @@ $cfg_ig_stable            = "423.0.0.47.66"
 
 ## ⚠️ Troubleshooting
 
-Script closing instantly or throwing a bunch of red errors on your first try? Don't panic. That's usually just Windows being overprotective with its default Execution Policy. Here's a quick fix:
+**Script closing instantly or throwing a bunch of red errors on your first try? (Windows Only)**
+Don't panic. That's usually just Windows being overprotective with its default Execution Policy. Here's a quick fix:
 
 1. Open PowerShell as Administrator.
 2. Run this exact command:
