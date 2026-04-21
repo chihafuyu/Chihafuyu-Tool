@@ -180,8 +180,17 @@ function Invoke-PatchingSession {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$projectName folder." -ForegroundColor Yellow }
         if (-not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in .\$projectName folder." -ForegroundColor Yellow }
-        Write-Host "`nPlace the required files and try again." -ForegroundColor Gray
-        return $false 
+        
+        Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
+        
+        # Auto-Refresh Scanner Loop
+        while (-not $cliJar -or -not $patchesFile) {
+            Start-Sleep -Seconds 2
+            $cliJar = Get-ChildItem -Path $PSScriptRoot, $workspace -Filter $cliPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            $patchesFile = Get-ChildItem -Path $workspace -Filter $patchPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+        }
+        
+        Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
     }
 
     $patchTrack = if ($patchesChoice -eq "1") { "stable" } else { "dev" }
