@@ -36,7 +36,7 @@
     SOFTWARE.
 #>
 
-# Enforce minimum PowerShell version required to run this script safely
+# Enforce minimum PowerShell version
 #Requires -Version 5.1
 
 if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
@@ -57,27 +57,33 @@ $cfg_x_stable             = "Any"
 $cfg_ig_stable            = "423.0.0.47.66"
 # ==============================================================================
 
-# Check for JDK 21+ (LTS)
+# Check for JDK 21+ requirement
 try {
-    $javaVerOutput = & java -version 2>&1
+    # Merge multiline output into a single string for accurate regex parsing
+    $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java missing" }
     
     $regex = '"(?:1\.)?(\d+)'
-    $match = $javaVerOutput -match $regex
-    if ($match) {
+    if ($javaVerOutput -match $regex) {
         $version = [int]$matches[1]
         if ($version -lt 21) {
             Clear-Host
             Write-Host "[!] Java Development Kit (JDK) 21 or higher is required!" -ForegroundColor Red
             Write-Host "    You currently have Java $version installed." -ForegroundColor Yellow
-            Write-Host "    Please upgrade to Azul Zulu or Eclipse Temurin JDK 21 and add it to PATH." -ForegroundColor Gray
+            Write-Host "    Please upgrade to Azul Zulu or Eclipse Temurin JDK 21 (LTS) and add it to PATH." -ForegroundColor Gray
+            Write-Host "`nPress Enter to exit..." -ForegroundColor DarkGray
+            $null = Read-Host
             exit 1
         }
+    } else {
+        throw "Cannot parse Java version"
     }
 } catch {
     Clear-Host
     Write-Host "Java Development Kit (JDK) 21 is missing or misconfigured." -ForegroundColor Red
-    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 21 and add it to PATH." -ForegroundColor Gray
+    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 21 (LTS) and add it to PATH." -ForegroundColor Gray
+    Write-Host "`nPress Enter to exit..." -ForegroundColor DarkGray
+    $null = Read-Host
     exit 1
 }
 
@@ -196,7 +202,7 @@ function Invoke-PatchingSession {
         
         Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
         
-        # Auto-Refresh Scanner Loop
+        # Non-blocking scanner loop for missing artifacts
         while (-not $cliJar -or -not $patchesFile) {
             Start-Sleep -Seconds 2
             $cliJar = Get-ChildItem -Path $PSScriptRoot, $workspace -Filter $cliPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
@@ -396,7 +402,7 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 11] Bytecode Mode Configuration..." -ForegroundColor Yellow
     $bytecodeMode = $null
     
-    # OS Detection: Check if running on Windows
+    # Identify OS environment for upstream quirk handling
     $isWindowsOS = ($env:OS -eq 'Windows_NT')
     
     if ($isWindowsOS) {
