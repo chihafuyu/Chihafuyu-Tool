@@ -342,10 +342,10 @@ function Invoke-PatchingSession {
                 # Auto-generate template if config file is missing
                 $template = "# Keystore configuration file`n" +
                             "KeystorePath=my-release-key.keystore`n" +
-                            "# Note: KeystoreAlias and SignerName must be max 8 chars, NO SPACES (Android META-INF limitation)`n" +
                             "KeystoreAlias=MyAlias`n" +
                             "KeystorePassword=my_password`n" +
                             "KeystoreEntryPassword=my_entry_password`n" +
+                            "# Note: SignerName must be max 8 chars, NO SPACES (Android META-INF limitation)`n" +
                             "SignerName=MySigner"
                 Set-Content -Path $ksConfigFile -Value $template -Encoding UTF8
                 Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
@@ -383,18 +383,10 @@ function Invoke-PatchingSession {
                 return $true
             }
             
+            # Resolve Alias without length limitations (as it's an internal DB key, not a file output)
             $rawAlias = $ksConfig['KeystoreAlias']
             if (-not [string]::IsNullOrWhiteSpace($rawAlias)) {
-                # Auto-sanitize: strip invalid characters/spaces and truncate to 8 to prevent META-INF crash
-                $sanitizedAlias = $rawAlias -replace '[^a-zA-Z0-9_\-]', ''
-                if ($sanitizedAlias.Length -gt 8) {
-                    $sanitizedAlias = $sanitizedAlias.Substring(0, 8)
-                }
-                
-                if ($rawAlias -ne $sanitizedAlias) {
-                    Write-Host "  [i] KeystoreAlias '$rawAlias' auto-formatted to '$sanitizedAlias' to comply with Android 8-char limit." -ForegroundColor Yellow
-                }
-                $keystoreAlias = $sanitizedAlias
+                $keystoreAlias = $rawAlias
             } else {
                 $keystoreAlias = "Morphe"
             }
@@ -408,6 +400,7 @@ function Invoke-PatchingSession {
             $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
             $rawEntryPass = $null # Immediately nullify plaintext reference
             
+            # Resolve SignerName with strict 8-char truncation (Android META-INF constraint)
             $rawSigner = $ksConfig['SignerName']
             if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
                 # Auto-sanitize: strip invalid characters/spaces and truncate to 8 to prevent META-INF crash
@@ -428,19 +421,19 @@ function Invoke-PatchingSession {
             
         } else {
             # Fallback to manual entry routine
-            Write-Host "  [i] Android limits META-INF signatures (Alias and Signer) to max 8 characters, NO spaces." -ForegroundColor DarkGray
             while ($true) {
                 $ks = (Read-Host "Keystore filename/path").Trim()
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
                 if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
                 Write-Host "  File not found: $ks" -ForegroundColor Red
             }
-            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes."
+            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Alphanumeric, spaces, underscores, and dashes only."
             $securePass = Read-Host "Password" -AsSecureString
             $secureEntryPass = Read-Host "Entry Password" -AsSecureString
             
             $useCustomSigner = Get-YesNoPrompt "Use custom signer?"
             if ($useCustomSigner) { 
+                Write-Host "  [i] Android limits META-INF signatures (SignerName) to max 8 characters, NO spaces." -ForegroundColor DarkGray
                 $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
             }
         }
