@@ -340,7 +340,13 @@ function Invoke-PatchingSession {
             
             if (-not (Test-Path -LiteralPath $ksConfigFile)) {
                 # Auto-generate template if config file is missing
-                $template = "KeystorePath=my-release-key.keystore`nKeystoreAlias=my_alias`nKeystorePassword=my_password`nKeystoreEntryPassword=my_entry_password`nSignerName=My Custom Signer"
+                $template = "# Keystore configuration file`n" +
+                            "KeystorePath=my-release-key.keystore`n" +
+                            "# Note: KeystoreAlias and SignerName must be max 8 chars, NO SPACES (Android META-INF limitation)`n" +
+                            "KeystoreAlias=MyAlias`n" +
+                            "KeystorePassword=my_password`n" +
+                            "KeystoreEntryPassword=my_entry_password`n" +
+                            "SignerName=MySigner"
                 Set-Content -Path $ksConfigFile -Value $template -Encoding UTF8
                 Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
                 Write-Host "      Please fill in your details, save the file, and run the script again." -ForegroundColor Yellow
@@ -377,8 +383,21 @@ function Invoke-PatchingSession {
                 return $true
             }
             
-            $keystoreAlias = $ksConfig['KeystoreAlias']
-            if ([string]::IsNullOrWhiteSpace($keystoreAlias)) { $keystoreAlias = "Morphe" }
+            $rawAlias = $ksConfig['KeystoreAlias']
+            if (-not [string]::IsNullOrWhiteSpace($rawAlias)) {
+                # Auto-sanitize: strip invalid characters/spaces and truncate to 8 to prevent META-INF crash
+                $sanitizedAlias = $rawAlias -replace '[^a-zA-Z0-9_\-]', ''
+                if ($sanitizedAlias.Length -gt 8) {
+                    $sanitizedAlias = $sanitizedAlias.Substring(0, 8)
+                }
+                
+                if ($rawAlias -ne $sanitizedAlias) {
+                    Write-Host "  [i] KeystoreAlias '$rawAlias' auto-formatted to '$sanitizedAlias' to comply with Android 8-char limit." -ForegroundColor Yellow
+                }
+                $keystoreAlias = $sanitizedAlias
+            } else {
+                $keystoreAlias = "Morphe"
+            }
             
             # Convert plaintext passwords to SecureString for safe downstream handling
             $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
@@ -389,26 +408,40 @@ function Invoke-PatchingSession {
             $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
             $rawEntryPass = $null # Immediately nullify plaintext reference
             
-            $customSigner = $ksConfig['SignerName']
-            if ([string]::IsNullOrWhiteSpace($customSigner)) { $customSigner = $null }
+            $rawSigner = $ksConfig['SignerName']
+            if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
+                # Auto-sanitize: strip invalid characters/spaces and truncate to 8 to prevent META-INF crash
+                $sanitizedSigner = $rawSigner -replace '[^a-zA-Z0-9_\-]', ''
+                if ($sanitizedSigner.Length -gt 8) {
+                    $sanitizedSigner = $sanitizedSigner.Substring(0, 8)
+                }
+                
+                if ($rawSigner -ne $sanitizedSigner) {
+                    Write-Host "  [i] SignerName '$rawSigner' auto-formatted to '$sanitizedSigner' to comply with Android 8-char limit." -ForegroundColor Yellow
+                }
+                $customSigner = $sanitizedSigner
+            } else {
+                $customSigner = $null
+            }
             
             Write-Host "  [✓] Keystore configuration loaded successfully." -ForegroundColor Green
             
         } else {
             # Fallback to manual entry routine
+            Write-Host "  [i] Android limits META-INF signatures (Alias and Signer) to max 8 characters, NO spaces." -ForegroundColor DarkGray
             while ($true) {
                 $ks = (Read-Host "Keystore filename/path").Trim()
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
                 if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
                 Write-Host "  File not found: $ks" -ForegroundColor Red
             }
-            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-]+$" -ErrorMessage "Alphanumeric, underscores, and dashes only."
+            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes."
             $securePass = Read-Host "Password" -AsSecureString
             $secureEntryPass = Read-Host "Entry Password" -AsSecureString
             
             $useCustomSigner = Get-YesNoPrompt "Use custom signer?"
             if ($useCustomSigner) { 
-                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Invalid characters." 
+                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
             }
         }
     }
