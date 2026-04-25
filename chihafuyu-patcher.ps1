@@ -328,22 +328,90 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 7] Configuration:" -ForegroundColor Yellow
     $useCustomKeystore = Get-YesNoPrompt "Use custom keystore?"
     
-    $keystoreFile = $null; $keystoreAlias = $null; $securePass = $null; $secureEntryPass = $null
+    $keystoreFile = $null; $keystoreAlias = $null; $securePass = $null; $secureEntryPass = $null; $customSigner = $null
     
     if ($useCustomKeystore) {
-        while ($true) {
-            $ks = (Read-Host "Keystore filename/path").Trim()
-            if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
-            if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
-            Write-Host "  File not found: $ks" -ForegroundColor Red
+        Write-Host "  1. Enter credentials manually"
+        Write-Host "  2. Load from 'custom-keystore.txt'"
+        $ksMethod = Read-ValidatedInput -Prompt "Choice (1-2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+
+        if ($ksMethod -eq "2") {
+            $ksConfigFile = Join-Path $PSScriptRoot "custom-keystore.txt"
+            
+            if (-not (Test-Path -LiteralPath $ksConfigFile)) {
+                # Auto-generate template if config file is missing
+                $template = "KeystorePath=my-release-key.keystore`nKeystoreAlias=my_alias`nKeystorePassword=my_password`nKeystoreEntryPassword=my_entry_password`nSignerName=My Custom Signer"
+                Set-Content -Path $ksConfigFile -Value $template -Encoding UTF8
+                Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
+                Write-Host "      Please fill in your details, save the file, and run the script again." -ForegroundColor Yellow
+                Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
+                $null = Read-Host
+                return $true
+            }
+            
+            Write-Host "  [i] Reading 'custom-keystore.txt'..." -ForegroundColor DarkGray
+            
+            # Parse config file while safely ignoring comments and empty lines
+            $ksConfig = @{}
+            Get-Content -LiteralPath $ksConfigFile | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
+                $split = $_ -split '=', 2
+                $ksConfig[$split[0].Trim()] = $split[1].Trim()
+            }
+            
+            # Resolve Keystore Path (Relative or Absolute)
+            $ks = $ksConfig['KeystorePath']
+            if (-not [string]::IsNullOrWhiteSpace($ks)) {
+                if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
+                if (Test-Path -LiteralPath $ks -PathType Leaf) { 
+                    $keystoreFile = $ks 
+                } else {
+                    Write-Host "  [!] Keystore file not found at: $ks" -ForegroundColor Red
+                    Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
+                    $null = Read-Host
+                    return $true
+                }
+            } else {
+                Write-Host "  [!] KeystorePath is empty or missing in config." -ForegroundColor Red
+                Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
+                $null = Read-Host
+                return $true
+            }
+            
+            $keystoreAlias = $ksConfig['KeystoreAlias']
+            if ([string]::IsNullOrWhiteSpace($keystoreAlias)) { $keystoreAlias = "Morphe" }
+            
+            # Convert plaintext passwords to SecureString for safe downstream handling
+            $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
+            $securePass = ConvertTo-SecureString $rawPass -AsPlainText -Force
+            $rawPass = $null # Immediately nullify plaintext reference
+            
+            $rawEntryPass = if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }
+            $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
+            $rawEntryPass = $null # Immediately nullify plaintext reference
+            
+            $customSigner = $ksConfig['SignerName']
+            if ([string]::IsNullOrWhiteSpace($customSigner)) { $customSigner = $null }
+            
+            Write-Host "  [✓] Keystore configuration loaded successfully." -ForegroundColor Green
+            
+        } else {
+            # Fallback to manual entry routine
+            while ($true) {
+                $ks = (Read-Host "Keystore filename/path").Trim()
+                if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
+                if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
+                Write-Host "  File not found: $ks" -ForegroundColor Red
+            }
+            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-]+$" -ErrorMessage "Alphanumeric, underscores, and dashes only."
+            $securePass = Read-Host "Password" -AsSecureString
+            $secureEntryPass = Read-Host "Entry Password" -AsSecureString
+            
+            $useCustomSigner = Get-YesNoPrompt "Use custom signer?"
+            if ($useCustomSigner) { 
+                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Invalid characters." 
+            }
         }
-        $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-]+$" -ErrorMessage "Alphanumeric, underscores, and dashes only."
-        $securePass = Read-Host "Password" -AsSecureString
-        $secureEntryPass = Read-Host "Entry Password" -AsSecureString
     }
-    
-    $useCustomSigner = Get-YesNoPrompt "Use custom signer?"
-    $customSigner = if ($useCustomSigner) { Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Invalid characters." } else { $null }
 
     Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
     $patchesListFile = "list-patches-$patchTrack.txt"
