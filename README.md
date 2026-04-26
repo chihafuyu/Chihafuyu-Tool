@@ -18,8 +18,17 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 - **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔍 Smart APK Discovery**: Scans your `Input` folder and uses robust regex to find the right files and extract exact versions, ignoring messy build numbers.
 - **⚙️ Auto Architecture Detection**: Automatically detects if an APK is already architecture-specific (like `arm64-v8a`) and skips redundant library stripping.
-- **🔐 Secure Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to handle custom keystore passwords, instantly wiping them from RAM after use.
+- **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
 - **📝 Clean Logging**: Captures Java execution logs in the background and exports them to a clean, UTF-8 text file without cluttering your terminal.
+
+> [!WARNING]
+> **🚨 Keystore Password Exposure Notice**
+> 
+> While this script uses advanced memory-handling to protect your passwords internally, the upstream `morphe-cli` Java engine currently requires passwords to be passed via standard command-line arguments (e.g., `--keystore-password`). 
+> 
+> This means your plaintext password **may be momentarily visible to system monitoring tools** (like Windows Task Manager or Process Explorer) while the patching process is actively running in the background. 
+> 
+> **Recommendation:** Never use high-value personal passwords (like your bank or primary email password) for your Android keystores, especially if you are running this tool on a shared or enterprise machine!
 
 ---
 
@@ -57,6 +66,7 @@ Before spinning up the script, make sure you have these ready:
 📁 Your-Working-Directory/
  ├── 📄 chihafuyu-patcher.ps1        (The main script)
  ├── ☕ morphe-cli-x.x.x-all.jar     (CLI - Place here or inside the ecosystem folder)
+ ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
  ├── 📁 Morphe/                      (Morphe Workspace)
  │    ├── 📦 patches-x.x.x.mpp       (Morphe Patches)
@@ -67,7 +77,6 @@ Before spinning up the script, make sure you have these ready:
       ├── 📁 Input/                  (Drop Piko supported apps here)
       └── 📁 Output/                 (Patched APKs and log land here)
 ```
-
 3. **Load your Apps**: Move the target files (`.apk`, `.apkm`, etc.) into the `Input` folder of the ecosystem you want to patch.
 4. **Run the script**:
    * Double click `chihafuyu-patcher.ps1`, OR
@@ -96,13 +105,13 @@ Whenever new stable patch bundles are released with updated app version targets,
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
 # Morphe
-$cfg_youtube_stable       = "20.45.36"
-$cfg_youtube_music_stable = "8.44.54"
+$cfg_youtube_stable       = "20.47.62"
+$cfg_youtube_music_stable = "8.47.56"
 $cfg_reddit_stable        = "2026.04.0"
 
 # Piko
 $cfg_x_stable             = "Any"
-$cfg_ig_stable            = "423.0.0.47.66"
+$cfg_ig_stable            = "426.0.0.37.68"
 # ==============================================================================
 ```
 
