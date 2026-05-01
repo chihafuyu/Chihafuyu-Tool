@@ -318,6 +318,9 @@ function Invoke-PatchingSession {
     if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected. Force patch?")) { return $false }
 
     Write-Host "`n[STEP 6] Select Target Architecture:" -ForegroundColor Yellow
+    Write-Host "  [i] Heads up! Make sure you pick the architecture that matches your device." -ForegroundColor DarkGray
+    Write-Host "      Picking the wrong one could mean a sluggish app, or worse, crashes/broken functionality." -ForegroundColor DarkGray
+    Write-Host "      Not sure? Grab an app like AIDA64 or CPU-Z and check the 'CPU ABI' or 'System Architecture' info." -ForegroundColor DarkGray
     Write-Host "1. arm64-v8a`n2. armeabi-v7a`n3. x86_64`n4. x86`n5. Universal"
     $archChoice = Read-ValidatedInput -Prompt "Choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input."
     
@@ -547,6 +550,11 @@ function Invoke-PatchingSession {
         foreach ($app in $selectedApps) {
             if (-not $app.TargetApk) { continue }
             
+            # Generate safe, cross-platform system temp directory
+            $sysTempDir = [System.IO.Path]::GetTempPath()
+            $sessionGuid = [guid]::NewGuid().ToString().Substring(0,8)
+            $customTempDir = Join-Path $sysTempDir "Chihafuyu_$($app.name)_$sessionGuid"
+            
             $jsonFileName = "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             $outputApkRelative = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
             
@@ -555,7 +563,7 @@ function Invoke-PatchingSession {
             $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
             Add-Content -Path $tempLogFile -Value $logHeader -Encoding UTF8
             
-            $baseArgs = @("-jar", $cliRelPath, "patch", "--patches=$patchRelPath", "--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkRelative", "--purge")
+            $baseArgs = @("-jar", $cliRelPath, "patch", "--patches=$patchRelPath", "--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkRelative", "--temporary-files-path=$customTempDir", "--purge")
             
             if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
             if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
@@ -578,55 +586,54 @@ function Invoke-PatchingSession {
             
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Windows temp folder cleanup
-            if ($isWindowsOS) {
-                $expectedTempDir = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch-temporary-files"
-                if (Test-Path -LiteralPath $expectedTempDir) {
+            # Post-patching explicitly defined temp folder cleanup
+            if (Test-Path -LiteralPath $customTempDir) {
+                if ($isWindowsOS) {
                     Start-Sleep -Seconds 2 # Allow JVM to fully exit and OS to release file handles
+                }
+                
+                if ($isWindowsOS -and $useSecureErase) {
+                    Write-Host "  [i] Shredding residual temporary files (1-Pass Zero Fill)..." -ForegroundColor DarkGray
+                    $tempFiles = Get-ChildItem -LiteralPath $customTempDir -Recurse -File -ErrorAction SilentlyContinue
                     
-                    if ($useSecureErase) {
-                        Write-Host "  [i] Shredding residual temporary files (1-Pass Zero Fill)..." -ForegroundColor DarkGray
-                        $tempFiles = Get-ChildItem -LiteralPath $expectedTempDir -Recurse -File -ErrorAction SilentlyContinue
+                    if ($null -ne $tempFiles -and $tempFiles.Count -gt 0) {
+                        Write-Host "      Overwriting $($tempFiles.Count) files safely (Buffered Stream)..." -ForegroundColor DarkGray
                         
-                        if ($null -ne $tempFiles -and $tempFiles.Count -gt 0) {
-                            Write-Host "      Overwriting $($tempFiles.Count) files safely (Buffered Stream)..." -ForegroundColor DarkGray
-                            
-                            # Initialize 4MB buffer
-                            $bufferSize = 4096 * 1024 
-                            $buffer = New-Object byte[] $bufferSize
-                            
-                            foreach ($file in $tempFiles) {
-                                $stream = $null
-                                try {
-                                    # Remove Read-Only attribute
-                                    if ($file.IsReadOnly) { $file.IsReadOnly = $false }
-                                    
-                                    $size = $file.Length
-                                    if ($size -gt 0) {
-                                        $stream = [System.IO.File]::OpenWrite($file.FullName)
-                                        $written = 0L
-                                        while ($written -lt $size) {
-                                            $remaining = $size - $written
-                                            $toWrite = if ($remaining -gt $bufferSize) { $bufferSize } else { [int]$remaining }
-                                            $stream.Write($buffer, 0, $toWrite)
-                                            $written += $toWrite
-                                        }
+                        # Initialize 4MB buffer
+                        $bufferSize = 4096 * 1024 
+                        $buffer = New-Object byte[] $bufferSize
+                        
+                        foreach ($file in $tempFiles) {
+                            $stream = $null
+                            try {
+                                # Remove Read-Only attribute
+                                if ($file.IsReadOnly) { $file.IsReadOnly = $false }
+                                
+                                $size = $file.Length
+                                if ($size -gt 0) {
+                                    $stream = [System.IO.File]::OpenWrite($file.FullName)
+                                    $written = 0L
+                                    while ($written -lt $size) {
+                                        $remaining = $size - $written
+                                        $toWrite = if ($remaining -gt $bufferSize) { $bufferSize } else { [int]$remaining }
+                                        $stream.Write($buffer, 0, $toWrite)
+                                        $written += $toWrite
                                     }
-                                } catch {
-                                    # Ignore locked files
-                                } finally {
-                                    # Release file stream
-                                    if ($null -ne $stream) { $stream.Dispose() }
                                 }
+                            } catch {
+                                # Ignore locked files
+                            } finally {
+                                # Release file stream
+                                if ($null -ne $stream) { $stream.Dispose() }
                             }
                         }
-                    } else {
-                        Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
                     }
-                    
-                    # Remove temp directory
-                    Remove-Item -LiteralPath $expectedTempDir -Recurse -Force -ErrorAction SilentlyContinue
+                } else {
+                    Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
                 }
+                
+                # Remove temp directory completely
+                Remove-Item -LiteralPath $customTempDir -Recurse -Force -ErrorAction SilentlyContinue
             }
 
             if ($LASTEXITCODE -ne 0) {
