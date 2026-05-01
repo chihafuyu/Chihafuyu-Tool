@@ -154,7 +154,7 @@ function Read-ValidatedInput {
 # --- Core Logic ---
 
 function Invoke-PatchingSession {
-    Set-Location -Path $PSScriptRoot -ErrorAction Stop
+    Set-Location -LiteralPath $PSScriptRoot -ErrorAction Stop
 
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
@@ -169,15 +169,16 @@ function Invoke-PatchingSession {
     $projectName = if ($ecoChoice -eq "1") { "Morphe" } else { "Piko" }
     $workspace = Join-Path $PSScriptRoot $projectName
 
-    if (-not (Test-Path $workspace)) {
+    if (-not (Test-Path -LiteralPath $workspace)) {
         New-Item -ItemType Directory -Path $workspace -Force | Out-Null
         Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
     }
     
-    Set-Location -Path $workspace -ErrorAction Stop
+    Set-Location -LiteralPath $workspace -ErrorAction Stop
 
     foreach ($dir in @("Input", "Output")) {
-        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        $dirPath = Join-Path $workspace $dir
+        if (-not (Test-Path -LiteralPath $dirPath)) { New-Item -ItemType Directory -Path $dirPath -Force | Out-Null }
     }
 
     Write-Host "`n[STEP 2] Select Patcher CLI Environment:" -ForegroundColor Yellow
@@ -191,8 +192,10 @@ function Invoke-PatchingSession {
     $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
     $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
     
-    $cliJar = Get-ChildItem -Path $PSScriptRoot, $workspace -Filter $cliPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
-    $patchesFile = Get-ChildItem -Path $workspace -Filter $patchPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+    # We cannot use -LiteralPath with Wildcards, so we must rely on -Path here. 
+    # To mitigate issues with brackets in root path, we execute Get-ChildItem from within the directory context.
+    $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+    $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
 
     if (-not $cliJar -or -not $patchesFile) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
@@ -203,8 +206,8 @@ function Invoke-PatchingSession {
         
         while (-not $cliJar -or -not $patchesFile) {
             Start-Sleep -Seconds 2
-            $cliJar = Get-ChildItem -Path $PSScriptRoot, $workspace -Filter $cliPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
-            $patchesFile = Get-ChildItem -Path $workspace -Filter $patchPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
         }
         
         Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
@@ -253,7 +256,8 @@ function Invoke-PatchingSession {
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
     
-    $allApks = Get-ChildItem "Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue
+    # Path with Wildcards for scanning
+    $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue
     $hasMismatch = $false
     $missingApps = 0
 
@@ -347,7 +351,7 @@ function Invoke-PatchingSession {
                             "KeystoreEntryPassword=my_entry_password`n" +
                             "# Note: SignerName must be max 8 chars, NO SPACES (Android META-INF limitation)`n" +
                             "SignerName=MySigner"
-                Set-Content -Path $ksConfigFile -Value $template -Encoding UTF8
+                Set-Content -LiteralPath $ksConfigFile -Value $template -Encoding UTF8
                 Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
                 Write-Host "      Please fill in your details, save the file, and run the script again." -ForegroundColor Yellow
                 Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
@@ -433,15 +437,25 @@ function Invoke-PatchingSession {
     }
 
     Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
-    $patchesListFile = "list-patches-$patchTrack.txt"
+    $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
     
-    $cliRelPath = if ($cliJar.DirectoryName -eq $workspace) { ".\$($cliJar.Name)" } else { "..\$($cliJar.Name)" }
-    $patchRelPath = ".\$($patchesFile.Name)"
+    # Strictly quote literal paths for Java arguments
+    $cliAbsPath = $cliJar.FullName
+    $patchAbsPath = $patchesFile.FullName
     
-    $listArgs = @("-jar", $cliRelPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchRelPath")
+    $listArgs = @(
+        "-jar", 
+        $cliAbsPath, 
+        "list-patches", 
+        "--with-packages", 
+        "--with-versions", 
+        "--with-options", 
+        "--out=`"$patchesListFile`"", 
+        "--patches=`"$patchAbsPath`""
+    )
     
     $null = & java $listArgs 2>&1
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $patchesListFile)) {
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $patchesListFile)) {
         Write-Host "  Failed to create patches reference file." -ForegroundColor Red
     } else {
         $headerText  = "========================================================================`n"
@@ -454,10 +468,10 @@ function Invoke-PatchingSession {
         }
         $headerText += "========================================================================`n`n"
         
-        $originalContent = Get-Content -Path $patchesListFile -Raw
-        Set-Content -Path $patchesListFile -Value ($headerText + $originalContent) -Encoding UTF8
+        $originalContent = Get-Content -LiteralPath $patchesListFile -Raw
+        Set-Content -LiteralPath $patchesListFile -Value ($headerText + $originalContent) -Encoding UTF8
         
-        Write-Host "  Reference file created: $patchesListFile" -ForegroundColor Green
+        Write-Host "  Reference file created: $(Split-Path $patchesListFile -Leaf)" -ForegroundColor Green
     }
 
     Write-Host "`n[STEP 9] Generating Option Files..." -ForegroundColor Yellow
@@ -465,14 +479,21 @@ function Invoke-PatchingSession {
     foreach ($app in $selectedApps) {
         if (-not $app.TargetApk) { continue }
         
-        $jsonFileName = "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
-        if (Test-Path $jsonFileName) { Remove-Item $jsonFileName -Force }
+        $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
+        if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force }
         
-        $optArgs = @("-jar", $cliRelPath, "options-create", "--patches=$patchRelPath", "--out=$jsonFileName", "--filter-package-name=$($app.package)")
+        $optArgs = @(
+            "-jar", 
+            $cliAbsPath, 
+            "options-create", 
+            "--patches=`"$patchAbsPath`"", 
+            "--out=`"$jsonFileName`"", 
+            "--filter-package-name=$($app.package)"
+        )
         
         $null = & java $optArgs 2>&1
         
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $jsonFileName)) {
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $jsonFileName)) {
             Write-Host "  [!] Options generation failed for $($app.name). Aborting." -ForegroundColor Red
             return $false
         }
@@ -481,7 +502,7 @@ function Invoke-PatchingSession {
 
     Write-Host "`n[STEP 10] Options Generated Successfully." -ForegroundColor Cyan
     if (Get-YesNoPrompt "Modify JSON files before patching?") {
-        Write-Host "  [TIP] Confused on what to edit? Check the '$patchesListFile' file generated in Step 8 for reference." -ForegroundColor DarkGray
+        Write-Host "  [TIP] Confused on what to edit? Check the '$(Split-Path $patchesListFile -Leaf)' file generated in Step 8 for reference." -ForegroundColor DarkGray
         Write-Host "Awaiting manual modifications. Press any key to resume..." -ForegroundColor Magenta
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     }
@@ -513,8 +534,8 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 13] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
-    $tempLogFile = "Output\temp_patch_log.txt"
-    if (Test-Path $tempLogFile) { Remove-Item $tempLogFile -Force -ErrorAction Ignore }
+    $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
+    if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
     try {
         $plainPass = $null; $plainEntryPass = $null
@@ -534,15 +555,26 @@ function Invoke-PatchingSession {
             $sessionGuid = [guid]::NewGuid().ToString().Substring(0,8)
             $customTempDir = Join-Path $sysTempDir "Chihafuyu_$($app.name)_$sessionGuid"
             
-            $jsonFileName = "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
-            $outputApkRelative = ".\Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
+            $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
+            $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
             
             Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) <<<" -ForegroundColor Magenta
             
             $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
-            Add-Content -Path $tempLogFile -Value $logHeader -Encoding UTF8
+            Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
             
-            $baseArgs = @("-jar", $cliRelPath, "patch", "--patches=$patchRelPath", "--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkRelative", "--temporary-files-path=$customTempDir", "--purge")
+            # Securely quote all potential path arguments to prevent parsing errors when dealing with spaces or special characters
+            $baseArgs = @(
+                "-jar", 
+                $cliAbsPath, 
+                "patch", 
+                "--patches=`"$patchAbsPath`"", 
+                "--options-file=`"$jsonFileName`"", 
+                "`"$($app.TargetApk)`"", 
+                "--out=`"$outputApkAbs`"", 
+                "--temporary-files-path=`"$customTempDir`"", 
+                "--purge"
+            )
             
             if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
             if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
@@ -551,9 +583,9 @@ function Invoke-PatchingSession {
                 $baseArgs += "--unsigned"
             } else {
                 if ($useCustomKeystore) { 
-                    $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
+                    $baseArgs += "--keystore=`"$keystoreFile`"", "--keystore-entry-alias=`"$keystoreAlias`"", "--keystore-password=`"$plainPass`"", "--keystore-entry-password=`"$plainEntryPass`"" 
                 }
-                if ($customSigner) { $baseArgs += "--signer=$customSigner" }
+                if ($customSigner) { $baseArgs += "--signer=`"$customSigner`"" }
             }
             
             $isArchSpecific = (Split-Path $app.TargetApk -Leaf) -match "(?i)(arm64|armeabi|v7a|v8a|x86|x86_64|mips|mips64|riscv64)"
@@ -601,12 +633,12 @@ function Invoke-PatchingSession {
 
     if (Get-YesNoPrompt "`nExport patching logs?") {
         $logPath = Join-Path $workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-        if (Test-Path $tempLogFile) { 
-            Rename-Item $tempLogFile -NewName (Split-Path $logPath -Leaf) 
+        if (Test-Path -LiteralPath $tempLogFile) { 
+            Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf) 
             Write-Host "  -> Log exported successfully to: .\Output\$(Split-Path $logPath -Leaf)" -ForegroundColor Green
         }
     } else {
-        if (Test-Path $tempLogFile) { Remove-Item $tempLogFile -ErrorAction Ignore }
+        if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -ErrorAction Ignore }
     }
 
     if (Get-YesNoPrompt "Open output directory?") { Invoke-Item ".\Output" }
