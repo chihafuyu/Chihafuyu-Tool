@@ -192,8 +192,6 @@ function Invoke-PatchingSession {
     $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
     $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
     
-    # We cannot use -LiteralPath with Wildcards, so we must rely on -Path here. 
-    # To mitigate issues with brackets in root path, we execute Get-ChildItem from within the directory context.
     $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
     $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -256,7 +254,6 @@ function Invoke-PatchingSession {
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
     
-    # Path with Wildcards for scanning
     $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue
     $hasMismatch = $false
     $missingApps = 0
@@ -439,10 +436,10 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
     $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
     
-    # Strictly quote literal paths for Java arguments
     $cliAbsPath = $cliJar.FullName
     $patchAbsPath = $patchesFile.FullName
     
+    # Let PowerShell handle the argument quoting automatically
     $listArgs = @(
         "-jar", 
         $cliAbsPath, 
@@ -450,8 +447,8 @@ function Invoke-PatchingSession {
         "--with-packages", 
         "--with-versions", 
         "--with-options", 
-        "--out=`"$patchesListFile`"", 
-        "--patches=`"$patchAbsPath`""
+        "--out=$patchesListFile", 
+        "--patches=$patchAbsPath"
     )
     
     $null = & java $listArgs 2>&1
@@ -486,8 +483,8 @@ function Invoke-PatchingSession {
             "-jar", 
             $cliAbsPath, 
             "options-create", 
-            "--patches=`"$patchAbsPath`"", 
-            "--out=`"$jsonFileName`"", 
+            "--patches=$patchAbsPath", 
+            "--out=$jsonFileName", 
             "--filter-package-name=$($app.package)"
         )
         
@@ -563,16 +560,15 @@ function Invoke-PatchingSession {
             $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
             Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
             
-            # Securely quote all potential path arguments to prevent parsing errors when dealing with spaces or special characters
             $baseArgs = @(
                 "-jar", 
                 $cliAbsPath, 
                 "patch", 
-                "--patches=`"$patchAbsPath`"", 
-                "--options-file=`"$jsonFileName`"", 
-                "`"$($app.TargetApk)`"", 
-                "--out=`"$outputApkAbs`"", 
-                "--temporary-files-path=`"$customTempDir`"", 
+                "--patches=$patchAbsPath", 
+                "--options-file=$jsonFileName", 
+                $app.TargetApk, 
+                "--out=$outputApkAbs", 
+                "--temporary-files-path=$customTempDir", 
                 "--purge"
             )
             
@@ -583,9 +579,9 @@ function Invoke-PatchingSession {
                 $baseArgs += "--unsigned"
             } else {
                 if ($useCustomKeystore) { 
-                    $baseArgs += "--keystore=`"$keystoreFile`"", "--keystore-entry-alias=`"$keystoreAlias`"", "--keystore-password=`"$plainPass`"", "--keystore-entry-password=`"$plainEntryPass`"" 
+                    $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
                 }
-                if ($customSigner) { $baseArgs += "--signer=`"$customSigner`"" }
+                if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             }
             
             $isArchSpecific = (Split-Path $app.TargetApk -Leaf) -match "(?i)(arm64|armeabi|v7a|v8a|x86|x86_64|mips|mips64|riscv64)"
