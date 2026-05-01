@@ -513,14 +513,6 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 13] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
-    $useSecureErase = $false
-    if ($isWindowsOS) {
-        Write-Host "  [i] Windows OS detected. Residual temp files will be swept automatically." -ForegroundColor DarkGray
-        Write-Host "      You can opt to securely erase them (1-Pass Zero Fill) to prevent recovery." -ForegroundColor DarkGray
-        Write-Host "      WARNING: Only use this on mechanical HDDs. Do NOT use on SSDs." -ForegroundColor Red
-        $useSecureErase = Get-YesNoPrompt "Enable Secure Erase for temp files?"
-    }
-    
     $tempLogFile = "Output\temp_patch_log.txt"
     if (Test-Path $tempLogFile) { Remove-Item $tempLogFile -Force -ErrorAction Ignore }
 
@@ -577,43 +569,7 @@ function Invoke-PatchingSession {
                 if ($isWindowsOS) {
                     Start-Sleep -Seconds 2
                 }
-                
-                if ($isWindowsOS -and $useSecureErase) {
-                    Write-Host "  [i] Shredding residual temporary files (1-Pass Zero Fill)..." -ForegroundColor DarkGray
-                    $tempFiles = Get-ChildItem -LiteralPath $customTempDir -Recurse -File -ErrorAction SilentlyContinue
-                    
-                    if ($null -ne $tempFiles -and $tempFiles.Count -gt 0) {
-                        Write-Host "      Overwriting $($tempFiles.Count) files safely (Buffered Stream)..." -ForegroundColor DarkGray
-                        
-                        $bufferSize = 4096 * 1024 
-                        $buffer = New-Object byte[] $bufferSize
-                        
-                        foreach ($file in $tempFiles) {
-                            $stream = $null
-                            try {
-                                if ($file.IsReadOnly) { $file.IsReadOnly = $false }
-                                
-                                $size = $file.Length
-                                if ($size -gt 0) {
-                                    $stream = [System.IO.File]::OpenWrite($file.FullName)
-                                    $written = 0L
-                                    while ($written -lt $size) {
-                                        $remaining = $size - $written
-                                        $toWrite = if ($remaining -gt $bufferSize) { $bufferSize } else { [int]$remaining }
-                                        $stream.Write($buffer, 0, $toWrite)
-                                        $written += $toWrite
-                                    }
-                                }
-                            } catch {
-                            } finally {
-                                if ($null -ne $stream) { $stream.Dispose() }
-                            }
-                        }
-                    }
-                } else {
-                    Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
-                }
-                
+                Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
                 Remove-Item -LiteralPath $customTempDir -Recurse -Force -ErrorAction SilentlyContinue
             }
 
