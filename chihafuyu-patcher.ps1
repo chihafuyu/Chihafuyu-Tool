@@ -59,7 +59,6 @@ $cfg_ig_stable            = "426.0.0.37.68"
 
 # Check for JDK 21+ requirement
 try {
-    # Parse Java version string
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java missing" }
     
@@ -202,7 +201,6 @@ function Invoke-PatchingSession {
         
         Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
         
-        # Wait for missing artifacts
         while (-not $cliJar -or -not $patchesFile) {
             Start-Sleep -Seconds 2
             $cliJar = Get-ChildItem -Path $PSScriptRoot, $workspace -Filter $cliPrefix -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
@@ -342,7 +340,6 @@ function Invoke-PatchingSession {
             $ksConfigFile = Join-Path $PSScriptRoot "custom-keystore.txt"
             
             if (-not (Test-Path -LiteralPath $ksConfigFile)) {
-                # Auto-generate template if config file is missing
                 $template = "# Keystore configuration file`n" +
                             "KeystorePath=my-release-key.keystore`n" +
                             "KeystoreAlias=MyAlias`n" +
@@ -360,14 +357,12 @@ function Invoke-PatchingSession {
             
             Write-Host "  [i] Reading 'custom-keystore.txt'..." -ForegroundColor DarkGray
             
-            # Parse config file
             $ksConfig = @{}
             Get-Content -LiteralPath $ksConfigFile | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
                 $split = $_ -split '=', 2
                 $ksConfig[$split[0].Trim()] = $split[1].Trim()
             }
             
-            # Resolve Keystore Path
             $ks = $ksConfig['KeystorePath']
             if (-not [string]::IsNullOrWhiteSpace($ks)) {
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -386,7 +381,6 @@ function Invoke-PatchingSession {
                 return $true
             }
             
-            # Resolve Keystore Alias
             $rawAlias = $ksConfig['KeystoreAlias']
             if (-not [string]::IsNullOrWhiteSpace($rawAlias)) {
                 $keystoreAlias = $rawAlias
@@ -394,19 +388,16 @@ function Invoke-PatchingSession {
                 $keystoreAlias = "Morphe"
             }
             
-            # Convert passwords to SecureString
             $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
             $securePass = ConvertTo-SecureString $rawPass -AsPlainText -Force
-            $rawPass = $null # Clear plaintext reference
+            $rawPass = $null
             
             $rawEntryPass = if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }
             $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
-            $rawEntryPass = $null # Clear plaintext reference
+            $rawEntryPass = $null
             
-            # Resolve SignerName (Android META-INF 8-char limit)
             $rawSigner = $ksConfig['SignerName']
             if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
-                # Sanitize SignerName
                 $sanitizedSigner = $rawSigner -replace '[^a-zA-Z0-9_\-]', ''
                 if ($sanitizedSigner.Length -gt 8) {
                     $sanitizedSigner = $sanitizedSigner.Substring(0, 8)
@@ -423,7 +414,6 @@ function Invoke-PatchingSession {
             Write-Host "  [✓] Keystore configuration loaded successfully." -ForegroundColor Green
             
         } else {
-            # Fallback to manual entry routine
             while ($true) {
                 $ks = (Read-Host "Keystore filename/path").Trim()
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -499,12 +489,10 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 11] Bytecode Mode Configuration..." -ForegroundColor Yellow
     $bytecodeMode = $null
     
-    # Check OS environment
     $isWindowsOS = ($env:OS -eq 'Windows_NT')
     
     if ($isWindowsOS) {
         Write-Host "  [i] Skipped. Morphe CLI currently forces 'FULL' bytecode mode on Windows." -ForegroundColor DarkGray
-        Write-Host "      (This is an upstream workaround to prevent memory lock errors during DEX rebuilding)" -ForegroundColor DarkGray
     } else {
         if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
             Write-Host "1. FULL       (Legacy: rebuilds all dex, slow, highest memory)"
@@ -550,7 +538,6 @@ function Invoke-PatchingSession {
         foreach ($app in $selectedApps) {
             if (-not $app.TargetApk) { continue }
             
-            # Generate safe, cross-platform system temp directory
             $sysTempDir = [System.IO.Path]::GetTempPath()
             $sessionGuid = [guid]::NewGuid().ToString().Substring(0,8)
             $customTempDir = Join-Path $sysTempDir "Chihafuyu_$($app.name)_$sessionGuid"
@@ -586,10 +573,9 @@ function Invoke-PatchingSession {
             
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Post-patching explicitly defined temp folder cleanup
             if (Test-Path -LiteralPath $customTempDir) {
                 if ($isWindowsOS) {
-                    Start-Sleep -Seconds 2 # Allow JVM to fully exit and OS to release file handles
+                    Start-Sleep -Seconds 2
                 }
                 
                 if ($isWindowsOS -and $useSecureErase) {
@@ -599,14 +585,12 @@ function Invoke-PatchingSession {
                     if ($null -ne $tempFiles -and $tempFiles.Count -gt 0) {
                         Write-Host "      Overwriting $($tempFiles.Count) files safely (Buffered Stream)..." -ForegroundColor DarkGray
                         
-                        # Initialize 4MB buffer
                         $bufferSize = 4096 * 1024 
                         $buffer = New-Object byte[] $bufferSize
                         
                         foreach ($file in $tempFiles) {
                             $stream = $null
                             try {
-                                # Remove Read-Only attribute
                                 if ($file.IsReadOnly) { $file.IsReadOnly = $false }
                                 
                                 $size = $file.Length
@@ -621,9 +605,7 @@ function Invoke-PatchingSession {
                                     }
                                 }
                             } catch {
-                                # Ignore locked files
                             } finally {
-                                # Release file stream
                                 if ($null -ne $stream) { $stream.Dispose() }
                             }
                         }
@@ -632,7 +614,6 @@ function Invoke-PatchingSession {
                     Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
                 }
                 
-                # Remove temp directory completely
                 Remove-Item -LiteralPath $customTempDir -Recurse -Force -ErrorAction SilentlyContinue
             }
 
