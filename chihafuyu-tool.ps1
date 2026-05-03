@@ -882,7 +882,7 @@ function Invoke-UtilityWorkflow {
                 "-alias", $ksAlias,
                 "-keyalg", "RSA",
                 "-keysize", "4096",
-                "-validity", "10000",
+                "-validity", "36500",
                 "-storepass", $ksPass,
                 "-keypass", $ksPass,
                 "-dname", "CN=$ksSigner, OU=$ksOU, O=$ksOrg, C=$($ksCountry.ToUpper())",
