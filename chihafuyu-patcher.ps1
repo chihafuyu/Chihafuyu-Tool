@@ -439,7 +439,6 @@ function Invoke-PatchingSession {
     $cliAbsPath = $cliJar.FullName
     $patchAbsPath = $patchesFile.FullName
     
-    # Let PowerShell handle the argument quoting automatically
     $listArgs = @(
         "-jar", 
         $cliAbsPath, 
@@ -528,7 +527,15 @@ function Invoke-PatchingSession {
     Write-Host "`n[STEP 12] Signing Configuration..." -ForegroundColor Yellow
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
 
-    Write-Host "`n[STEP 13] Patching & Cleanup Sequence..." -ForegroundColor Yellow
+    Write-Host "`n[STEP 13] Verification Configuration..." -ForegroundColor Yellow
+    $verifyWithSdk = Get-YesNoPrompt "Verify the patched app with a local Android SDK? (--verify-with-sdk)"
+    if ($verifyWithSdk) {
+        Write-Host "  [i] Just a heads up: You'll need a proper Android SDK installed on your machine for this to work," -ForegroundColor DarkGray
+        Write-Host "      specifically the 'build-tools' and 'platforms' packages." -ForegroundColor DarkGray
+        Write-Host "      If Morphe CLI can't find them, the patching process will throw an error and abort." -ForegroundColor DarkGray
+    }
+
+    Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
     $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
@@ -555,6 +562,10 @@ function Invoke-PatchingSession {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
             
+            # Prepare hidden temp JSON result file path
+            $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+            if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -Force -ErrorAction Ignore }
+            
             Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) <<<" -ForegroundColor Magenta
             
             $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
@@ -568,12 +579,14 @@ function Invoke-PatchingSession {
                 "--options-file=$jsonFileName", 
                 $app.TargetApk, 
                 "--out=$outputApkAbs", 
-                "--temporary-files-path=$customTempDir", 
+                "--temporary-files-path=$customTempDir",
+                "--result-file=$tempResultFile",
                 "--purge"
             )
             
             if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
             if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
+            if ($verifyWithSdk) { $baseArgs += "--verify-with-sdk" }
             
             if ($disableSigning) {
                 $baseArgs += "--unsigned"
@@ -635,6 +648,22 @@ function Invoke-PatchingSession {
         }
     } else {
         if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -ErrorAction Ignore }
+    }
+
+    if (Get-YesNoPrompt "Export patching result JSON? (--result-file)") {
+        foreach ($app in $selectedApps) {
+            $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+            if (Test-Path -LiteralPath $tempResultFile) {
+                $finalResultName = "Result_$($app.name)_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
+                Rename-Item -LiteralPath $tempResultFile -NewName $finalResultName
+                Write-Host "  -> JSON result exported to: .\Output\$finalResultName" -ForegroundColor Green
+            }
+        }
+    } else {
+        foreach ($app in $selectedApps) {
+            $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+            if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -ErrorAction Ignore }
+        }
     }
 
     if (Get-YesNoPrompt "Open output directory?") { Invoke-Item ".\Output" }
