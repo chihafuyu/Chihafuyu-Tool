@@ -729,13 +729,14 @@ function Invoke-UtilityWorkflow {
     Write-Host "2. Uninstall app from device (adb)"
     Write-Host "3. Generate Options only"
     Write-Host "4. Generate list-patches only"
-    Write-Host "5. Go back to Main Menu"
+    Write-Host "5. Generate Custom Keystore (PKCS12)"
+    Write-Host "6. Go back to Main Menu"
     Write-Host "X. Close Tool"
     
-    $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-5xX]$" -ErrorMessage "Invalid input. Please enter 1-5, or X."
+    $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-6xX]$" -ErrorMessage "Invalid input. Please enter 1-6, or X."
     
     if ($utilChoice -match '^[xX]$') { exit 0 }
-    if ($utilChoice -eq '5') { return }
+    if ($utilChoice -eq '6') { return }
     
     if ($utilChoice -in @('1', '2')) {
         $eco = Resolve-Ecosystem
@@ -841,6 +842,49 @@ function Invoke-UtilityWorkflow {
                 Write-Host "  [✓] Reference file created successfully in .\$($eco.Name)\" -ForegroundColor Green
             } else {
                 Write-Host "  [!] Failed to create patches reference file." -ForegroundColor Red
+            }
+        }
+    }
+    elseif ($utilChoice -eq '5') {
+        Write-Host "`n[GENERATE KEYSTORE] Creating a new PKCS12 Keystore..." -ForegroundColor Yellow
+        $ksName = Read-ValidatedInput -Prompt "Enter filename (e.g., my-key.keystore)" -RegexPattern "^[\w\-\.]+$" -ErrorMessage "Alphanumeric, dashes, and dots only."
+        $ksAlias = Read-ValidatedInput -Prompt "Enter Alias" -RegexPattern "^[\w\-\s]+$" -ErrorMessage "Alphanumeric, spaces, and dashes only."
+        $ksPass = Read-ValidatedInput -Prompt "Enter Password (min 6 chars)" -RegexPattern "^.{6,}$" -ErrorMessage "Password must be at least 6 characters."
+        
+        Write-Host "  [i] Android limits META-INF signatures (SignerName) to max 8 characters, NO spaces." -ForegroundColor DarkGray
+        $ksSigner = Read-ValidatedInput -Prompt "Enter Signer Name (CN)" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces."
+        
+        $ksOU = Read-ValidatedInput -Prompt "Enter Organizational Unit (OU) [e.g., IT, Modder]" -RegexPattern "^[\w\-\.\s]+$" -ErrorMessage "Alphanumeric, spaces, dots, and dashes only."
+        $ksOrg = Read-ValidatedInput -Prompt "Enter Organization (O) [e.g., MyCompany]" -RegexPattern "^[\w\-\.\s]+$" -ErrorMessage "Alphanumeric, spaces, dots, and dashes only."
+        $ksCountry = Read-ValidatedInput -Prompt "Enter 2-letter Country Code (C) [e.g., ID, US]" -RegexPattern "^[a-zA-Z]{2}$" -ErrorMessage "Must be exactly 2 letters."
+
+        $ksPath = Join-Path $PSScriptRoot $ksName
+        if (Test-Path -LiteralPath $ksPath) {
+            Write-Host "  [!] File '$ksName' already exists in the root folder!" -ForegroundColor Red
+        } else {
+            Write-Host "  Generating keystore using Java keytool..." -ForegroundColor DarkGray
+            
+            # Using keytool from JDK to generate PKCS12 with 4096-bit RSA for maximum security
+            $keytoolArgs = @(
+                "-genkeypair",
+                "-v",
+                "-keystore", $ksPath,
+                "-alias", $ksAlias,
+                "-keyalg", "RSA",
+                "-keysize", "4096",
+                "-validity", "10000",
+                "-storepass", $ksPass,
+                "-keypass", $ksPass,
+                "-dname", "CN=$ksSigner, OU=$ksOU, O=$ksOrg, C=$($ksCountry.ToUpper())",
+                "-storetype", "PKCS12"
+            )
+            
+            & keytool @keytoolArgs 2>&1 | Out-Null
+            
+            if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $ksPath)) {
+                Write-Host "  [✓] Keystore generated successfully at: $ksPath" -ForegroundColor Green
+            } else {
+                Write-Host "  [!] Failed to generate keystore." -ForegroundColor Red
             }
         }
     }
