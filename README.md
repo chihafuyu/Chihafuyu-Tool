@@ -1,25 +1,27 @@
-# 🚀 Chihafuyu Patcher
+# 🚀 Chihafuyu Tool
 
-A straightforward PowerShell script to automate Android app patching utilizing the **Morphe** and **Piko** ecosystems via **Morphe CLI**. 
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe** and **Piko** ecosystems via the **Morphe CLI**.
 
-Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or `Instagram`, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, and proper memory cleanup.
+Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or `Instagram`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
 >
-> Just a quick heads-up: I built and tested this script exclusively for **non-rooted** Android devices. While the actual patching process on your PC will work flawlessly either way, I can't guarantee how the patched apps will behave if you try to install them via root-specific methods (like system mounting). If you're rocking a rooted phone, you might need to tweak things on your end. You've been warned! ✌️
+> Just a quick heads-up: I built and tested the core patching process for **non-rooted** Android devices. While the actual patching on your PC will work flawlessly either way, installing the patched apps via root-specific methods (like system mounting) requires root privileges on your phone. Luckily, this tool's Utility menu explicitly supports both Root (`--mount`) and Non-Root (`--apk`) workflows!
 
 ---
 
 ## ✨ Features
 
 - **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`) and Piko (`X/Twitter` and `Instagram`) workspaces in a single script.
+- **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard and root-mount modes), or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
-- **🔍 Smart APK Discovery**: Scans your `Input` folder and uses robust regex to find the right files and extract exact versions, ignoring messy build numbers.
+- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers, and validates them against an array of supported versions.
+- **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" patch is forced on an incompatible Twitter APK).
 - **⚙️ Auto Architecture Detection**: Automatically detects if an APK is already architecture-specific (like `arm64-v8a`) and skips redundant library stripping.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
-- **📝 Clean Logging**: Captures Java execution logs in the background and exports them to a clean, UTF-8 text file without cluttering your terminal.
+- **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
 
 > [!WARNING]
 > **🚨 Keystore Password Exposure Notice**
@@ -34,7 +36,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 ## 📋 Prerequisites
 
-Before spinning up the script, make sure you have these ready:
+Before spinning up the tool, make sure you have these ready:
 
 1. **OS**: Windows 10/11, macOS, or Linux. PowerShell 5.1+ is required for Windows (PowerShell 7+ is highly recommended). For macOS and Linux, you must install [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
 2. **Java Development Kit (JDK) 21**: The latest Morphe CLI requires JDK 21 (a standard JRE or older JDK 17 won't cut it). Pick and install **JUST ONE** of these reliable builds:
@@ -42,48 +44,49 @@ Before spinning up the script, make sure you have these ready:
    * **OR** [Eclipse Temurin JDK 21 (LTS)](https://adoptium.net/temurin/releases/?version=21)
    
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
-3. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
+3. **Android SDK (Optional)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured in your system environment variables (e.g., `ANDROID_HOME`). Otherwise, the script will throw a fatal error.
+4. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
    * **Morphe CLI (Required for all)**: [morphe-cli releases](https://github.com/MorpheApp/morphe-cli/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
-4. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended). 
+5. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended). 
 
 > [!NOTE]
 > **📱 File Format Support:**
 >
 > While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 
-5. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+6. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
 ## 🚀 How to Use
 
-1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Patcher/releases/latest) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Patcher/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-patcher.ps1` into an empty working directory. Next, place your downloaded `morphe-cli.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
+1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Patcher/releases/latest) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Patcher/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-cli.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
 2. **Folder Structure**: The script uses a smart multi-workspace architecture. When you run it, it will auto-create the `Morphe` and `Piko` folders for you. Your root directory should look like this:
-
 ```text
 📁 Your-Working-Directory/
- ├── 📄 chihafuyu-patcher.ps1        (The main script)
+ ├── 📄 chihafuyu-tool.ps1           (The main script)
  ├── ☕ morphe-cli-x.x.x-all.jar     (CLI - Place here or inside the ecosystem folder)
  ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
  ├── 📁 Morphe/                      (Morphe Workspace)
  │    ├── 📦 patches-x.x.x.mpp       (Morphe Patches)
  │    ├── 📁 Input/                  (Drop Morphe supported apps here)
- │    └── 📁 Output/                 (Patched APKs and log land here)
+ │    └── 📁 Output/                 (Patched APKs, logs, and JSON results land here)
  └── 📁 Piko/                        (Piko Workspace)
       ├── 📦 patches-x.x.x.mpp       (Piko Patches)
       ├── 📁 Input/                  (Drop Piko supported apps here)
-      └── 📁 Output/                 (Patched APKs and log land here)
+      └── 📁 Output/                 (Patched APKs, logs, and JSON results land here)
 ```
 3. **Load your Apps**: Move the target files (`.apk`, `.apkm`, etc.) into the `Input` folder of the ecosystem you want to patch.
 4. **Run the script**:
-   * Double click `chihafuyu-patcher.ps1`, OR
-   * Right-click `chihafuyu-patcher.ps1` and select "Run with PowerShell", OR
-   * Open a PowerShell terminal in the folder and type: `.\chihafuyu-patcher.ps1`, then press `Enter`.
-5. **Follow the Prompts**: The script will interactively guide you through selecting the ecosystem, environment track, target apps, architecture, and optional custom keystore.
-6. **Grab your patched apps**: Once you hit that `[SUCCESS]` message, just open the `Output` folder (and save the logs if you want). Your fresh patched APK(s) are ready to be installed!
+   * Double click `chihafuyu-tool.ps1`, OR
+   * Right-click `chihafuyu-tool.ps1` and select "Run with PowerShell", OR
+   * Open a PowerShell terminal in the folder and type: `.\chihafuyu-tool.ps1`, then press `Enter`.
+5. **Main Menu**: You will be greeted with the Main Menu. Select `1` for Patching apps or `2` for the ADB Utility features.
+6. **Follow the Prompts**: The script will interactively guide you through selecting the ecosystem, environment track, target apps, architecture, and other configurations.
+7. **Grab your patched apps**: Once you hit that `[SUCCESS]` message, just open the `Output` folder (and save the logs if you want). Your fresh patched APK(s) are ready to be installed!
 
 > **💡 Pro Tip:** By default, the script applies the standard set of patches. Want to customize them? Hit `Y` when asked to modify the JSON files. Open the generated file (e.g., `youtube-options-stable.json`), set the patch values to `true` or `false` as needed, save your changes, and press any key in the terminal to resume patching!
 
@@ -98,20 +101,17 @@ Before spinning up the script, make sure you have these ready:
 
 ## 🛠️ Configuration (Optional)
 
-Whenever new stable patch bundles are released with updated app version targets, just open `chihafuyu-patcher.ps1` in your favorite text editor ([Notepad++](https://notepad-plus-plus.org/downloads/) is highly recommended) and update the versions at the very top of the file:
+Whenever new stable patch bundles are released with updated app version targets, just open `chihafuyu-tool.ps1` in your favorite text editor ([Notepad++](https://notepad-plus-plus.org/downloads/) is highly recommended) and update the versions at the very top of the file:
 
 ```powershell
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
-# Morphe
-$cfg_youtube_stable       = "20.47.62"
-$cfg_youtube_music_stable = "8.47.56"
-$cfg_reddit_stable        = "2026.04.0"
-
-# Piko
-$cfg_x_stable             = "Any"
-$cfg_ig_stable            = "426.0.0.37.68"
+$cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable = @("8.47.56", "7.29.52")
+$cfg_reddit_stable        = @("2026.10.0", "2026.04.0")
+$cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
+$cfg_ig_stable            = @("426.0.0.37.68")
 # ==============================================================================
 ```
 

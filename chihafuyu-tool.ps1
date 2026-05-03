@@ -1,13 +1,14 @@
 <#
 .SYNOPSIS
-    Chihafuyu Patcher
-    A straightforward tool to automate Android app patching using standard CLI patchers.
+    Chihafuyu Tool
+    A comprehensive utility to automate Android app patching and manage ADB installations 
+    using standard CLI patchers.
 
 .DESCRIPTION
-    Simplifies the Android application patching workflow. Automates artifact 
-    discovery, enforces version validation, manages secure credentials, 
-    and optimizes APK size via architecture stripping. Natively supports 
-    standard APKs and app bundles (.apkm, .xapk, .apks).
+    Simplifies the Android application patching workflow and ADB utility operations. 
+    Automates artifact discovery, enforces version validation, manages secure credentials, 
+    optimizes APK size via architecture stripping, and acts as an ADB frontend for 
+    both root and non-root device installations.
 
 .AUTHOR
     chihafuyu
@@ -36,7 +37,6 @@
     SOFTWARE.
 #>
 
-# Enforce minimum PowerShell version
 #Requires -Version 5.1
 
 if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
@@ -47,17 +47,13 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
-# Morphe
-$cfg_youtube_stable       = "20.47.62"
-$cfg_youtube_music_stable = "8.47.56"
-$cfg_reddit_stable        = "2026.04.0"
-
-# Piko
-$cfg_x_stable             = "Any"
-$cfg_ig_stable            = "426.0.0.37.68"
+$cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable = @("8.47.56", "7.29.52")
+$cfg_reddit_stable        = @("2026.10.0", "2026.04.0")
+$cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
+$cfg_ig_stable            = @("426.0.0.37.68")
 # ==============================================================================
 
-# Check for JDK 21+ requirement
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java missing" }
@@ -85,8 +81,6 @@ try {
     $null = Read-Host
     exit 1
 }
-
-# --- Helpers ---
 
 function Get-ApkVersion {
     param([string]$FileName, [string]$AppKeyword)
@@ -151,20 +145,16 @@ function Read-ValidatedInput {
     }
 }
 
-# --- Core Logic ---
-
-function Invoke-PatchingSession {
-    Set-Location -LiteralPath $PSScriptRoot -ErrorAction Stop
-
-    Clear-Host
-    Write-Host "==============================================" -ForegroundColor Cyan
-    Write-Host "              CHIHAFUYU PATCHER               " -ForegroundColor Cyan
-    Write-Host "==============================================" -ForegroundColor Cyan
-
-    Write-Host "`n[STEP 1] Select Target Ecosystem:" -ForegroundColor Yellow
+function Resolve-Ecosystem {
+    Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+    Write-Host "3. Go back to Main Menu"
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1, 2, or 3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input. Please enter 1, 2, or 3."
+
+    if ($ecoChoice -eq "3") {
+        return $null
+    }
 
     $projectName = if ($ecoChoice -eq "1") { "Morphe" } else { "Piko" }
     $workspace = Join-Path $PSScriptRoot $projectName
@@ -174,49 +164,80 @@ function Invoke-PatchingSession {
         Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
     }
     
-    Set-Location -LiteralPath $workspace -ErrorAction Stop
-
     foreach ($dir in @("Input", "Output")) {
         $dirPath = Join-Path $workspace $dir
         if (-not (Test-Path -LiteralPath $dirPath)) { New-Item -ItemType Directory -Path $dirPath -Force | Out-Null }
     }
+    
+    return @{ Name = $projectName; Workspace = $workspace }
+}
 
-    Write-Host "`n[STEP 2] Select Patcher CLI Environment:" -ForegroundColor Yellow
+function Resolve-EnvironmentArtifacts {
+    param([string]$Workspace, [string]$ProjectName, [bool]$RequirePatches)
+
+    Write-Host "`n[SELECT] Patcher CLI Environment:" -ForegroundColor Yellow
     Write-Host "1. Latest Stable CLI`n2. Latest Pre-release CLI"
     $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
 
-    Write-Host "`n[STEP 3] Select Patches Environment:" -ForegroundColor Yellow
-    Write-Host "1. Latest Stable Patches`n2. Latest Pre-release Patches"
-    $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+    $patchesChoice = "1"
+    if ($RequirePatches) {
+        Write-Host "`n[SELECT] Patches Environment:" -ForegroundColor Yellow
+        Write-Host "1. Latest Stable Patches`n2. Latest Pre-release Patches"
+        $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+    }
 
     $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
     $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
     
+    Set-Location -LiteralPath $Workspace -ErrorAction Stop
+    
     $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
-    $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+    $patchesFile = $null
+    
+    if ($RequirePatches) {
+        $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+    }
 
-    if (-not $cliJar -or -not $patchesFile) {
+    if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
-        if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$projectName folder." -ForegroundColor Yellow }
-        if (-not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in .\$projectName folder." -ForegroundColor Yellow }
+        if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
+        if ($RequirePatches -and -not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in .\$ProjectName folder." -ForegroundColor Yellow }
         
         Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
         
-        while (-not $cliJar -or -not $patchesFile) {
+        while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
             Start-Sleep -Seconds 2
             $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
-            $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            if ($RequirePatches) {
+                $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            }
         }
-        
         Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
     }
 
     $patchTrack = if ($patchesChoice -eq "1") { "stable" } else { "dev" }
 
-    if ($cliChoice -eq "2" -or $patchesChoice -eq "2") {
+    if ($cliChoice -eq "2" -or ($RequirePatches -and $patchesChoice -eq "2")) {
         Write-Host "`n[WARNING] Pre-Release Environment Detected" -ForegroundColor Yellow
-        if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $false }
+        if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $null }
     }
+    
+    return @{ Cli = $cliJar; Patches = $patchesFile; Track = $patchTrack }
+}
+
+function Invoke-PatchingWorkflow {
+    Clear-Host
+    Write-Host "==============================================" -ForegroundColor Cyan
+    Write-Host "          CHIHAFUYU TOOL - PATCHING           " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+    
+    $eco = Resolve-Ecosystem
+    if (-not $eco) { return }
+    $projectName = $eco.Name; $workspace = $eco.Workspace
+    
+    $envArt = Resolve-EnvironmentArtifacts -Workspace $workspace -ProjectName $projectName -RequirePatches $true
+    if (-not $envArt) { return }
+    $cliJar = $envArt.Cli; $patchesFile = $envArt.Patches; $patchTrack = $envArt.Track
 
     Write-Host "`n[STEP 4] Select Target Application(s):" -ForegroundColor Yellow
     if ($projectName -eq "Morphe") {
@@ -249,7 +270,8 @@ function Invoke-PatchingSession {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
     if ($selectedApps.name -contains "X_Twitter") {
-        Write-Host "Note for X (Twitter): Supports latest versions. However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Magenta
+        Write-Host "Note for X (Twitter): Supports v11.80.0-alpha.1, 11.81.0-release.0, 11.82.0-beta.1." -ForegroundColor Magenta
+        Write-Host "However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Red
     }
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
@@ -277,7 +299,7 @@ function Invoke-PatchingSession {
 
         $chosenApk = if ($matched.Count -eq 1) { 
             $v = Get-ApkVersion -FileName $matched[0].Name -AppKeyword $app.keys[0]
-            $tag = if ($app.stable -eq "Any") { " [SUPPORTED]" } elseif ($v -eq $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
+            $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
             $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
             Write-Host "  [✓] $($app.name) -> $($matched[0].Name)$tag" -ForegroundColor $color
             $matched[0] 
@@ -285,7 +307,7 @@ function Invoke-PatchingSession {
             Write-Host "`nMultiple files detected for $($app.name):" -ForegroundColor Cyan
             for ($i = 0; $i -lt $matched.Count; $i++) {
                 $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeyword $app.keys[0]
-                $tag = if ($app.stable -eq "Any") { " [SUPPORTED]" } elseif ($v -eq $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
+                $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                 $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                 Write-Host "  $($i + 1). $($matched[$i].Name)$tag" -ForegroundColor $color
             }
@@ -297,7 +319,7 @@ function Invoke-PatchingSession {
         if (-not $isBundle -and -not (Test-IsUniversalApk $chosenApk.FullName)) {
             Write-Host "`n  [!] WARNING: This .apk is missing required core files (Split/Corrupt)!" -ForegroundColor Yellow
             Write-Host "     Please use a fully merged or standalone Universal .apk, or a supported bundle (.apkm/.xapk/.apks)." -ForegroundColor Yellow
-            if (-not (Get-YesNoPrompt "  Force continue anyway?")) { return $false }
+            if (-not (Get-YesNoPrompt "  Force continue anyway?")) { return }
         }
 
         $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
@@ -308,13 +330,13 @@ function Invoke-PatchingSession {
         $app.TargetApk = $chosenApk.FullName
         $app.TargetVersion = $ver
         
-        if ($app.stable -ne "Any" -and $ver -ne $app.stable) { 
+        if ("Any" -notin $app.stable -and $ver -notin $app.stable) { 
             $hasMismatch = $true; $app.RequiresForce = $true 
         }
     }
 
-    if ($missingApps -gt 0) { return $false }
-    if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected. Force patch?")) { return $false }
+    if ($missingApps -gt 0) { return }
+    if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected. Force patch?")) { return }
 
     Write-Host "`n[STEP 6] Select Target Architecture:" -ForegroundColor Yellow
     Write-Host "  [i] Heads up! Make sure you pick the architecture that matches your device." -ForegroundColor DarkGray
@@ -342,6 +364,7 @@ function Invoke-PatchingSession {
             
             if (-not (Test-Path -LiteralPath $ksConfigFile)) {
                 $template = "# Keystore configuration file`n" +
+                            "# KeystorePath: Enter the filename (if placed in the same folder as this script) OR the full path (e.g., C:\Keys\my-release-key.keystore)`n" +
                             "KeystorePath=my-release-key.keystore`n" +
                             "KeystoreAlias=MyAlias`n" +
                             "KeystorePassword=my_password`n" +
@@ -353,7 +376,7 @@ function Invoke-PatchingSession {
                 Write-Host "      Please fill in your details, save the file, and run the script again." -ForegroundColor Yellow
                 Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
                 $null = Read-Host
-                return $true
+                return
             }
             
             Write-Host "  [i] Reading 'custom-keystore.txt'..." -ForegroundColor DarkGray
@@ -373,13 +396,13 @@ function Invoke-PatchingSession {
                     Write-Host "  [!] Keystore file not found at: $ks" -ForegroundColor Red
                     Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
                     $null = Read-Host
-                    return $true
+                    return
                 }
             } else {
                 Write-Host "  [!] KeystorePath is empty or missing in config." -ForegroundColor Red
                 Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
                 $null = Read-Host
-                return $true
+                return
             }
             
             $rawAlias = $ksConfig['KeystoreAlias']
@@ -416,7 +439,7 @@ function Invoke-PatchingSession {
             
         } else {
             while ($true) {
-                $ks = (Read-Host "Keystore filename/path").Trim()
+                $ks = (Read-Host "Keystore filename/path").Trim().Trim('"').Trim("'")
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
                 if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
                 Write-Host "  File not found: $ks" -ForegroundColor Red
@@ -455,7 +478,7 @@ function Invoke-PatchingSession {
         Write-Host "  Failed to create patches reference file." -ForegroundColor Red
     } else {
         $headerText  = "========================================================================`n"
-        $headerText += " Generated via Chihafuyu Patcher`n"
+        $headerText += " Generated via Chihafuyu Tool`n"
         $headerText += " This tool utilizes patches and code from $projectName.`n"
         if ($projectName -eq "Morphe") {
             $headerText += " To learn more, visit https://morphe.software`n"
@@ -491,7 +514,7 @@ function Invoke-PatchingSession {
         
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $jsonFileName)) {
             Write-Host "  [!] Options generation failed for $($app.name). Aborting." -ForegroundColor Red
-            return $false
+            return
         }
         Write-Host "  [✓] Options generated for $($app.name)" -ForegroundColor Green
     }
@@ -501,6 +524,30 @@ function Invoke-PatchingSession {
         Write-Host "  [TIP] Confused on what to edit? Check the '$(Split-Path $patchesListFile -Leaf)' file generated in Step 8 for reference." -ForegroundColor DarkGray
         Write-Host "Awaiting manual modifications. Press any key to resume..." -ForegroundColor Magenta
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    }
+
+    $constraintError = $false
+    foreach ($app in $selectedApps) {
+        if ($app.name -eq "X_Twitter" -and $app.TargetVersion -ne "11.69.0-release.0") {
+            $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
+            if (Test-Path -LiteralPath $jsonFileName) {
+                try {
+                    $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
+                    if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
+                        Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
+                        Write-Host "    You enabled the 'Disunify xchat system' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
+                        Write-Host "    This specific patch ONLY supports v11.69.0-release.0." -ForegroundColor Red
+                        $constraintError = $true
+                    }
+                } catch { }
+            }
+        }
+    }
+    
+    if ($constraintError) {
+        if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to fail/crash)")) {
+            return
+        }
     }
 
     Write-Host "`n[STEP 11] Bytecode Mode Configuration..." -ForegroundColor Yellow
@@ -562,7 +609,6 @@ function Invoke-PatchingSession {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
             
-            # Prepare hidden temp JSON result file path
             $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
             if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -Force -ErrorAction Ignore }
             
@@ -668,12 +714,174 @@ function Invoke-PatchingSession {
 
     if (Get-YesNoPrompt "Open output directory?") { Invoke-Item ".\Output" }
     
-    return (Get-YesNoPrompt "Initiate a new workflow session?")
+    Write-Host "`nPress Enter to return to Main Menu..." -ForegroundColor Magenta
+    $null = Read-Host
 }
 
-# --- Runner ---
+function Invoke-UtilityWorkflow {
+    Clear-Host
+    Write-Host "==============================================" -ForegroundColor Cyan
+    Write-Host "           CHIHAFUYU TOOL - UTILITY           " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+    
+    Write-Host "`nSelect Utility Action:" -ForegroundColor Yellow
+    Write-Host "1. Install app to device (adb)"
+    Write-Host "2. Uninstall app from device (adb)"
+    Write-Host "3. Generate Options only"
+    Write-Host "4. Generate list-patches only"
+    Write-Host "5. Go back to Main Menu"
+    Write-Host "X. Close Tool"
+    
+    $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-5xX]$" -ErrorMessage "Invalid input. Please enter 1-5, or X."
+    
+    if ($utilChoice -match '^[xX]$') { exit 0 }
+    if ($utilChoice -eq '5') { return }
+    
+    if ($utilChoice -in @('1', '2')) {
+        $eco = Resolve-Ecosystem
+        if (-not $eco) { return }
+        $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
+        if (-not $envArt) { return }
+        $cliAbsPath = $envArt.Cli.FullName
+        
+        if ($utilChoice -eq '1') {
+            Write-Host "`n[INSTALL] Select Install Mode:" -ForegroundColor Yellow
+            Write-Host "1. Non-Root (Standard Install via --apk)"
+            Write-Host "2. Root (Mount Install via --mount)"
+            $installMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+            
+            $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path"
+            $apkPath = $apkPath.Trim().Trim('"').Trim("'")
+            
+            if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) {
+                Write-Host "  [!] APK file not found at: $apkPath" -ForegroundColor Red
+            } else {
+                Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
+                
+                $baseArgs = @("utility", "install", "-a", $apkPath)
+                if ($installMode -eq '2') {
+                    $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name."
+                    $baseArgs += "-m"
+                    $baseArgs += $pkg
+                }
+                
+                Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
+                & java -jar $cliAbsPath $baseArgs
+            }
+        } 
+        elseif ($utilChoice -eq '2') {
+            Write-Host "`n[UNINSTALL] Select Uninstall Mode:" -ForegroundColor Yellow
+            Write-Host "1. Non-Root (Standard Uninstall via --package-name)"
+            Write-Host "2. Root (Unmount via --unmount)"
+            $uninstallMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+            
+            $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name format."
+            
+            Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
+            
+            $baseArgs = @("utility", "uninstall", "-p", $pkg)
+            if ($uninstallMode -eq '2') {
+                $baseArgs += "--unmount"
+            }
+            
+            Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
+            & java -jar $cliAbsPath $baseArgs
+        }
+    }
+    elseif ($utilChoice -in @('3', '4')) {
+        $eco = Resolve-Ecosystem
+        if (-not $eco) { return }
+        $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $true
+        if (-not $envArt) { return }
+        
+        $cliAbsPath = $envArt.Cli.FullName
+        $patchAbsPath = $envArt.Patches.FullName
+        
+        if ($utilChoice -eq '3') {
+            Write-Host "`n[GENERATE OPTIONS] Running for all supported apps in $($eco.Name)..." -ForegroundColor Yellow
+            
+            $apps = if ($eco.Name -eq "Morphe") { 
+                @(@{pkg="com.google.android.youtube"; name="youtube"}, 
+                  @{pkg="com.google.android.apps.youtube.music"; name="youtube-music"}, 
+                  @{pkg="com.reddit.frontpage"; name="reddit"}) 
+            } else { 
+                @(@{pkg="com.twitter.android"; name="x-twitter"}, 
+                  @{pkg="com.instagram.android"; name="instagram"}) 
+            }
+            
+            foreach ($app in $apps) {
+                $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
+                
+                $optArgs = @(
+                    "options-create", 
+                    "--patches=$patchAbsPath", 
+                    "--out=$jsonFileName", 
+                    "--filter-package-name=$($app.pkg)"
+                )
+                
+                Write-Host "  Generating for $($app.pkg)..." -ForegroundColor DarkGray
+                & java -jar $cliAbsPath $optArgs
+                
+                if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
+                    Write-Host "  [✓] Saved to $(Split-Path $jsonFileName -Leaf)" -ForegroundColor Green
+                } else {
+                    Write-Host "  [!] Failed to generate for $($app.pkg)" -ForegroundColor Red
+                }
+            }
+        }
+        elseif ($utilChoice -eq '4') {
+            $patchesListFile = Join-Path $eco.Workspace "list-patches-$($envArt.Track).txt"
+            Write-Host "`n[GENERATE LIST] Exporting patches reference to $(Split-Path $patchesListFile -Leaf)..." -ForegroundColor Yellow
+            
+            $listArgs = @("list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+            
+            & java -jar $cliAbsPath $listArgs
+            
+            if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
+                Write-Host "  [✓] Reference file created successfully in .\$($eco.Name)\" -ForegroundColor Green
+            } else {
+                Write-Host "  [!] Failed to create patches reference file." -ForegroundColor Red
+            }
+        }
+    }
+    
+    Write-Host "`nPress Enter to return to Main Menu..." -ForegroundColor Magenta
+    $null = Read-Host
+}
 
-while (Invoke-PatchingSession) { Start-Sleep -Seconds 1 }
+function Invoke-MainMenu {
+    Clear-Host
+    Write-Host "==============================================" -ForegroundColor Cyan
+    Write-Host "                CHIHAFUYU TOOL                " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+    
+    Write-Host "`nWhat do you want to do?" -ForegroundColor Yellow
+    Write-Host "1. Patching apps"
+    Write-Host "2. Using utility"
+    Write-Host "X. Close"
+
+    while ($true) {
+        $choice = (Read-Host "Enter choice (1, 2, or X)").Trim()
+        
+        if ($choice -match '^[xX]$') { 
+            return $false 
+        }
+        elseif ($choice -eq '1') {
+            Invoke-PatchingWorkflow
+            return $true
+        }
+        elseif ($choice -eq '2') {
+            Invoke-UtilityWorkflow
+            return $true
+        }
+        else {
+            Write-Host "  Invalid input. Please enter 1, 2, or X." -ForegroundColor Red
+        }
+    }
+}
+
+while (Invoke-MainMenu) { 
+}
 
 Write-Host "`nSession ended. Have a great day!" -ForegroundColor Cyan
 Start-Sleep -Seconds 2
