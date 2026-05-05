@@ -585,6 +585,22 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
+    $heapSize = "2G"
+    try {
+        $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
+        if ($ramInfo) {
+            $sysRamGB = [math]::Round($ramInfo.TotalPhysicalMemory / 1GB)
+            if ($sysRamGB -ge 8) { 
+                $heapSize = "4G" 
+            } elseif ($sysRamGB -ge 6) { 
+                $heapSize = "3G" 
+            }
+            Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
+        }
+    } catch {
+        Write-Host "  [i] Could not detect RAM. Using safe fallback Java Heap Space: -$heapSize" -ForegroundColor DarkGray
+    }
+    
     $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
     if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
@@ -618,6 +634,7 @@ function Invoke-PatchingWorkflow {
             Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
             
             $baseArgs = @(
+                "-Xmx$heapSize",
                 "-jar", 
                 $cliAbsPath, 
                 "patch", 
@@ -739,6 +756,8 @@ function Invoke-UtilityWorkflow {
     if ($utilChoice -eq '6') { return }
     
     if ($utilChoice -in @('1', '2')) {
+        Write-Host "`n  [i] HEADS UP: This feature relies on ADB. Make sure you have Android 'platform-tools' installed and added to your system PATH!" -ForegroundColor Cyan
+        
         $eco = Resolve-Ecosystem
         if (-not $eco) { return }
         $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
@@ -759,7 +778,7 @@ function Invoke-UtilityWorkflow {
             } else {
                 Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
                 
-                $baseArgs = @("utility", "install", "-a", $apkPath)
+                $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "install", "-a", $apkPath)
                 if ($installMode -eq '2') {
                     $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name."
                     $baseArgs += "-m"
@@ -767,7 +786,7 @@ function Invoke-UtilityWorkflow {
                 }
                 
                 Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
-                & java -jar $cliAbsPath $baseArgs
+                & java $baseArgs
             }
         } 
         elseif ($utilChoice -eq '2') {
@@ -780,13 +799,13 @@ function Invoke-UtilityWorkflow {
             
             Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
             
-            $baseArgs = @("utility", "uninstall", "-p", $pkg)
+            $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "uninstall", "-p", $pkg)
             if ($uninstallMode -eq '2') {
                 $baseArgs += "--unmount"
             }
             
             Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
-            & java -jar $cliAbsPath $baseArgs
+            & java $baseArgs
         }
     }
     elseif ($utilChoice -in @('3', '4')) {
@@ -814,6 +833,9 @@ function Invoke-UtilityWorkflow {
                 $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
                 
                 $optArgs = @(
+                    "-Xmx2G",
+                    "-jar", 
+                    $cliAbsPath,
                     "options-create", 
                     "--patches=$patchAbsPath", 
                     "--out=$jsonFileName", 
@@ -821,7 +843,7 @@ function Invoke-UtilityWorkflow {
                 )
                 
                 Write-Host "  Generating for $($app.pkg)..." -ForegroundColor DarkGray
-                & java -jar $cliAbsPath $optArgs
+                & java $optArgs
                 
                 if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
                     Write-Host "  [✓] Saved to $(Split-Path $jsonFileName -Leaf)" -ForegroundColor Green
@@ -834,9 +856,9 @@ function Invoke-UtilityWorkflow {
             $patchesListFile = Join-Path $eco.Workspace "list-patches-$($envArt.Track).txt"
             Write-Host "`n[GENERATE LIST] Exporting patches reference to $(Split-Path $patchesListFile -Leaf)..." -ForegroundColor Yellow
             
-            $listArgs = @("list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+            $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
             
-            & java -jar $cliAbsPath $listArgs
+            & java $listArgs
             
             if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
                 Write-Host "  [✓] Reference file created successfully in .\$($eco.Name)\" -ForegroundColor Green
@@ -874,7 +896,6 @@ function Invoke-UtilityWorkflow {
         } else {
             Write-Host "  Generating keystore using Java keytool..." -ForegroundColor DarkGray
             
-            # Using keytool from JDK to generate PKCS12 with 4096-bit RSA for maximum security
             $keytoolArgs = @(
                 "-genkeypair",
                 "-v",
@@ -882,7 +903,7 @@ function Invoke-UtilityWorkflow {
                 "-alias", $ksAlias,
                 "-keyalg", "RSA",
                 "-keysize", "4096",
-                "-validity", "36500",
+                "-validity", "10000",
                 "-storepass", $ksPass,
                 "-keypass", $ksPass,
                 "-dname", "CN=$ksSigner, OU=$ksOU, O=$ksOrg, C=$($ksCountry.ToUpper())",
