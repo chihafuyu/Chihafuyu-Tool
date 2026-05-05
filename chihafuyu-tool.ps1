@@ -174,28 +174,47 @@ function Resolve-Ecosystem {
 
 function Resolve-EnvironmentArtifacts {
     param([string]$Workspace, [string]$ProjectName, [bool]$RequirePatches)
+    
+    Set-Location -LiteralPath $Workspace -ErrorAction Stop
+
+    # Pre-scan for CLI artifacts
+    $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
+    $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+
+    $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
+    $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
 
     Write-Host "`n[SELECT] Patcher CLI Environment:" -ForegroundColor Yellow
-    Write-Host "1. Latest Stable CLI`n2. Latest Pre-release CLI"
+    Write-Host -NoNewline "1. Latest Stable CLI "
+    if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
+    Write-Host -NoNewline "2. Latest Pre-release CLI "
+    if ($cliDevDisplay -eq "[Not Found]") { Write-Host $cliDevDisplay -ForegroundColor Red } else { Write-Host $cliDevDisplay -ForegroundColor Green }
+    
     $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
 
     $patchesChoice = "1"
     if ($RequirePatches) {
+        # Pre-scan for Patches artifacts
+        $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
+        $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+
+        $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
+        $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
+
         Write-Host "`n[SELECT] Patches Environment:" -ForegroundColor Yellow
-        Write-Host "1. Latest Stable Patches`n2. Latest Pre-release Patches"
+        Write-Host -NoNewline "1. Latest Stable Patches "
+        if ($patchStableDisplay -eq "[Not Found]") { Write-Host $patchStableDisplay -ForegroundColor Red } else { Write-Host $patchStableDisplay -ForegroundColor Green }
+        Write-Host -NoNewline "2. Latest Pre-release Patches "
+        if ($patchDevDisplay -eq "[Not Found]") { Write-Host $patchDevDisplay -ForegroundColor Red } else { Write-Host $patchDevDisplay -ForegroundColor Green }
+        
         $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
     }
 
-    $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
-    $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
-    
-    Set-Location -LiteralPath $Workspace -ErrorAction Stop
-    
-    $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+    $cliJar = if ($cliChoice -eq "1") { $cliStableSearch } else { $cliDevSearch }
     $patchesFile = $null
     
     if ($RequirePatches) {
-        $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+        $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
     }
 
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
@@ -205,6 +224,9 @@ function Resolve-EnvironmentArtifacts {
         
         Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
         
+        $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
+        $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
+
         while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
             Start-Sleep -Seconds 2
             $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
