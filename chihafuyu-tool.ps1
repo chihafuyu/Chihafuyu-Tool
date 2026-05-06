@@ -52,6 +52,12 @@ $cfg_youtube_music_stable = @("8.47.56", "7.29.52")
 $cfg_reddit_stable        = @("2026.10.0", "2026.04.0")
 $cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
 $cfg_ig_stable            = @("426.0.0.37.68")
+$cfg_adguard_stable       = @("4.12.81")
+$cfg_ibispaint_stable     = @("14.0.1")
+$cfg_wps_stable           = @("18.24")
+$cfg_camscanner_stable    = @("7.15.5.2604080000")
+$cfg_photos_stable        = @("Any")
+$cfg_rar_stable           = @("Any")
 # ==============================================================================
 
 try {
@@ -149,14 +155,22 @@ function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
-    Write-Host "3. Go back to Main Menu"
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1, 2, or 3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input. Please enter 1, 2, or 3."
+    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, CamScanner)"
+    Write-Host "4. De-ReVanced (Google Photos, RAR)"
+    Write-Host "5. Go back to Main Menu"
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input. Please enter 1-5."
 
-    if ($ecoChoice -eq "3") {
+    if ($ecoChoice -eq "5") {
         return $null
     }
 
-    $projectName = if ($ecoChoice -eq "1") { "Morphe" } else { "Piko" }
+    $projectName = switch ($ecoChoice) {
+        "1" { "Morphe" }
+        "2" { "Piko" }
+        "3" { "hoo-dles" }
+        "4" { "De-ReVanced" }
+    }
+    
     $workspace = Join-Path $PSScriptRoot $projectName
 
     if (-not (Test-Path -LiteralPath $workspace)) {
@@ -177,7 +191,6 @@ function Resolve-EnvironmentArtifacts {
     
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
-    # Pre-scan for CLI artifacts
     $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
     $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -194,7 +207,6 @@ function Resolve-EnvironmentArtifacts {
 
     $patchesChoice = "1"
     if ($RequirePatches) {
-        # Pre-scan for Patches artifacts
         $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
         $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -271,7 +283,7 @@ function Invoke-PatchingWorkflow {
             @{ id = "2"; name = "YouTube_Music"; package = "com.google.android.apps.youtube.music"; keys = @("music", "ytmusic"); exclude = @(); strip = $true; stable = $cfg_youtube_music_stable },
             @{ id = "3"; name = "Reddit"; package = "com.reddit.frontpage"; keys = @("reddit"); exclude = @(); strip = $true; stable = $cfg_reddit_stable }
         )
-    } else {
+    } elseif ($projectName -eq "Piko") {
         Write-Host "1. X (Twitter)`n2. Instagram`n3. All Applications"
         $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
         
@@ -279,10 +291,28 @@ function Invoke-PatchingWorkflow {
             @{ id = "1"; name = "X_Twitter"; package = "com.twitter.android"; keys = @("twitter", "x"); exclude = @(); strip = $true; stable = $cfg_x_stable },
             @{ id = "2"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable }
         )
+    } elseif ($projectName -eq "hoo-dles") {
+        Write-Host "1. AdGuard`n2. IbisPaint X`n3. WPS Office`n4. CamScanner`n5. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 5]" -RegexPattern "^[1-5](,[1-5])*$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas."
+        
+        $masterApps = @(
+            @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
+            @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
+            @{ id = "3"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
+            @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable }
+        )
+    } elseif ($projectName -eq "De-ReVanced") {
+        Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
+        
+        $masterApps = @(
+            @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable },
+            @{ id = "2"; name = "RAR"; package = "com.rarlab.rar"; keys = @("rar"); exclude = @(); strip = $true; stable = $cfg_rar_stable }
+        )
     }
 
     $choices = $appSelection.Split(',')
-    $selectAllId = if ($projectName -eq "Morphe") { "4" } else { "3" }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"5"} "De-ReVanced" {"3"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -294,6 +324,9 @@ function Invoke-PatchingWorkflow {
     if ($selectedApps.name -contains "X_Twitter") {
         Write-Host "Note for X (Twitter): Supports v11.80.0-alpha.1, 11.81.0-release.0, 11.82.0-beta.1." -ForegroundColor Magenta
         Write-Host "However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Red
+    }
+    if ($selectedApps.name -contains "IbisPaint_X") {
+        Write-Host "Note for IbisPaint X: Make sure to select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
     }
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
@@ -506,6 +539,10 @@ function Invoke-PatchingWorkflow {
             $headerText += " To learn more, visit https://morphe.software`n"
         } elseif ($projectName -eq "Piko") {
             $headerText += " To learn more, visit https://github.com/crimera/piko`n"
+        } elseif ($projectName -eq "hoo-dles") {
+            $headerText += " To learn more, visit https://github.com/hoo-dles/morphe-patches`n"
+        } elseif ($projectName -eq "De-ReVanced") {
+            $headerText += " To learn more, visit https://github.com/RookieEnough/De-ReVanced`n"
         }
         $headerText += "========================================================================`n`n"
         
@@ -846,9 +883,17 @@ function Invoke-UtilityWorkflow {
                 @(@{pkg="com.google.android.youtube"; name="youtube"}, 
                   @{pkg="com.google.android.apps.youtube.music"; name="youtube-music"}, 
                   @{pkg="com.reddit.frontpage"; name="reddit"}) 
-            } else { 
+            } elseif ($eco.Name -eq "Piko") { 
                 @(@{pkg="com.twitter.android"; name="x-twitter"}, 
                   @{pkg="com.instagram.android"; name="instagram"}) 
+            } elseif ($eco.Name -eq "hoo-dles") {
+                @(@{pkg="com.adguard.android"; name="adguard"},
+                  @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
+                  @{pkg="cn.wps.moffice_eng"; name="wps-office"},
+                  @{pkg="com.intsig.camscanner"; name="camscanner"})
+            } elseif ($eco.Name -eq "De-ReVanced") {
+                @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
+                  @{pkg="com.rarlab.rar"; name="rar"})
             }
             
             foreach ($app in $apps) {
