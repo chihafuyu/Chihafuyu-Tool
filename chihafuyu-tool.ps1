@@ -322,14 +322,14 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
     Write-Host "Note: Universal .apk is highly recommended, but bundle formats are natively supported." -ForegroundColor Green
 
-    if ($selectedApps.name -contains "Reddit") {
+    if ($selectedApps | Where-Object { $_.name -eq "Reddit" }) {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
-    if ($selectedApps.name -contains "X_Twitter") {
+    if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
         Write-Host "Note for X (Twitter): Supports v11.80.0-alpha.1, 11.81.0-release.0, 11.82.0-beta.1." -ForegroundColor Magenta
         Write-Host "However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Red
     }
-    if ($selectedApps.name -contains "IbisPaint_X") {
+    if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
         Write-Host "Note for IbisPaint X: Make sure to select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
     }
 
