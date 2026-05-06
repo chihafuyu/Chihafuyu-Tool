@@ -95,17 +95,21 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
+    $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release\.\d+)?|\d+-\d+(?:-\d+)*(?:-release\.\d+)?)"
+    
     $patterns = @(
-        @{ P = "$AppKeyword(?:[\._-]android)?[-_](\d+\.\d+\.\d+(?:\.\d{1,6})*(-release\.\d+)?)\b"; W = 10 }
-        @{ P = "(\d+\.\d+\.\d+(?:\.\d{1,6})*(-release\.\d+)?)[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a)"; W = 9 }
-        @{ P = "v(\d+\.\d+\.\d+(?:\.\d{1,6})*(-release\.\d+)?)\b"; W = 7 }
-        @{ P = "(\d+\.\d+\.\d+(?:\.\d{1,6})*(-release\.\d+)?)\b"; W = 5 }
+        @{ P = "$AppKeyword.*?[-_]$vPat\b"; W = 10 }
+        @{ P = "$vPat[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a|armeabi)"; W = 9 }
+        @{ P = "v$vPat\b"; W = 7 }
+        @{ P = "(?<!\d)$vPat\b"; W = 5 }
     )
     
     $matches = @()
     foreach ($regex in $patterns) {
         if ($baseName -match $regex.P) {
-            $matches += @{ Ver = $Matches[1]; Weight = $regex.W }
+            $ext = $Matches[1]
+            $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
+            $matches += @{ Ver = $ext; Weight = $regex.W }
         }
     }
     
@@ -297,7 +301,7 @@ function Invoke-PatchingWorkflow {
         
         $masterApps = @(
             @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
-            @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
+            @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint", "ibis", "ibis-paint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
             @{ id = "3"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
             @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable }
         )
@@ -379,7 +383,7 @@ function Invoke-PatchingWorkflow {
 
         $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
         if (-not $ver) {
-            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+\.\d+(?:\.\d+)*(-release\.\d+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
+            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+(?:\.\d+)*(-release\.\d+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
         }
 
         $app.TargetApk = $chosenApk.FullName
