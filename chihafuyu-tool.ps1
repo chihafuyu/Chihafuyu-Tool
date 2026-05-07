@@ -95,6 +95,7 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
+    # Regex magic: Handles standard x.y.z versions AND weird formats like x-y-z, then normalizes them
     $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release\.\d+)?|\d+-\d+(?:-\d+)*(?:-release\.\d+)?)"
     
     $patterns = @(
@@ -125,6 +126,7 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
+        # Quick validation to ensure the APK is actually a valid Android package, not just a random renamed zip
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -177,6 +179,7 @@ function Resolve-Ecosystem {
     
     $workspace = Join-Path $PSScriptRoot $projectName
 
+    # Auto-generate folder structure if it doesn't exist yet
     if (-not (Test-Path -LiteralPath $workspace)) {
         New-Item -ItemType Directory -Path $workspace -Force | Out-Null
         Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
@@ -195,6 +198,7 @@ function Resolve-EnvironmentArtifacts {
     
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
+    # Pre-scan root and workspace directories for CLI engine files
     $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
     $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -211,6 +215,7 @@ function Resolve-EnvironmentArtifacts {
 
     $patchesChoice = "1"
     if ($RequirePatches) {
+        # Pre-scan workspace for target patch bundles
         $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
         $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -233,6 +238,7 @@ function Resolve-EnvironmentArtifacts {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
     }
 
+    # Halts execution and continuously monitors directory if required artifacts are missing
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
@@ -315,6 +321,7 @@ function Invoke-PatchingWorkflow {
         )
     }
 
+    # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
     $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"5"} "De-ReVanced" {"3"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
@@ -322,6 +329,7 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
     Write-Host "Note: Universal .apk is highly recommended, but bundle formats are natively supported." -ForegroundColor Green
 
+    # Safely scan the array of objects to trigger custom app-specific warnings
     if ($selectedApps | Where-Object { $_.name -eq "Reddit" }) {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
@@ -595,6 +603,7 @@ function Invoke-PatchingWorkflow {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             if (Test-Path -LiteralPath $jsonFileName) {
                 try {
+                    # Sneaky check into the user's generated options to prevent a known Twitter crash scenario
                     $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
                     if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
                         Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
@@ -648,6 +657,7 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
+    # Smart JVM heap size allocation based on system physical RAM to prevent OOM errors
     $heapSize = "2G"
     try {
         $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
