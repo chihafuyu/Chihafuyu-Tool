@@ -60,6 +60,7 @@ $cfg_photos_stable        = @("Any")
 $cfg_rar_stable           = @("Any")
 # ==============================================================================
 
+# Make sure we're on JDK 21 or higher (Morphe CLI drops support for older Java versions)
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java missing" }
@@ -95,7 +96,7 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex magic: Handles standard x.y.z versions AND weird formats like x-y-z, then normalizes them
+    # Regex magic: Catches standard x.y.z and weird x-y-z formats, then normalizes everything to dots
     $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release\.\d+)?|\d+-\d+(?:-\d+)*(?:-release\.\d+)?)"
     
     $patterns = @(
@@ -115,6 +116,8 @@ function Get-ApkVersion {
     }
     
     if ($matches.Count -eq 0) { return $null }
+    
+    # Fallback weight system to pick the most accurate version string if multiple matches pop up
     $best = $matches | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -126,7 +129,7 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
-        # Quick validation to ensure the APK is actually a valid Android package, not just a random renamed zip
+        # Quick sanity check: ensures the file is a legit Android package, not just a renamed zip
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -179,7 +182,7 @@ function Resolve-Ecosystem {
     
     $workspace = Join-Path $PSScriptRoot $projectName
 
-    # Auto-generate folder structure if it doesn't exist yet
+    # Scaffold the directory structure if it's the user's first time running this ecosystem
     if (-not (Test-Path -LiteralPath $workspace)) {
         New-Item -ItemType Directory -Path $workspace -Force | Out-Null
         Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
@@ -198,7 +201,7 @@ function Resolve-EnvironmentArtifacts {
     
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
-    # Pre-scan root and workspace directories for CLI engine files
+    # Sweep root and workspace dirs for CLI engine jars
     $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
     $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -215,7 +218,7 @@ function Resolve-EnvironmentArtifacts {
 
     $patchesChoice = "1"
     if ($RequirePatches) {
-        # Pre-scan workspace for target patch bundles
+        # Sweep workspace for .mpp patch bundles
         $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
         $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
 
@@ -238,7 +241,7 @@ function Resolve-EnvironmentArtifacts {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
     }
 
-    # Halts execution and continuously monitors directory if required artifacts are missing
+    # Pause execution and monitor directory if the user forgot to drop the required files
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
@@ -284,6 +287,8 @@ function Invoke-PatchingWorkflow {
     $cliJar = $envArt.Cli; $patchesFile = $envArt.Patches; $patchTrack = $envArt.Track
 
     Write-Host "`n[STEP 4] Select Target Application(s):" -ForegroundColor Yellow
+    
+    # Map ecosystem choices to their respective targets
     if ($projectName -eq "Morphe") {
         Write-Host "1. YouTube`n2. YouTube Music`n3. Reddit`n4. All Applications"
         $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 4]" -RegexPattern "^[1-4](,[1-4])*$" -ErrorMessage "Invalid input. Enter numbers 1-4 separated by commas."
@@ -526,6 +531,9 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
     $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
     
+    # Nuke existing files first! Morphe CLI throws a silent exit code 1 if it tries to overwrite
+    if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
+    
     $cliAbsPath = $cliJar.FullName
     $patchAbsPath = $patchesFile.FullName
     
@@ -570,7 +578,9 @@ function Invoke-PatchingWorkflow {
         if (-not $app.TargetApk) { continue }
         
         $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
-        if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force }
+        
+        # Nuke existing files first! Morphe CLI throws a silent exit code 1 if it tries to overwrite
+        if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
         
         $optArgs = @(
             "-jar", 
@@ -603,7 +613,7 @@ function Invoke-PatchingWorkflow {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             if (Test-Path -LiteralPath $jsonFileName) {
                 try {
-                    # Sneaky check into the user's generated options to prevent a known Twitter crash scenario
+                    # Sneaky check: Prevent a known Twitter bootloop if the user forces the xchat patch on the wrong app version
                     $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
                     if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
                         Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
@@ -657,7 +667,7 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
-    # Smart JVM heap size allocation based on system physical RAM to prevent OOM errors
+    # Smart JVM Heap Allocation: Grabs total physical RAM and sets a safe -Xmx limit to dodge OOM crashes
     $heapSize = "2G"
     try {
         $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
@@ -740,6 +750,7 @@ function Invoke-PatchingWorkflow {
 
             Write-Host "  Executing Patcher CLI..." -ForegroundColor DarkGray
             
+            # Stream the Java output to both the console and our temp log file in real-time
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
             if (Test-Path -LiteralPath $customTempDir) {
@@ -758,9 +769,11 @@ function Invoke-PatchingWorkflow {
             }
         }
     } finally {
+        # Securely free the unmanaged memory pointers to aggressively prevent password leaks
         if ($bstr1 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr1) }
         if ($bstr2 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr2) }
         
+        # Trigger explicit Garbage Collection to flush out the standard string representations
         if ($plainPass) { 
             $plainPass = $null; Clear-Variable plainPass -ErrorAction Ignore
             [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() 
@@ -851,6 +864,7 @@ function Invoke-UtilityWorkflow {
             } else {
                 Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
                 
+                # Enforce safe RAM limits here too just to be consistent
                 $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "install", "-a", $apkPath)
                 if ($installMode -eq '2') {
                     $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name."
@@ -913,6 +927,9 @@ function Invoke-UtilityWorkflow {
             foreach ($app in $apps) {
                 $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
                 
+                # Nuke existing files first! Morphe CLI throws a silent exit code 1 if it tries to overwrite
+                if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
+                
                 $optArgs = @(
                     "-Xmx2G",
                     "-jar", 
@@ -936,6 +953,9 @@ function Invoke-UtilityWorkflow {
         elseif ($utilChoice -eq '4') {
             $patchesListFile = Join-Path $eco.Workspace "list-patches-$($envArt.Track).txt"
             Write-Host "`n[GENERATE LIST] Exporting patches reference to $(Split-Path $patchesListFile -Leaf)..." -ForegroundColor Yellow
+            
+            # Nuke existing files first! Morphe CLI throws a silent exit code 1 if it tries to overwrite
+            if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
             
             $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
             
@@ -1041,4 +1061,6 @@ while (Invoke-MainMenu) {
 
 Write-Host "`nSession ended. Have a great day!" -ForegroundColor Cyan
 Start-Sleep -Seconds 2
-exit
+
+# Forces a clean exit code so the terminal doesn't flash previous Java errors
+exit 0
