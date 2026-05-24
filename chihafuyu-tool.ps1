@@ -49,9 +49,9 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # ==============================================================================
 $cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.47.56", "7.29.52")
-$cfg_reddit_stable        = @("2026.10.0", "2026.04.0")
+$cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
 $cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
-$cfg_ig_stable            = @("426.0.0.37.68")
+$cfg_ig_stable            = @("430.0.0.53.80")
 $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
 $cfg_wps_stable           = @("18.24")
@@ -342,6 +342,9 @@ function Invoke-PatchingWorkflow {
         Write-Host "Note for X (Twitter): Supports v11.80.0-alpha.1, 11.81.0-release.0, 11.82.0-beta.1." -ForegroundColor Magenta
         Write-Host "However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Red
     }
+    if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
+        Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build codes 383611190 and 383611231. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
+    }
     if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
         Write-Host "Note for IbisPaint X: Make sure to select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
     }
@@ -395,6 +398,8 @@ function Invoke-PatchingWorkflow {
         }
 
         $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
+        
+        # Fallback to manual entry if our regex fails to catch the version
         if (-not $ver) {
             $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+(?:\.\d+)*(-release\.\d+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
         }

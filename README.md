@@ -1,8 +1,8 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe** and **Piko** ecosystems via the **Morphe CLI**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, and **De-ReVanced** ecosystems via the **Morphe CLI**.
 
-Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or `Instagram`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, JSON result generation, and proper memory cleanup.
+Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
@@ -13,13 +13,13 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `X (Twitter)`, or 
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`) and Piko (`X/Twitter` and `Instagram`) workspaces in a single script.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`), and De-ReVanced (`Google Photos`, `RAR`) workspaces in a single script.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard and root-mount modes), or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
-- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers, and validates them against an array of supported versions.
+- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`), and validates them against an array of supported versions.
 - **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" patch is forced on an incompatible Twitter APK).
-- **⚙️ Auto Architecture Detection**: Automatically detects if an APK is already architecture-specific (like `arm64-v8a`) and skips redundant library stripping.
+- **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
 - **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
 
@@ -44,26 +44,29 @@ Before spinning up the tool, make sure you have these ready:
    * **OR** [Eclipse Temurin JDK 21 (LTS)](https://adoptium.net/temurin/releases/?version=21)
    
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
-3. **Android SDK (Optional)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured in your system environment variables (e.g., `ANDROID_HOME`). Otherwise, the script will throw a fatal error.
-4. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
+3. **Android SDK Platform-Tools (For Utility Menu)**: If you want to use the script's install/uninstall features, you must have `adb` installed. Download [SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) and add it to your system PATH.
+4. **Android SDK (For Verification)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured. Otherwise, the script will throw a fatal error.
+5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
    * **Morphe CLI (Required for all)**: [morphe-cli releases](https://github.com/MorpheApp/morphe-cli/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
-5. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended). 
+   * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
+   * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended). 
 
 > [!NOTE]
 > **📱 File Format Support:**
 >
 > While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 
-6. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
 ## 🚀 How to Use
 
 1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Patcher/releases/latest) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Patcher/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-cli.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
-2. **Folder Structure**: The script uses a smart multi-workspace architecture. When you run it, it will auto-create the `Morphe` and `Piko` folders for you. Your root directory should look like this:
+2. **Folder Structure**: The script uses a smart multi-workspace architecture. When you run it, it will auto-create the necessary folders for you. Your root directory should look like this:
 ```text
 📁 Your-Working-Directory/
  ├── 📄 chihafuyu-tool.ps1           (The main script)
@@ -71,13 +74,21 @@ Before spinning up the tool, make sure you have these ready:
  ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
  ├── 📁 Morphe/                      (Morphe Workspace)
- │    ├── 📦 patches-x.x.x.mpp       (Morphe Patches)
- │    ├── 📁 Input/                  (Drop Morphe supported apps here)
- │    └── 📁 Output/                 (Patched APKs, logs, and JSON results land here)
- └── 📁 Piko/                        (Piko Workspace)
-      ├── 📦 patches-x.x.x.mpp       (Piko Patches)
-      ├── 📁 Input/                  (Drop Piko supported apps here)
-      └── 📁 Output/                 (Patched APKs, logs, and JSON results land here)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/                 
+ ├── 📁 Piko/                        (Piko Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 hoo-dles/                    (hoo-dles Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ └── 📁 De-ReVanced/                 (De-ReVanced Workspace)
+      ├── 📦 patches-x.x.x.mpp       
+      ├── 📁 Input/                  
+      └── 📁 Output/
 ```
 3. **Load your Apps**: Move the target files (`.apk`, `.apkm`, etc.) into the `Input` folder of the ecosystem you want to patch.
 4. **Run the script**:
@@ -109,9 +120,15 @@ Whenever new stable patch bundles are released with updated app version targets,
 # ==============================================================================
 $cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.47.56", "7.29.52")
-$cfg_reddit_stable        = @("2026.10.0", "2026.04.0")
+$cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
 $cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
-$cfg_ig_stable            = @("426.0.0.37.68")
+$cfg_ig_stable            = @("430.0.0.53.80")
+$cfg_adguard_stable       = @("4.12.81")
+$cfg_ibispaint_stable     = @("14.0.1")
+$cfg_wps_stable           = @("18.24")
+$cfg_camscanner_stable    = @("7.15.5.2604080000")
+$cfg_photos_stable        = @("Any")
+$cfg_rar_stable           = @("Any")
 # ==============================================================================
 ```
 
@@ -135,4 +152,4 @@ Distributed under the MIT License.
 
 Copyright (c) 2026 chihafuyu
 
-**Third-Party Code Attribution:** This tool utilizes patches and code from Morphe and Piko. To learn more, visit [Morphe](https://morphe.software) or [Piko](https://github.com/crimera/piko).
+**Third-Party Code Attribution:** This tool utilizes patches and code from Morphe, Piko, hoo-dles, and De-ReVanced. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced).
