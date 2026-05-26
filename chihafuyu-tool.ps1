@@ -47,10 +47,19 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
-$cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.47.56", "7.29.52")
 $cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
-$cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
+
+# Broken down into multiple lines for clean readability
+$cfg_x_stable             = @(
+    "11.93.0-release-ripped.0", 
+    "11.80.0-alpha.1", 
+    "11.82.0-beta.1", 
+    "11.81.0-release.0", 
+    "11.69.0-release.0"
+)
+
 $cfg_ig_stable            = @("430.0.0.53.80")
 $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
@@ -96,8 +105,8 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex magic: Catches standard x.y.z and weird x-y-z formats, then normalizes everything to dots
-    $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release\.\d+)?|\d+-\d+(?:-\d+)*(?:-release\.\d+)?)"
+    # Regex magic: Catches standard x.y.z, weird x-y-z formats, and custom suffixes like -release-ripped.0
+    $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release(?:-ripped)?\.\d+)?|\d+-\d+(?:-\d+)*(?:-release(?:-ripped)?\.\d+)?)"
     
     $patterns = @(
         @{ P = "$AppKeyword.*?[-_]$vPat\b"; W = 10 }
@@ -339,8 +348,9 @@ function Invoke-PatchingWorkflow {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
     if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
-        Write-Host "Note for X (Twitter): Supports v11.80.0-alpha.1, 11.81.0-release.0, 11.82.0-beta.1." -ForegroundColor Magenta
-        Write-Host "However, if you manually enable the 'Disunify xchat system' patch, you MUST use v11.69.0-release.0!" -ForegroundColor Red
+        Write-Host "Note for X (Twitter): Versions 11.82.0+ have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
+        Write-Host "You MUST use the custom '11.93.0-release-ripped.0' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
+        Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
     }
     if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
         Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build codes 383611190 and 383611231. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
@@ -401,7 +411,7 @@ function Invoke-PatchingWorkflow {
         
         # Fallback to manual entry if our regex fails to catch the version
         if (-not $ver) {
-            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+(?:\.\d+)*(-release\.\d+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
+            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+(?:\.\d+)*(-[a-zA-Z0-9\-\.]+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
         }
 
         $app.TargetApk = $chosenApk.FullName

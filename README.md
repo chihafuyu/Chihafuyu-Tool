@@ -52,7 +52,7 @@ Before spinning up the tool, make sure you have these ready:
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
    * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
    * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
-6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended). 
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
 
 > [!NOTE]
 > **📱 File Format Support:**
@@ -118,10 +118,19 @@ Whenever new stable patch bundles are released with updated app version targets,
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
-$cfg_youtube_stable       = @("20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.47.56", "7.29.52")
 $cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
-$cfg_x_stable             = @("11.80.0-alpha.1", "11.82.0-beta.1", "11.81.0-release.0", "11.69.0-release.0")
+
+# Broken down into multiple lines for clean readability
+$cfg_x_stable             = @(
+    "11.93.0-release-ripped.0", 
+    "11.80.0-alpha.1", 
+    "11.82.0-beta.1", 
+    "11.81.0-release.0", 
+    "11.69.0-release.0"
+)
+
 $cfg_ig_stable            = @("430.0.0.53.80")
 $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
