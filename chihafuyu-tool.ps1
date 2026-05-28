@@ -346,6 +346,7 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
     Write-Host "Note: Universal .apk is highly recommended, but bundle formats are natively supported." -ForegroundColor Green
 
+    # Safely scan the array of objects to trigger custom app-specific warnings
     if ($selectedApps | Where-Object { $_.name -eq "Reddit" }) {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
@@ -760,9 +761,11 @@ function Invoke-PatchingWorkflow {
                 if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             }
             
-            $isArchSpecific = (Split-Path $app.TargetApk -Leaf) -match "(?i)(arm64|armeabi|v7a|v8a|x86|x86_64|mips|mips64|riscv64)"
-            if ($app.name -eq "Reddit") { $isArchSpecific = $false }
-            if ($app.strip -and ($targetArch -ne "universal") -and -not $isArchSpecific) { $baseArgs += "--striplibs=$targetArch" }
+            # Always enforce library stripping if a specific architecture is chosen and the app allows it
+            if ($app.strip -and ($targetArch -ne "universal")) { 
+                $baseArgs += "--striplibs=$targetArch" 
+            }
+
             if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
             Write-Host "  Executing Patcher CLI..." -ForegroundColor DarkGray
@@ -881,6 +884,7 @@ function Invoke-UtilityWorkflow {
             } else {
                 Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
                 
+                # Enforce safe RAM limits here too just to be consistent
                 $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "install", "-a", $apkPath)
                 if ($installMode -eq '2') {
                     $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name."
