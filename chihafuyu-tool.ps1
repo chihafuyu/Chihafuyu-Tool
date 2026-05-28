@@ -65,6 +65,7 @@ $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.15.5.2604080000")
+$cfg_sleep_stable         = @("20260526")
 $cfg_photos_stable        = @("Any")
 $cfg_rar_stable           = @("Any")
 # ==============================================================================
@@ -105,8 +106,8 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex magic: Catches standard x.y.z, weird x-y-z formats, and custom suffixes like -release-ripped.0
-    $vPat = "(\d+\.\d+(?:\.\d+)*(?:-release(?:-ripped)?\.\d+)?|\d+-\d+(?:-\d+)*(?:-release(?:-ripped)?\.\d+)?)"
+    # Regex logic: Catches standard x.y.z, weird x-y-z formats, custom suffixes like -release.0, AND 7+ digit date-code builds (e.g., YYYYMMDD)
+    $vPat = "(\d+\.\d+(?:\.\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\d+-\d+(?:-\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\b\d{7,}\b)"
     
     $patterns = @(
         @{ P = "$AppKeyword.*?[-_]$vPat\b"; W = 10 }
@@ -126,7 +127,7 @@ function Get-ApkVersion {
     
     if ($matches.Count -eq 0) { return $null }
     
-    # Fallback weight system to pick the most accurate version string if multiple matches pop up
+    # Fallback weight system to pick the most accurate version string if multiple regex hits occur
     $best = $matches | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -173,7 +174,7 @@ function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
-    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, CamScanner)"
+    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, CamScanner, Sleep as Android)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. Go back to Main Menu"
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input. Please enter 1-5."
@@ -316,14 +317,15 @@ function Invoke-PatchingWorkflow {
             @{ id = "2"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable }
         )
     } elseif ($projectName -eq "hoo-dles") {
-        Write-Host "1. AdGuard`n2. IbisPaint X`n3. WPS Office`n4. CamScanner`n5. All Applications"
-        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 5]" -RegexPattern "^[1-5](,[1-5])*$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas."
+        Write-Host "1. AdGuard`n2. IbisPaint X`n3. WPS Office`n4. CamScanner`n5. Sleep as Android`n6. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 6]" -RegexPattern "^[1-6](,[1-6])*$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas."
         
         $masterApps = @(
             @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
             @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint", "ibis", "ibis-paint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
             @{ id = "3"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
-            @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable }
+            @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable },
+            @{ id = "5"; name = "Sleep_as_Android"; package = "com.urbandroid.sleep"; keys = @("sleep", "urbandroid"); exclude = @(); strip = $true; stable = $cfg_sleep_stable }
         )
     } elseif ($projectName -eq "De-ReVanced") {
         Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
@@ -337,7 +339,7 @@ function Invoke-PatchingWorkflow {
 
     # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
-    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"5"} "De-ReVanced" {"3"} }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"6"} "De-ReVanced" {"3"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -411,7 +413,7 @@ function Invoke-PatchingWorkflow {
         
         # Fallback to manual entry if our regex fails to catch the version
         if (-not $ver) {
-            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^\d+\.\d+(?:\.\d+)*(-[a-zA-Z0-9\-\.]+)?$" -ErrorMessage "Use format x.x.x or x.x.x-release.x"
+            $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^(\d+(?:[\.-]\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\d{7,})$" -ErrorMessage "Use format x.x.x, x-x-x, or a build number (e.g., 20260526)"
         }
 
         $app.TargetApk = $chosenApk.FullName
@@ -933,7 +935,8 @@ function Invoke-UtilityWorkflow {
                 @(@{pkg="com.adguard.android"; name="adguard"},
                   @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
                   @{pkg="cn.wps.moffice_eng"; name="wps-office"},
-                  @{pkg="com.intsig.camscanner"; name="camscanner"})
+                  @{pkg="com.intsig.camscanner"; name="camscanner"},
+                  @{pkg="com.urbandroid.sleep"; name="sleep-as-android"})
             } elseif ($eco.Name -eq "De-ReVanced") {
                 @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
                   @{pkg="com.rarlab.rar"; name="rar"})
