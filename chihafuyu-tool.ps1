@@ -122,7 +122,9 @@ function Get-ApkVersion {
         if ($baseName -match $regex.P) {
             $ext = $Matches[1]
             $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
-            $matches += @{ Ver = $ext; Weight = $regex.W }
+            
+            # Using PSCustomObject fixes PowerShell's Hashtable sorting bug
+            $matches += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
         }
     }
     
@@ -761,7 +763,7 @@ function Invoke-PatchingWorkflow {
                 if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             }
             
-            # Always enforce library stripping if a specific architecture is chosen and the app allows it
+            # Enforce stripping of unnecessary native libraries if a specific architecture is selected
             if ($app.strip -and ($targetArch -ne "universal")) { 
                 $baseArgs += "--striplibs=$targetArch" 
             }
