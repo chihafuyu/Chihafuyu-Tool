@@ -117,21 +117,22 @@ function Get-ApkVersion {
         @{ P = "(?<!\d)$vPat\b"; W = 5 }
     )
     
-    $matches = @()
+    $foundVersions = @()
     foreach ($regex in $patterns) {
         if ($baseName -match $regex.P) {
+            # Note: $Matches is the automatic PS variable populated by the -match operator
             $ext = $Matches[1]
             $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
             
             # Using PSCustomObject fixes PowerShell's Hashtable sorting bug
-            $matches += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
+            $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
         }
     }
     
-    if ($matches.Count -eq 0) { return $null }
+    if ($foundVersions.Count -eq 0) { return $null }
     
     # Fallback weight system to pick the most accurate version string if multiple matches occur
-    $best = $matches | Sort-Object Weight -Descending | Select-Object -First 1
+    $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
 
