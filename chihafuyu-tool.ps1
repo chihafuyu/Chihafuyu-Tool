@@ -106,9 +106,9 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex logic: Prioritize 7+ digit date codes (e.g., 20260526). 
-    # For standard dot/dash formats, restrict suffixes to prevent swallowing architectures (like -arm64).
-    $vPat = "(\b\d{7,}\b|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped)[\w\-\.]+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped)[\w\-\.]+)?)"
+    # Regex logic: Prioritize 7+ digit date codes (e.g., 20260526).
+    # Re-clamped suffix parsing (?:\.\d+)+ to strictly prevent greedy gobbling of APKMirror build/DPI/arch tags.
+    $vPat = "(\b\d{7,}\b|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
     $patterns = @(
         @{ P = "$AppKeyword.*?[-_]$vPat\b"; W = 10 }
