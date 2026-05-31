@@ -53,7 +53,7 @@ $cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
 
 # Broken down into multiple lines for readability
 $cfg_x_stable             = @(
-    "11.93.0-release-ripped.0", 
+    "11.95.1-release-ripped.0", 
     "11.80.0-alpha.1", 
     "11.82.0-beta.1", 
     "11.81.0-release.0", 
@@ -363,7 +363,7 @@ function Invoke-PatchingWorkflow {
     }
     if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
         Write-Host "Note for X (Twitter): Versions 11.82.0+ have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
-        Write-Host "You MUST use the custom '11.93.0-release-ripped.0' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
+        Write-Host "You MUST use the custom '11.95.1-release-ripped.0' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
         Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
     }
     if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {

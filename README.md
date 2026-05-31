@@ -124,7 +124,7 @@ $cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
 
 # Broken down into multiple lines for clean readability
 $cfg_x_stable             = @(
-    "11.93.0-release-ripped.0", 
+    "11.95.1-release-ripped.0", 
     "11.80.0-alpha.1", 
     "11.82.0-beta.1", 
     "11.81.0-release.0", 
