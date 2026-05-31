@@ -106,8 +106,8 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex logic: Prioritize 7+ digit date codes (e.g., 20260526).
-    # Re-clamped suffix parsing (?:\.\d+)+ to strictly prevent greedy gobbling of APKMirror build/DPI/arch tags.
+    # Regex logic: Prioritize 7+ digit date codes (e.g., 20260526). 
+    # For standard dot/dash formats, restrict suffixes to prevent swallowing architectures (like -arm64).
     $vPat = "(\b\d{7,}\b|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
     $patterns = @(
@@ -159,17 +159,25 @@ function Test-IsUniversalApk {
 function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
-        $input = (Read-Host "$Prompt (Y/N)").Trim()
+        # Appended the back instruction dynamically to all Y/N prompts
+        $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
+        
+        if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
         if ($input -match '^[yYnN]$') { return ($input -match '^[yY]$') }
-        Write-Host "  Invalid input. Please enter Y or N." -ForegroundColor Red
+        
+        Write-Host "  Invalid input. Please enter Y, N, or B." -ForegroundColor Red
     }
 }
 
 function Read-ValidatedInput {
     param([string]$Prompt, [string]$RegexPattern, [string]$ErrorMessage)
     while ($true) {
-        $input = (Read-Host $Prompt).Trim()
+        # Appended the back instruction dynamically to all structured prompts
+        $input = (Read-Host "$Prompt (or 'B' to go back)").Trim()
+        
+        if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
         if ($input -match $RegexPattern) { return $input }
+        
         Write-Host "  $ErrorMessage" -ForegroundColor Red
     }
 }
@@ -532,7 +540,9 @@ function Invoke-PatchingWorkflow {
             
         } else {
             while ($true) {
-                $ks = (Read-Host "Keystore filename/path").Trim().Trim('"').Trim("'")
+                # Add 'B' handling specifically for manual path entry
+                $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
+                if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
                 if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
                 Write-Host "  File not found: $ks" -ForegroundColor Red
@@ -879,8 +889,10 @@ function Invoke-UtilityWorkflow {
             Write-Host "2. Root (Mount Install via --mount)"
             $installMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
             
-            $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path"
+            # Explicit back instruction added for manual file drop
+            $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path (or 'B' to go back)"
             $apkPath = $apkPath.Trim().Trim('"').Trim("'")
+            if ($apkPath -match '^[bB]$') { throw "BACK_TO_MAIN" }
             
             if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) {
                 Write-Host "  [!] APK file not found at: $apkPath" -ForegroundColor Red
@@ -1067,11 +1079,29 @@ function Invoke-MainMenu {
             return $false 
         }
         elseif ($choice -eq '1') {
-            Invoke-PatchingWorkflow
+            try {
+                Invoke-PatchingWorkflow
+            } catch {
+                if ($_.Exception.Message -eq "BACK_TO_MAIN") {
+                    Write-Host "`n[i] Operation aborted. Returning to Main Menu..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 1
+                } else {
+                    throw $_
+                }
+            }
             return $true
         }
         elseif ($choice -eq '2') {
-            Invoke-UtilityWorkflow
+            try {
+                Invoke-UtilityWorkflow
+            } catch {
+                if ($_.Exception.Message -eq "BACK_TO_MAIN") {
+                    Write-Host "`n[i] Operation aborted. Returning to Main Menu..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds 1
+                } else {
+                    throw $_
+                }
+            }
             return $true
         }
         else {
