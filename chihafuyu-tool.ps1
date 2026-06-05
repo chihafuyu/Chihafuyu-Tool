@@ -784,7 +784,7 @@ function Invoke-PatchingWorkflow {
             # Workaround for Windows memory-mapped file lock issue
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
-                Start-Sleep -Seconds 2
+                Start-Sleep -Seconds 3
                 
                 $morpheTmpDirs = @(
                     Join-Path $cliJar.Directory.FullName "morphe-data\tmp",
@@ -792,7 +792,7 @@ function Invoke-PatchingWorkflow {
                 )
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
-                        Remove-Item -Path "$tmpDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+                        Get-ChildItem -LiteralPath $tmpDir | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
             }
