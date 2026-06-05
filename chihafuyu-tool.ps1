@@ -48,7 +48,7 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
 $cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable = @("8.47.56", "7.29.52")
+$cfg_youtube_music_stable = @("8.51.51", "7.29.52")
 $cfg_reddit_stable        = @("2026.10.0", "2026.04.0", "2026.14.0")
 
 # Broken down into multiple lines for readability
@@ -717,7 +717,8 @@ function Invoke-PatchingWorkflow {
     
     $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
     if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
-
+    
+    # Rely on Morphe 1.9.0+ native morphe-data/tmp/ handling and instruct it to self-purge
     try {
         $plainPass = $null; $plainEntryPass = $null
         $bstr1 = [IntPtr]::Zero; $bstr2 = [IntPtr]::Zero
@@ -731,10 +732,6 @@ function Invoke-PatchingWorkflow {
 
         foreach ($app in $selectedApps) {
             if (-not $app.TargetApk) { continue }
-            
-            $sysTempDir = [System.IO.Path]::GetTempPath()
-            $sessionGuid = [guid]::NewGuid().ToString().Substring(0,8)
-            $customTempDir = Join-Path $sysTempDir "Chihafuyu_$($app.name)_$sessionGuid"
             
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
@@ -756,7 +753,6 @@ function Invoke-PatchingWorkflow {
                 "--options-file=$jsonFileName", 
                 $app.TargetApk, 
                 "--out=$outputApkAbs", 
-                "--temporary-files-path=$customTempDir",
                 "--result-file=$tempResultFile",
                 "--purge"
             )
@@ -767,10 +763,9 @@ function Invoke-PatchingWorkflow {
             
             if ($disableSigning) {
                 $baseArgs += "--unsigned"
-            } else {
-                if ($useCustomKeystore) { 
-                    $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
-                }
+            } elseif ($useCustomKeystore) { 
+                # If custom keystore is NOT enabled, Morphe natively defaults to morphe-data/morphe.keystore
+                $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
                 if ($customSigner) { $baseArgs += "--signer=$customSigner" }
             }
             
@@ -786,14 +781,6 @@ function Invoke-PatchingWorkflow {
             # Stream the Java output to the console and temp log file simultaneously
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            if (Test-Path -LiteralPath $customTempDir) {
-                if ($isWindowsOS) {
-                    Start-Sleep -Seconds 2
-                }
-                Write-Host "  [i] Sweeping residual temporary files..." -ForegroundColor DarkGray
-                Remove-Item -LiteralPath $customTempDir -Recurse -Force -ErrorAction SilentlyContinue
-            }
-
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "  [!] Patching FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
                 if (-not $continueOnError) { break }
@@ -822,7 +809,7 @@ function Invoke-PatchingWorkflow {
 
     Write-Host "`n[SUCCESS] Operations concluded." -ForegroundColor Green
 
-    if (Get-YesNoPrompt "`nExport patching logs?") {
+    if (Get-YesNoPrompt "Export patching logs?") {
         $logPath = Join-Path $workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
         if (Test-Path -LiteralPath $tempLogFile) { 
             Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf) 
