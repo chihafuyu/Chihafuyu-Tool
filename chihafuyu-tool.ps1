@@ -781,6 +781,22 @@ function Invoke-PatchingWorkflow {
             # Stream the Java output to the console and temp log file simultaneously
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
+            # Workaround for Windows memory-mapped file lock issue
+            if ($isWindowsOS) {
+                Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
+                Start-Sleep -Seconds 2
+                
+                $morpheTmpDirs = @(
+                    Join-Path $cliJar.Directory.FullName "morphe-data\tmp",
+                    Join-Path $env:USERPROFILE "morphe\tmp"
+                )
+                foreach ($tmpDir in $morpheTmpDirs) {
+                    if (Test-Path -LiteralPath $tmpDir) {
+                        Remove-Item -Path "$tmpDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "  [!] Patching FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
                 if (-not $continueOnError) { break }
@@ -809,7 +825,7 @@ function Invoke-PatchingWorkflow {
 
     Write-Host "`n[SUCCESS] Operations concluded." -ForegroundColor Green
 
-    if (Get-YesNoPrompt "Export patching logs?") {
+    if (Get-YesNoPrompt "`nExport patching logs?") {
         $logPath = Join-Path $workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
         if (Test-Path -LiteralPath $tempLogFile) { 
             Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf) 
