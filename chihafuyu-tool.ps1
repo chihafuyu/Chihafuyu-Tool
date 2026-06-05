@@ -784,27 +784,23 @@ function Invoke-PatchingWorkflow {
             # Workaround for Windows memory-mapped file lock issue
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
+                
+                # Give JVM extra time to terminate and release file handles
                 Start-Sleep -Seconds 4
                 
+                # Locate the morphe-data dynamically relative to where the CLI jar actually resides
                 $morpheTmpDirs = @(
-                    Join-Path $PSScriptRoot "morphe-data\tmp",
+                    Join-Path $cliJar.Directory.FullName "morphe-data\tmp",
                     Join-Path $env:USERPROFILE "morphe\tmp"
                 )
                 
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
-                        # Brute-force filesystem deletion to bypass stubborn read-only locks
+                        # Brute-force filesystem deletion via cmd.exe to bypass stubborn Windows locks
                         try {
-                            $directory = [System.IO.DirectoryInfo]::new($tmpDir)
-                            foreach ($file in $directory.GetFiles("*", [System.IO.SearchOption]::AllDirectories)) {
-                                $file.IsReadOnly = $false
-                                $file.Delete()
-                            }
-                            foreach ($dir in $directory.GetDirectories("*", [System.IO.SearchOption]::AllDirectories) | Sort-Object FullName -Descending) {
-                                $dir.Delete($true)
-                            }
+                            $null = & cmd.exe /c "rmdir /s /q `"$tmpDir`" 2>nul"
                         } catch {
-                            # Fallback if the pure .NET approach hits an immovable lock
+                            # Fallback to standard PowerShell deletion
                             Remove-Item -Path "$tmpDir\*" -Recurse -Force -ErrorAction SilentlyContinue
                         }
                     }
