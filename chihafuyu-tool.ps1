@@ -786,7 +786,7 @@ function Invoke-PatchingWorkflow {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
                 
                 # Give JVM extra time to terminate and release file handles
-                Start-Sleep -Seconds 4
+                Start-Sleep -Seconds 3
                 
                 # Locate the morphe-data dynamically relative to where the CLI jar actually resides
                 $morpheTmpDirs = @(
@@ -796,12 +796,24 @@ function Invoke-PatchingWorkflow {
                 
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
-                        # Brute-force filesystem deletion via cmd.exe to bypass stubborn Windows locks
-                        try {
-                            $null = & cmd.exe /c "rmdir /s /q `"$tmpDir`" 2>nul"
-                        } catch {
-                            # Fallback to standard PowerShell deletion
-                            Remove-Item -Path "$tmpDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+                        # Target specific subfolders instead of the parent 'tmp' directory
+                        # This circumvents Windows locking the entire folder if it is open in File Explorer
+                        $patchDirs = Get-ChildItem -Path $tmpDir -Filter "patching-*" -Directory -ErrorAction SilentlyContinue
+                        
+                        foreach ($pDir in $patchDirs) {
+                            $retry = 0
+                            $deleted = $false
+                            while (-not $deleted -and $retry -lt 4) {
+                                # Use CMD to forcefully bypass JVM file locks
+                                $null = & cmd.exe /c "rmdir /s /q `"$($pDir.FullName)`" >nul 2>&1"
+                                
+                                if (-not (Test-Path -LiteralPath $pDir.FullName)) {
+                                    $deleted = $true
+                                } else {
+                                    $retry++
+                                    Start-Sleep -Seconds 2
+                                }
+                            }
                         }
                     }
                 }
