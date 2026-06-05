@@ -784,15 +784,29 @@ function Invoke-PatchingWorkflow {
             # Workaround for Windows memory-mapped file lock issue
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
-                Start-Sleep -Seconds 3
+                Start-Sleep -Seconds 4
                 
                 $morpheTmpDirs = @(
-                    Join-Path $cliJar.Directory.FullName "morphe-data\tmp",
+                    Join-Path $PSScriptRoot "morphe-data\tmp",
                     Join-Path $env:USERPROFILE "morphe\tmp"
                 )
+                
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
-                        Get-ChildItem -LiteralPath $tmpDir | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+                        # Brute-force filesystem deletion to bypass stubborn read-only locks
+                        try {
+                            $directory = [System.IO.DirectoryInfo]::new($tmpDir)
+                            foreach ($file in $directory.GetFiles("*", [System.IO.SearchOption]::AllDirectories)) {
+                                $file.IsReadOnly = $false
+                                $file.Delete()
+                            }
+                            foreach ($dir in $directory.GetDirectories("*", [System.IO.SearchOption]::AllDirectories) | Sort-Object FullName -Descending) {
+                                $dir.Delete($true)
+                            }
+                        } catch {
+                            # Fallback if the pure .NET approach hits an immovable lock
+                            Remove-Item -Path "$tmpDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+                        }
                     }
                 }
             }
