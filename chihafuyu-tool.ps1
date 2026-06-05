@@ -1073,7 +1073,10 @@ function Invoke-MainMenu {
                     Write-Host "`n[i] Operation aborted. Returning to Main Menu..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 1
                 } else {
-                    throw $_
+                    Write-Host "`n[FATAL ERROR] $($_.Exception.Message)" -ForegroundColor Red
+                    Write-Host "Press Enter to exit..."
+                    $null = Read-Host
+                    exit 1
                 }
             }
             return $true
@@ -1086,7 +1089,10 @@ function Invoke-MainMenu {
                     Write-Host "`n[i] Operation aborted. Returning to Main Menu..." -ForegroundColor Yellow
                     Start-Sleep -Seconds 1
                 } else {
-                    throw $_
+                    Write-Host "`n[FATAL ERROR] $($_.Exception.Message)" -ForegroundColor Red
+                    Write-Host "Press Enter to exit..."
+                    $null = Read-Host
+                    exit 1
                 }
             }
             return $true
