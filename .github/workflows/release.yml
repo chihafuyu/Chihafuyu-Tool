@@ -25,7 +25,6 @@ jobs:
         uses: mikepenz/release-changelog-builder-action@v6
         with:
           mode: "COMMIT"
-          toTag: ${{ github.sha }}
           configurationJson: |
             {
               "template": "#{{CHANGELOG}}\n\n#{{UNCATEGORIZED}}",
@@ -34,13 +33,6 @@ jobs:
                 { "title": "## 🐛 Bug Fixes", "labels": ["fix", "bug"] },
                 { "title": "## 📚 Documentation", "labels": ["docs", "doc"] },
                 { "title": "## 🛠️ Maintenance", "labels": ["chore", "refactor", "style"] }
-              ],
-              "label_extractor": [
-                {
-                  "pattern": "^([a-zA-Z]+)(\\([a-zA-Z0-9_-]+\\))?(!)?: (.*)",
-                  "on_property": "title",
-                  "target": "$1"
-                }
               ]
             }
         env:
@@ -48,7 +40,7 @@ jobs:
 
       - name: Create ZIP Archive
         run: |
-          zip Chihafuyu-Patcher-${{ env.VERSION }}.zip chihafuyu-patcher.ps1 README.md
+          zip -r Chihafuyu-Tool-${{ env.VERSION }}.zip . -x "*.git*" "Output/*" ".github/*"
 
       - name: Publish Automatic Release
         uses: softprops/action-gh-release@v2
@@ -56,4 +48,4 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
           body: ${{ steps.changelog.outputs.changelog }}
-          files: Chihafuyu-Patcher-${{ env.VERSION }}.zip
+          files: Chihafuyu-Tool-${{ env.VERSION }}.zip
