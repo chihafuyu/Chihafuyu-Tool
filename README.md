@@ -22,6 +22,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 - **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
 - **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
+- **🔙 Global Abort / Back Navigation**: Made a mistake? Just type `B` at any prompt to safely cancel the operation and return to the main menu without breaking the script.
 
 > [!WARNING]
 > **🚨 Keystore Password Exposure Notice**
@@ -55,9 +56,12 @@ Before spinning up the tool, make sure you have these ready:
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
 
 > [!NOTE]
-> **📱 File Format Support:**
+> **📱 File Format & Naming Support:**
 >
-> While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
+> * While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also natively supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
+> * **Don't worry about messy file names!** If you download directly from APKMirror, your file might look something like this:
+>     `com.google.android.youtube_20.51.39-1558707648_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`
+>     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. Alternatively, if you prefer keeping things clean and simple, you can easily rename it to something like `com.google.android.youtube-20.51.39-universal.apk`for `YouTube` or `com.google.android.apps.youtube.music-8.51.51-arm64-v8a.apkm` for `YT Music (bundle)`. For other supported apps, you can just follow the same naming convention.
 
 7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 

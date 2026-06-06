@@ -77,7 +77,7 @@ try {
     
     $regex = '"(?:1\.)?(\d+)'
     if ($javaVerOutput -match $regex) {
-        $version = [int]$matches[1]
+        $version = [int]$Matches[1]
         if ($version -lt 21) {
             Clear-Host
             Write-Host "[!] Java Development Kit (JDK) 21 or higher is required!" -ForegroundColor Red
@@ -106,8 +106,8 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex logic: Prioritize 7+ digit date codes (e.g., 20260526). 
-    # For standard dot/dash formats, restrict suffixes to prevent swallowing architectures (like -arm64).
+    # Regex logic: Match 7+ digit date codes (e.g., 20260526) or standard version formats.
+    # Suffix parsing is clamped to explicitly prevent matching APKMirror tags (e.g., build code, DPI, arch).
     $vPat = "(\b\d{7,}\b|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
     $patterns = @(
@@ -120,11 +120,10 @@ function Get-ApkVersion {
     $foundVersions = @()
     foreach ($regex in $patterns) {
         if ($baseName -match $regex.P) {
-            # Note: $Matches is the automatic PS variable populated by the -match operator
             $ext = $Matches[1]
             $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
             
-            # Using PSCustomObject fixes PowerShell's Hashtable sorting bug
+            # Using PSCustomObject circumvents PowerShell's Hashtable sorting limitations
             $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
         }
     }
@@ -143,7 +142,7 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
-        # Basic validation to ensure the file is a valid Android package
+        # Basic validation to ensure the file is a valid Android package structure
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -159,7 +158,7 @@ function Test-IsUniversalApk {
 function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
-        # Appended the back instruction dynamically to all Y/N prompts
+        # Global abort trigger: typing 'B' or 'b' throws an exception to safely return to the main menu
         $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
         
         if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -172,7 +171,6 @@ function Get-YesNoPrompt {
 function Read-ValidatedInput {
     param([string]$Prompt, [string]$RegexPattern, [string]$ErrorMessage)
     while ($true) {
-        # Appended the back instruction dynamically to all structured prompts
         $input = (Read-Host "$Prompt (or 'B' to go back)").Trim()
         
         if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -540,7 +538,6 @@ function Invoke-PatchingWorkflow {
             
         } else {
             while ($true) {
-                # Add 'B' handling specifically for manual path entry
                 $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
                 if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -781,31 +778,33 @@ function Invoke-PatchingWorkflow {
             # Stream the Java output to the console and temp log file simultaneously
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Workaround for Windows memory-mapped file lock issue
+            # Bypass JVM memory-mapped file locks on Windows.
+            # Java processes may hold locks on .dex files even after exiting. This routine waits and retries deletion.
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
                 
                 # Give JVM extra time to terminate and release file handles
                 Start-Sleep -Seconds 3
                 
-                # Locate the morphe-data dynamically relative to where the CLI jar actually resides
+                # Safely declare target directories by wrapping them in parentheses to prevent parsing bugs
                 $morpheTmpDirs = @(
-                    Join-Path $cliJar.Directory.FullName "morphe-data\tmp",
-                    Join-Path $env:USERPROFILE "morphe\tmp"
-                )
+                    (Join-Path $cliJar.Directory.FullName "morphe-data\tmp"),
+                    (Join-Path $PSScriptRoot "morphe-data\tmp"),
+                    (Join-Path $env:USERPROFILE "morphe\tmp")
+                ) | Select-Object -Unique
                 
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
                         # Target specific subfolders instead of the parent 'tmp' directory
                         # This circumvents Windows locking the entire folder if it is open in File Explorer
-                        $patchDirs = Get-ChildItem -Path $tmpDir -Filter "patching-*" -Directory -ErrorAction SilentlyContinue
+                        $patchDirs = Get-ChildItem -LiteralPath $tmpDir -Filter "patching-*" -Directory -ErrorAction SilentlyContinue
                         
                         foreach ($pDir in $patchDirs) {
                             $retry = 0
                             $deleted = $false
-                            while (-not $deleted -and $retry -lt 4) {
-                                # Use CMD to forcefully bypass JVM file locks
-                                $null = & cmd.exe /c "rmdir /s /q `"$($pDir.FullName)`" >nul 2>&1"
+                            # Retry loop to wait for the JVM to release memory-mapped file locks
+                            while (-not $deleted -and $retry -lt 5) {
+                                Remove-Item -LiteralPath $pDir.FullName -Recurse -Force -ErrorAction SilentlyContinue
                                 
                                 if (-not (Test-Path -LiteralPath $pDir.FullName)) {
                                     $deleted = $true
@@ -914,7 +913,6 @@ function Invoke-UtilityWorkflow {
             Write-Host "2. Root (Mount Install via --mount)"
             $installMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
             
-            # Explicit back instruction added for manual file drop
             $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path (or 'B' to go back)"
             $apkPath = $apkPath.Trim().Trim('"').Trim("'")
             if ($apkPath -match '^[bB]$') { throw "BACK_TO_MAIN" }
