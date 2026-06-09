@@ -47,11 +47,12 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
+# Morphe
 $cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.51.51", "8.47.56", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
-# Broken down into multiple lines for readability
+# Piko
 $cfg_x_stable             = @(
     "11.95.1-release-ripped.0", 
     "11.80.0-alpha.1", 
@@ -59,13 +60,21 @@ $cfg_x_stable             = @(
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
-
 $cfg_ig_stable            = @("430.0.0.53.80")
+
+# hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.15.5.2604080000")
 $cfg_sleep_stable         = @("20260526")
+$cfg_duolingo_stable      = @("6.82.3")
+$cfg_merriamwebster_stable= @("Any")
+$cfg_mimo_stable          = @("9.11")
+$cfg_windy_stable         = @("50.0.2")
+$cfg_xrecorder_stable     = @("2.5.1.1")
+
+# De-ReVanced
 $cfg_photos_stable        = @("Any")
 $cfg_rar_stable           = @("Any")
 # ==============================================================================
@@ -184,7 +193,7 @@ function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
-    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, CamScanner, Sleep as Android)"
+    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. Go back to Main Menu"
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input. Please enter 1-5."
@@ -327,15 +336,30 @@ function Invoke-PatchingWorkflow {
             @{ id = "2"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable }
         )
     } elseif ($projectName -eq "hoo-dles") {
-        Write-Host "1. AdGuard`n2. IbisPaint X`n3. WPS Office`n4. CamScanner`n5. Sleep as Android`n6. All Applications"
-        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 6]" -RegexPattern "^[1-6](,[1-6])*$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas."
+        Write-Host "1. AdGuard"
+        Write-Host "2. IbisPaint X"
+        Write-Host "3. WPS Office"
+        Write-Host "4. CamScanner"
+        Write-Host "5. Sleep as Android"
+        Write-Host "6. Duolingo"
+        Write-Host "7. Merriam-Webster"
+        Write-Host "8. Mimo"
+        Write-Host "9. Windy"
+        Write-Host "10. XRecorder"
+        Write-Host "11. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 11]" -RegexPattern "^(1[0-1]|[1-9])(,(1[0-1]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-11 separated by commas."
         
         $masterApps = @(
             @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
             @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint", "ibis", "ibis-paint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
             @{ id = "3"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
             @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable },
-            @{ id = "5"; name = "Sleep_as_Android"; package = "com.urbandroid.sleep"; keys = @("sleep", "urbandroid"); exclude = @(); strip = $true; stable = $cfg_sleep_stable }
+            @{ id = "5"; name = "Sleep_as_Android"; package = "com.urbandroid.sleep"; keys = @("sleep", "urbandroid"); exclude = @(); strip = $true; stable = $cfg_sleep_stable },
+            @{ id = "6"; name = "Duolingo"; package = "com.duolingo"; keys = @("duolingo"); exclude = @(); strip = $true; stable = $cfg_duolingo_stable },
+            @{ id = "7"; name = "Merriam_Webster"; package = "com.merriamwebster"; keys = @("merriam", "webster", "merriamwebster"); exclude = @(); strip = $true; stable = $cfg_merriamwebster_stable },
+            @{ id = "8"; name = "Mimo"; package = "com.getmimo"; keys = @("mimo"); exclude = @(); strip = $true; stable = $cfg_mimo_stable },
+            @{ id = "9"; name = "Windy"; package = "com.windyty.android"; keys = @("windy", "windyty"); exclude = @(); strip = $true; stable = $cfg_windy_stable },
+            @{ id = "10"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable }
         )
     } elseif ($projectName -eq "De-ReVanced") {
         Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
@@ -349,7 +373,7 @@ function Invoke-PatchingWorkflow {
 
     # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
-    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"6"} "De-ReVanced" {"3"} }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -538,6 +562,7 @@ function Invoke-PatchingWorkflow {
             
         } else {
             while ($true) {
+                # Add 'B' handling specifically for manual path entry
                 $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
                 if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -778,20 +803,21 @@ function Invoke-PatchingWorkflow {
             # Stream the Java output to the console and temp log file simultaneously
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Bypass JVM memory-mapped file locks on Windows.
-            # Java processes may hold locks on .dex files even after exiting. This routine waits and retries deletion.
+            # Bypass JVM memory-mapped file locks on Windows
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
                 
                 # Give JVM extra time to terminate and release file handles
                 Start-Sleep -Seconds 3
                 
-                # Safely declare target directories by wrapping them in parentheses to prevent parsing bugs
-                $morpheTmpDirs = @(
-                    (Join-Path $cliJar.Directory.FullName "morphe-data\tmp"),
-                    (Join-Path $PSScriptRoot "morphe-data\tmp"),
-                    (Join-Path $env:USERPROFILE "morphe\tmp")
-                ) | Select-Object -Unique
+                # Explicitly construct paths line-by-line to prevent PowerShell array parsing errors
+                $morpheTmpDirs = @()
+                if ($null -ne $cliJar -and $null -ne $cliJar.Directory) {
+                    $morpheTmpDirs += Join-Path -Path $cliJar.Directory.FullName -ChildPath "morphe-data\tmp"
+                }
+                $morpheTmpDirs += Join-Path -Path $PSScriptRoot -ChildPath "morphe-data\tmp"
+                $morpheTmpDirs += Join-Path -Path $env:USERPROFILE -ChildPath "morphe\tmp"
+                $morpheTmpDirs = $morpheTmpDirs | Select-Object -Unique
                 
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
@@ -913,6 +939,7 @@ function Invoke-UtilityWorkflow {
             Write-Host "2. Root (Mount Install via --mount)"
             $installMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
             
+            # Explicit back instruction added for manual file drop
             $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path (or 'B' to go back)"
             $apkPath = $apkPath.Trim().Trim('"').Trim("'")
             if ($apkPath -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -977,7 +1004,12 @@ function Invoke-UtilityWorkflow {
                   @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
                   @{pkg="cn.wps.moffice_eng"; name="wps-office"},
                   @{pkg="com.intsig.camscanner"; name="camscanner"},
-                  @{pkg="com.urbandroid.sleep"; name="sleep-as-android"})
+                  @{pkg="com.urbandroid.sleep"; name="sleep-as-android"},
+                  @{pkg="com.duolingo"; name="duolingo"},
+                  @{pkg="com.merriamwebster"; name="merriam-webster"},
+                  @{pkg="com.getmimo"; name="mimo"},
+                  @{pkg="com.windyty.android"; name="windy"},
+                  @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"})
             } elseif ($eco.Name -eq "De-ReVanced") {
                 @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
                   @{pkg="com.rarlab.rar"; name="rar"})
