@@ -231,8 +231,9 @@ function Resolve-EnvironmentArtifacts {
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
     # Scan root and workspace directories for CLI engine jars
-    $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
-    $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    # Implement zero-padding regex to accurately sort semantic versions (e.g., preventing v10.0 being sorted below v9.0)
+    $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+    $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
     $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
     $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
@@ -248,8 +249,8 @@ function Resolve-EnvironmentArtifacts {
     $patchesChoice = "1"
     if ($RequirePatches) {
         # Scan workspace for .mpp patch bundles
-        $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object Name -Descending | Select-Object -First 1
-        $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+        $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+        $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
         $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
         $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
@@ -270,7 +271,7 @@ function Resolve-EnvironmentArtifacts {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
     }
 
-    # Pause execution and monitor directory if required files are missing
+    # Pause execution and monitor directory if required files are missing with a 5-minute hard timeout
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
@@ -281,11 +282,14 @@ function Resolve-EnvironmentArtifacts {
         $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
         $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
 
+        $timeout = (Get-Date).AddMinutes(5)
         while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
+            if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
             Start-Sleep -Seconds 2
-            $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+            
+            $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
             if ($RequirePatches) {
-                $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object Name -Descending | Select-Object -First 1
+                $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
             }
         }
         Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
@@ -397,7 +401,8 @@ function Invoke-PatchingWorkflow {
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
     
-    $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue
+    # Filter out potential Symlinks or ReparsePoints to prevent path confusion abuse
+    $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
     $hasMismatch = $false
     $missingApps = 0
 
@@ -562,7 +567,6 @@ function Invoke-PatchingWorkflow {
             
         } else {
             while ($true) {
-                # Add 'B' handling specifically for manual path entry
                 $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
                 if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -584,8 +588,13 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
     $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
     
-    # Remove existing files first to prevent Morphe CLI from throwing a silent exit code 1 on overwrite
-    if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
+    if (Test-Path -LiteralPath $patchesListFile) {
+        try {
+            Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction Stop
+        } catch {
+            Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked by another process." -ForegroundColor Yellow
+        }
+    }
     
     $cliAbsPath = $cliJar.FullName
     $patchAbsPath = $patchesFile.FullName
@@ -632,8 +641,13 @@ function Invoke-PatchingWorkflow {
         
         $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
         
-        # Remove existing files first to prevent Morphe CLI from throwing a silent exit code 1 on overwrite
-        if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $jsonFileName) {
+            try {
+                Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction Stop
+            } catch {
+                Write-Host "  [!] Warning: Could not remove existing options JSON. It may be locked by another process." -ForegroundColor Yellow
+            }
+        }
         
         $optArgs = @(
             "-jar", 
@@ -810,14 +824,12 @@ function Invoke-PatchingWorkflow {
                 # Give JVM extra time to terminate and release file handles
                 Start-Sleep -Seconds 3
                 
-                # Explicitly construct paths line-by-line to prevent PowerShell array parsing errors
-                $morpheTmpDirs = @()
-                if ($null -ne $cliJar -and $null -ne $cliJar.Directory) {
-                    $morpheTmpDirs += Join-Path -Path $cliJar.Directory.FullName -ChildPath "morphe-data\tmp"
-                }
-                $morpheTmpDirs += Join-Path -Path $PSScriptRoot -ChildPath "morphe-data\tmp"
-                $morpheTmpDirs += Join-Path -Path $env:USERPROFILE -ChildPath "morphe\tmp"
-                $morpheTmpDirs = $morpheTmpDirs | Select-Object -Unique
+                # Safely declare target directories by wrapping them in parentheses to prevent parsing bugs
+                $morpheTmpDirs = @(
+                    (Join-Path -Path $cliJar.Directory.FullName -ChildPath "morphe-data\tmp"),
+                    (Join-Path -Path $PSScriptRoot -ChildPath "morphe-data\tmp"),
+                    (Join-Path -Path $env:USERPROFILE -ChildPath "morphe\tmp")
+                ) | Select-Object -Unique
                 
                 foreach ($tmpDir in $morpheTmpDirs) {
                     if (Test-Path -LiteralPath $tmpDir) {
@@ -944,6 +956,14 @@ function Invoke-UtilityWorkflow {
             $apkPath = $apkPath.Trim().Trim('"').Trim("'")
             if ($apkPath -match '^[bB]$') { throw "BACK_TO_MAIN" }
             
+            # Check for Symlinks or ReparsePoints to prevent path confusion abuse
+            $apkItem = Get-Item -LiteralPath $apkPath -Force -ErrorAction SilentlyContinue
+            if ($apkItem -and ($apkItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
+                Write-Host "  [!] Symlinks or ReparsePoints are not allowed for security reasons." -ForegroundColor Red
+                Start-Sleep -Seconds 2
+                return
+            }
+            
             if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) {
                 Write-Host "  [!] APK file not found at: $apkPath" -ForegroundColor Red
             } else {
@@ -952,13 +972,18 @@ function Invoke-UtilityWorkflow {
                 # Enforce safe RAM limits here too just to be consistent
                 $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "install", "-a", $apkPath)
                 if ($installMode -eq '2') {
-                    $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name."
+                    $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^(?:[a-zA-Z][a-zA-Z0-9_]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)+$" -ErrorMessage "Invalid Android package name format."
                     $baseArgs += "-m"
                     $baseArgs += $pkg
                 }
                 
                 Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
                 & java $baseArgs
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "  [!] Command FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
+                } else {
+                    Write-Host "  [✓] Command SUCCEEDED" -ForegroundColor Green
+                }
             }
         } 
         elseif ($utilChoice -eq '2') {
@@ -967,7 +992,7 @@ function Invoke-UtilityWorkflow {
             Write-Host "2. Root (Unmount via --unmount)"
             $uninstallMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
             
-            $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^[a-zA-Z0-9_\.]+$" -ErrorMessage "Invalid package name format."
+            $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^(?:[a-zA-Z][a-zA-Z0-9_]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)+$" -ErrorMessage "Invalid Android package name format."
             
             Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
             
@@ -978,6 +1003,11 @@ function Invoke-UtilityWorkflow {
             
             Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
             & java $baseArgs
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  [!] Command FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
+            } else {
+                Write-Host "  [✓] Command SUCCEEDED" -ForegroundColor Green
+            }
         }
     }
     elseif ($utilChoice -in @('3', '4')) {
@@ -1018,8 +1048,10 @@ function Invoke-UtilityWorkflow {
             foreach ($app in $apps) {
                 $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
                 
-                # Remove existing files first to prevent Morphe CLI from throwing a silent exit code 1 on overwrite
-                if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
+                if (Test-Path -LiteralPath $jsonFileName) {
+                    try { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction Stop }
+                    catch { Write-Host "  [!] Warning: Could not remove existing options JSON. It may be locked." -ForegroundColor Yellow }
+                }
                 
                 $optArgs = @(
                     "-Xmx2G",
@@ -1045,8 +1077,10 @@ function Invoke-UtilityWorkflow {
             $patchesListFile = Join-Path $eco.Workspace "list-patches-$($envArt.Track).txt"
             Write-Host "`n[GENERATE LIST] Exporting patches reference to $(Split-Path $patchesListFile -Leaf)..." -ForegroundColor Yellow
             
-            # Remove existing files first to prevent Morphe CLI from throwing a silent exit code 1 on overwrite
-            if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
+            if (Test-Path -LiteralPath $patchesListFile) {
+                try { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction Stop }
+                catch { Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked." -ForegroundColor Yellow }
+            }
             
             $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
             
