@@ -503,7 +503,18 @@ function Invoke-PatchingWorkflow {
         }
     }
 
-    if ($missingApps -gt 0) { return }
+    # Evaluate validation results and prompt if any target apps are missing
+    $validAppsCount = ($selectedApps | Where-Object { $null -ne $_.TargetApk }).Count
+    if ($validAppsCount -eq 0) {
+        Write-Host "`n[!] No matching app files found in the Input folder. Aborting." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+        return
+    }
+    
+    if ($missingApps -gt 0) {
+        if (-not (Get-YesNoPrompt "`nSome selected apps are missing. Continue patching the available ones?")) { return }
+    }
+    
     if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected. Force patch?")) { return }
 
     Write-Host "`n[STEP 6] Select Target Architecture:" -ForegroundColor Yellow
