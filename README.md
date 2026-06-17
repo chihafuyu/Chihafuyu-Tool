@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, and **De-ReVanced** ecosystems via the **Morphe CLI**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, and **BholeyKaBhakt** ecosystems via the **Morphe CLI**.
 
 Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Sleep as Android`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
@@ -13,10 +13,11 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`), and De-ReVanced (`Google Photos`, `RAR`) workspaces in a single script.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, etc.), De-ReVanced (`Google Photos`, `RAR`), and BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`) workspaces in a single script.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard and root-mount modes), or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
+- **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
 - **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`), and validates them against an array of supported versions.
 - **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" patch is forced on an incompatible Twitter APK).
 - **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
@@ -53,7 +54,10 @@ Before spinning up the tool, make sure you have these ready:
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
    * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
    * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
-6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
+   * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). 
+   * **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
+   * **For X (Twitter) v12.0.0-release.0**, you need an additional third-party patch from `inotia00`. Download `piko-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/piko-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
@@ -61,7 +65,7 @@ Before spinning up the tool, make sure you have these ready:
 > * While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also natively supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 > * **Don't worry about messy file names!** If you download directly from APKMirror, your file might look something like this:
 >     `com.google.android.youtube_20.51.39-1558707648_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`
->     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. Alternatively, if you prefer keeping things clean and simple, you can easily rename it to something like `com.google.android.youtube-20.51.39-universal.apk`for `YouTube` or `com.google.android.apps.youtube.music-8.51.51-arm64-v8a.apkm` for `YT Music (bundle)`. For other supported apps, you can just follow the same naming convention.
+>     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. Alternatively, if you prefer keeping things clean and simple, you can easily rename it to something like `com.google.android.youtube-20.51.39-universal.apk` for `YouTube` or `com.google.android.apps.youtube.music-8.51.51-arm64-v8a.apkm` for `YT Music`. For other supported apps, you can just follow the same naming convention.
 
 7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
@@ -83,13 +87,18 @@ Before spinning up the tool, make sure you have these ready:
  │    └── 📁 Output/                 
  ├── 📁 Piko/                        (Piko Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📦 piko-shim-x.x.x.mpp      (Optional - For X v12+)
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
- └── 📁 De-ReVanced/                 (De-ReVanced Workspace)
+ ├── 📁 De-ReVanced/                 (De-ReVanced Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ └── 📁 BholeyKaBhakt/               (BholeyKaBhakt Workspace)
       ├── 📦 patches-x.x.x.mpp       
       ├── 📁 Input/                  
       └── 📁 Output/
@@ -122,27 +131,46 @@ Whenever new stable patch bundles are released with updated app version targets,
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
+# Morphe
 $cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("8.51.51", "8.47.56", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
-# Broken down into multiple lines for clean readability
+# Piko
 $cfg_x_stable             = @(
+    "12.0.0-release.0",
+    "11.99.0-release-ripped.1",
     "11.95.1-release-ripped.0", 
     "11.80.0-alpha.1", 
     "11.82.0-beta.1", 
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
-
 $cfg_ig_stable            = @("430.0.0.53.80")
+
+# hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
 $cfg_ibispaint_stable     = @("14.0.1")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.15.5.2604080000")
 $cfg_sleep_stable         = @("20260526")
+$cfg_duolingo_stable      = @("6.82.3")
+$cfg_merriamwebster_stable= @("Any")
+$cfg_mimo_stable          = @("9.11")
+$cfg_windy_stable         = @("50.0.2")
+$cfg_xrecorder_stable     = @("2.5.1.1")
+
+# De-ReVanced
 $cfg_photos_stable        = @("Any")
 $cfg_rar_stable           = @("Any")
+
+# BholeyKaBhakt
+$cfg_speedtest_stable     = @("7.0.4")
+$cfg_stellarium_stable    = @("1.16.3", "1.16.2")
+$cfg_proto_stable         = @("1.49.0", "1.48.0")
+$cfg_vpnify_stable        = @("2.2.9")
+$cfg_backdrops_stable     = @("6.1.2")
+$cfg_solidexplorer_stable = @("3.4.10")
 # ==============================================================================
 ```
 

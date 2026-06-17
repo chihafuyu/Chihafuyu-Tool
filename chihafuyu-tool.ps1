@@ -54,7 +54,9 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
 $cfg_x_stable             = @(
-    "11.99.0-release-ripped.1", 
+    "12.0.0-release.0",
+    "11.99.0-release-ripped.1",
+    "11.95.1-release-ripped.0", 
     "11.80.0-alpha.1", 
     "11.82.0-beta.1", 
     "11.81.0-release.0", 
@@ -80,9 +82,11 @@ $cfg_rar_stable           = @("Any")
 
 # BholeyKaBhakt
 $cfg_speedtest_stable     = @("7.0.4")
-$cfg_stellarium_stable    = @("1.16.2")
-$cfg_proto_stable         = @("1.48.0")
+$cfg_stellarium_stable    = @("1.16.3", "1.16.2")
+$cfg_proto_stable         = @("1.49.0", "1.48.0")
 $cfg_vpnify_stable        = @("2.2.9")
+$cfg_backdrops_stable     = @("6.1.2")
+$cfg_solidexplorer_stable = @("3.4.10")
 # ==============================================================================
 
 # Ensure JDK 21 or higher is installed as required by Morphe CLI
@@ -201,7 +205,7 @@ function Resolve-Ecosystem {
     Write-Host "2. Piko (X/Twitter, Instagram)"
     Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
-    Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify)"
+    Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. Go back to Main Menu"
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-6)" -RegexPattern "^[1-6]$" -ErrorMessage "Invalid input. Please enter 1-6."
 
@@ -255,8 +259,9 @@ function Resolve-EnvironmentArtifacts {
     $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
 
     $patchesChoice = "1"
+    $extraPatches = @()
     if ($RequirePatches) {
-        # Scan workspace for .mpp patch bundles
+        # Scan workspace for primary .mpp patch bundles
         $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
         $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
@@ -277,6 +282,11 @@ function Resolve-EnvironmentArtifacts {
     
     if ($RequirePatches) {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
+        
+        # Discover secondary/shim patches (e.g., piko-shim) present in the same directory
+        if ($patchesFile) {
+            $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
+        }
     }
 
     # Pause execution and monitor directory if required files are missing with a 5-minute hard timeout
@@ -298,6 +308,9 @@ function Resolve-EnvironmentArtifacts {
             $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
             if ($RequirePatches) {
                 $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+                if ($patchesFile) {
+                    $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
+                }
             }
         }
         Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
@@ -310,7 +323,7 @@ function Resolve-EnvironmentArtifacts {
         if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $null }
     }
     
-    return @{ Cli = $cliJar; Patches = $patchesFile; Track = $patchTrack }
+    return @{ Cli = $cliJar; Patches = $patchesFile; ExtraPatches = $extraPatches; Track = $patchTrack }
 }
 
 function Invoke-PatchingWorkflow {
@@ -325,7 +338,7 @@ function Invoke-PatchingWorkflow {
     
     $envArt = Resolve-EnvironmentArtifacts -Workspace $workspace -ProjectName $projectName -RequirePatches $true
     if (-not $envArt) { return }
-    $cliJar = $envArt.Cli; $patchesFile = $envArt.Patches; $patchTrack = $envArt.Track
+    $cliJar = $envArt.Cli; $patchesFile = $envArt.Patches; $patchTrack = $envArt.Track; $extraPatches = $envArt.ExtraPatches
 
     Write-Host "`n[STEP 4] Select Target Application(s):" -ForegroundColor Yellow
     
@@ -386,20 +399,24 @@ function Invoke-PatchingWorkflow {
         Write-Host "2. Stellarium"
         Write-Host "3. PROTO"
         Write-Host "4. vpnify"
-        Write-Host "5. All Applications"
-        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 5]" -RegexPattern "^[1-5](,[1-5])*$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas."
+        Write-Host "5. Backdrops"
+        Write-Host "6. Solid Explorer"
+        Write-Host "7. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 7]" -RegexPattern "^[1-7](,[1-7])*$" -ErrorMessage "Invalid input. Enter numbers 1-7 separated by commas."
         
         $masterApps = @(
             @{ id = "1"; name = "Speedtest"; package = "org.zwanoo.android.speedtest"; keys = @("speedtest"); exclude = @(); strip = $true; stable = $cfg_speedtest_stable },
             @{ id = "2"; name = "Stellarium"; package = "com.noctuasoftware.stellarium_free"; keys = @("stellarium"); exclude = @(); strip = $true; stable = $cfg_stellarium_stable },
             @{ id = "3"; name = "PROTO"; package = "com.proto.circuitsimulator"; keys = @("proto", "circuit", "simulator"); exclude = @(); strip = $true; stable = $cfg_proto_stable },
-            @{ id = "4"; name = "vpnify"; package = "com.vpn.free.hotspot.secure.vpnify"; keys = @("vpnify"); exclude = @(); strip = $true; stable = $cfg_vpnify_stable }
+            @{ id = "4"; name = "vpnify"; package = "com.vpn.free.hotspot.secure.vpnify"; keys = @("vpnify"); exclude = @(); strip = $true; stable = $cfg_vpnify_stable },
+            @{ id = "5"; name = "Backdrops"; package = "com.backdrops.wallpapers"; keys = @("backdrops"); exclude = @(); strip = $true; stable = $cfg_backdrops_stable },
+            @{ id = "6"; name = "Solid_Explorer"; package = "pl.solidexplorer2"; keys = @("solid", "explorer"); exclude = @(); strip = $true; stable = $cfg_solidexplorer_stable }
         )
     }
 
     # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
-    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"5"} }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -411,7 +428,8 @@ function Invoke-PatchingWorkflow {
     }
     if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
         Write-Host "Note for X (Twitter): Versions 11.82.0+ have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
-        Write-Host "You MUST use the custom '11.95.1-release-ripped.0' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
+        Write-Host "You MUST use the custom '11.95.1-release-ripped.0' or '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
+        Write-Host "For v12.0.0-release.0, you ALSO need the 'piko-shim' patch file in your Piko folder!" -ForegroundColor Yellow
         Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
     }
     if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
@@ -633,6 +651,11 @@ function Invoke-PatchingWorkflow {
         "--patches=$patchAbsPath"
     )
     
+    # Integrate multi-patch support for ecosystem variants (e.g., piko-shim)
+    if ($extraPatches) {
+        foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
+    }
+    
     $null = & java $listArgs 2>&1
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $patchesListFile)) {
         Write-Host "  Failed to create patches reference file." -ForegroundColor Red
@@ -682,6 +705,10 @@ function Invoke-PatchingWorkflow {
             "--out=$jsonFileName", 
             "--filter-package-name=$($app.package)"
         )
+        
+        if ($extraPatches) {
+            foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" }
+        }
         
         $null = & java $optArgs 2>&1
         
@@ -794,6 +821,16 @@ function Invoke-PatchingWorkflow {
         foreach ($app in $selectedApps) {
             if (-not $app.TargetApk) { continue }
             
+            # Enforce strict dual-patch requirement for X v12
+            if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0") {
+                if (-not $extraPatches) {
+                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'piko-shim' patch!" -ForegroundColor Red
+                    Write-Host "      Please download it from https://gitlab.com/inotia00/piko-shim/-/releases" -ForegroundColor Red
+                    Write-Host "      and place the .mpp file inside your Piko folder before patching." -ForegroundColor Yellow
+                    continue
+                }
+            }
+            
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
             
@@ -810,7 +847,15 @@ function Invoke-PatchingWorkflow {
                 "-jar", 
                 $cliAbsPath, 
                 "patch", 
-                "--patches=$patchAbsPath", 
+                "--patches=$patchAbsPath"
+            )
+            
+            # Inject multiple patch bundles dynamically if any extra patches exist
+            if ($extraPatches) {
+                foreach ($ep in $extraPatches) { $baseArgs += "--patches=$($ep.FullName)" }
+            }
+            
+            $baseArgs += @(
                 "--options-file=$jsonFileName", 
                 $app.TargetApk, 
                 "--out=$outputApkAbs", 
@@ -1043,6 +1088,7 @@ function Invoke-UtilityWorkflow {
         
         $cliAbsPath = $envArt.Cli.FullName
         $patchAbsPath = $envArt.Patches.FullName
+        $extraPatches = $envArt.ExtraPatches
         
         if ($utilChoice -eq '3') {
             Write-Host "`n[GENERATE OPTIONS] Running for all supported apps in $($eco.Name)..." -ForegroundColor Yellow
@@ -1072,7 +1118,9 @@ function Invoke-UtilityWorkflow {
                 @(@{pkg="org.zwanoo.android.speedtest"; name="speedtest"},
                   @{pkg="com.noctuasoftware.stellarium_free"; name="stellarium"},
                   @{pkg="com.proto.circuitsimulator"; name="proto"},
-                  @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"})
+                  @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"},
+                  @{pkg="com.backdrops.wallpapers"; name="backdrops"},
+                  @{pkg="pl.solidexplorer2"; name="solid-explorer"})
             }
             
             foreach ($app in $apps) {
@@ -1088,7 +1136,14 @@ function Invoke-UtilityWorkflow {
                     "-jar", 
                     $cliAbsPath,
                     "options-create", 
-                    "--patches=$patchAbsPath", 
+                    "--patches=$patchAbsPath"
+                )
+                
+                if ($extraPatches) {
+                    foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" }
+                }
+                
+                $optArgs += @(
                     "--out=$jsonFileName", 
                     "--filter-package-name=$($app.pkg)"
                 )
@@ -1113,6 +1168,10 @@ function Invoke-UtilityWorkflow {
             }
             
             $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+            
+            if ($extraPatches) {
+                foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
+            }
             
             & java $listArgs
             
