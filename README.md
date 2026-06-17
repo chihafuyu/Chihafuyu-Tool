@@ -39,7 +39,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 Before spinning up the tool, make sure you have these ready:
 
-1. **OS**: Windows 10/11, macOS, or Linux. PowerShell 5.1+ is required for Windows (PowerShell 7+ is highly recommended). For macOS and Linux, you must install [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
+1. **OS**: Windows 10/11. PowerShell 5.1+ is required (PowerShell 7+ is highly recommended). Download [here](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
 2. **Java Development Kit (JDK) 21**: The latest Morphe CLI requires JDK 21 (a standard JRE or older JDK 17 won't cut it). Pick and install **JUST ONE** of these reliable builds:
    * [Azul Zulu JDK 21 (LTS)](https://www.azul.com/downloads/?version=java-21-lts&package=jdk)
    * **OR** [Eclipse Temurin JDK 21 (LTS)](https://adoptium.net/temurin/releases/?version=21)

@@ -54,7 +54,7 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
 $cfg_x_stable             = @(
-    "11.95.1-release-ripped.0", 
+    "11.99.0-release-ripped.1", 
     "11.80.0-alpha.1", 
     "11.82.0-beta.1", 
     "11.81.0-release.0", 
@@ -77,6 +77,12 @@ $cfg_xrecorder_stable     = @("2.5.1.1")
 # De-ReVanced
 $cfg_photos_stable        = @("Any")
 $cfg_rar_stable           = @("Any")
+
+# BholeyKaBhakt
+$cfg_speedtest_stable     = @("7.0.4")
+$cfg_stellarium_stable    = @("1.16.2")
+$cfg_proto_stable         = @("1.48.0")
+$cfg_vpnify_stable        = @("2.2.9")
 # ==============================================================================
 
 # Ensure JDK 21 or higher is installed as required by Morphe CLI
@@ -195,10 +201,11 @@ function Resolve-Ecosystem {
     Write-Host "2. Piko (X/Twitter, Instagram)"
     Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
-    Write-Host "5. Go back to Main Menu"
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input. Please enter 1-5."
+    Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify)"
+    Write-Host "6. Go back to Main Menu"
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice (1-6)" -RegexPattern "^[1-6]$" -ErrorMessage "Invalid input. Please enter 1-6."
 
-    if ($ecoChoice -eq "5") {
+    if ($ecoChoice -eq "6") {
         return $null
     }
 
@@ -207,6 +214,7 @@ function Resolve-Ecosystem {
         "2" { "Piko" }
         "3" { "hoo-dles" }
         "4" { "De-ReVanced" }
+        "5" { "BholeyKaBhakt" }
     }
     
     $workspace = Join-Path $PSScriptRoot $projectName
@@ -373,11 +381,25 @@ function Invoke-PatchingWorkflow {
             @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable },
             @{ id = "2"; name = "RAR"; package = "com.rarlab.rar"; keys = @("rar"); exclude = @(); strip = $true; stable = $cfg_rar_stable }
         )
+    } elseif ($projectName -eq "BholeyKaBhakt") {
+        Write-Host "1. Speedtest"
+        Write-Host "2. Stellarium"
+        Write-Host "3. PROTO"
+        Write-Host "4. vpnify"
+        Write-Host "5. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 5]" -RegexPattern "^[1-5](,[1-5])*$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas."
+        
+        $masterApps = @(
+            @{ id = "1"; name = "Speedtest"; package = "org.zwanoo.android.speedtest"; keys = @("speedtest"); exclude = @(); strip = $true; stable = $cfg_speedtest_stable },
+            @{ id = "2"; name = "Stellarium"; package = "com.noctuasoftware.stellarium_free"; keys = @("stellarium"); exclude = @(); strip = $true; stable = $cfg_stellarium_stable },
+            @{ id = "3"; name = "PROTO"; package = "com.proto.circuitsimulator"; keys = @("proto", "circuit", "simulator"); exclude = @(); strip = $true; stable = $cfg_proto_stable },
+            @{ id = "4"; name = "vpnify"; package = "com.vpn.free.hotspot.secure.vpnify"; keys = @("vpnify"); exclude = @(); strip = $true; stable = $cfg_vpnify_stable }
+        )
     }
 
     # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
-    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"5"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -567,6 +589,7 @@ function Invoke-PatchingWorkflow {
             
         } else {
             while ($true) {
+                # Add 'B' handling specifically for manual path entry
                 $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
                 if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
@@ -625,6 +648,8 @@ function Invoke-PatchingWorkflow {
             $headerText += " To learn more, visit https://github.com/hoo-dles/morphe-patches`n"
         } elseif ($projectName -eq "De-ReVanced") {
             $headerText += " To learn more, visit https://github.com/RookieEnough/De-ReVanced`n"
+        } elseif ($projectName -eq "BholeyKaBhakt") {
+            $headerText += " To learn more, visit https://github.com/BholeyKaBhakt/android-patches-xtra`n"
         }
         $headerText += "========================================================================`n`n"
         
@@ -1043,6 +1068,11 @@ function Invoke-UtilityWorkflow {
             } elseif ($eco.Name -eq "De-ReVanced") {
                 @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
                   @{pkg="com.rarlab.rar"; name="rar"})
+            } elseif ($eco.Name -eq "BholeyKaBhakt") {
+                @(@{pkg="org.zwanoo.android.speedtest"; name="speedtest"},
+                  @{pkg="com.noctuasoftware.stellarium_free"; name="stellarium"},
+                  @{pkg="com.proto.circuitsimulator"; name="proto"},
+                  @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"})
             }
             
             foreach ($app in $apps) {
