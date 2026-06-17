@@ -194,4 +194,6 @@ Distributed under the MIT License.
 
 Copyright (c) 2026 chihafuyu
 
-**Third-Party Code Attribution:** This tool utilizes patches and code from Morphe, Piko, hoo-dles, and De-ReVanced. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced).
+**Third-Party Code Attribution:**
+
+> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt and inoia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), and [inotia00](https://gitlab.com/inotia00/piko-shim/)
