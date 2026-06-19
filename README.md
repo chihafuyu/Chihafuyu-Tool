@@ -57,7 +57,7 @@ Before spinning up the tool, make sure you have these ready:
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). 
    * **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
-   * **For X (Twitter) v12.0.0-release.0**, you need an additional third-party patch from `inotia00`. Download `piko-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/piko-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
+   * **For X (Twitter) v12.0.0-release.0**, you need an additional third-party patch from `inotia00`. Download `x-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/x-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
@@ -87,7 +87,7 @@ Before spinning up the tool, make sure you have these ready:
  │    └── 📁 Output/                 
  ├── 📁 Piko/                        (Piko Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📦 piko-shim-x.x.x.mpp      (Optional - For X v12+)
+ │    ├── 📦 x-shim-x.x.x.mpp         (Optional - For X v12+)
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
@@ -133,7 +133,7 @@ Whenever new stable patch bundles are released with updated app version targets,
 # ==============================================================================
 # Morphe
 $cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52)
+$cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko

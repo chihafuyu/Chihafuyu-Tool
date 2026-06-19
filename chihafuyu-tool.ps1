@@ -283,7 +283,7 @@ function Resolve-EnvironmentArtifacts {
     if ($RequirePatches) {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
         
-        # Discover secondary/shim patches (e.g., piko-shim) present in the same directory
+        # Discover secondary/shim patches (e.g., x-shim) present in the same directory
         if ($patchesFile) {
             $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
         }
@@ -429,7 +429,7 @@ function Invoke-PatchingWorkflow {
     if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
         Write-Host "Note for X (Twitter): Versions 11.82.0+ have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
         Write-Host "You MUST use the custom '11.95.1-release-ripped.0' or '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
-        Write-Host "For v12.0.0-release.0, you ALSO need the 'piko-shim' patch file in your Piko folder!" -ForegroundColor Yellow
+        Write-Host "For v12.0.0-release.0, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
         Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
     }
     if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
@@ -662,7 +662,7 @@ function Invoke-PatchingWorkflow {
         "--patches=$patchAbsPath"
     )
     
-    # Integrate multi-patch support for ecosystem variants (e.g., piko-shim)
+    # Integrate multi-patch support for ecosystem variants (e.g., x-shim)
     if ($extraPatches) {
         foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
     }
@@ -835,8 +835,8 @@ function Invoke-PatchingWorkflow {
             # Enforce strict dual-patch requirement for X v12
             if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0") {
                 if (-not $extraPatches) {
-                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'piko-shim' patch!" -ForegroundColor Red
-                    Write-Host "      Please download it from https://gitlab.com/inotia00/piko-shim/-/releases" -ForegroundColor Red
+                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'x-shim' patch!" -ForegroundColor Red
+                    Write-Host "      Please download it from https://gitlab.com/inotia00/x-shim/-/releases" -ForegroundColor Red
                     Write-Host "      and place the .mpp file inside your Piko folder before patching." -ForegroundColor Yellow
                     continue
                 }
