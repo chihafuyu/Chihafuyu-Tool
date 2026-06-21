@@ -56,7 +56,7 @@ Before spinning up the tool, make sure you have these ready:
    * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). 
-   * **For X (Twitter) v11.82.0+**, you MUST use the ripped APK from the [Piko Telegram](https://t.me/pikopatches) due to anti-tamper protections.
+   * **For certain X (Twitter) versions**, standard APKs might crash due to 'pairiplib.so' protection. If they crash, use the ripped APKs (like `11.99.0-release-ripped.1`) from the [Piko Telegram](https://t.me/pikopatches).
    * **For X (Twitter) v12.0.0-release.0**, you need an additional third-party patch from `inotia00`. Download `x-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/x-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
 
 > [!NOTE]
@@ -139,10 +139,8 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 # Piko
 $cfg_x_stable             = @(
     "12.0.0-release.0",
-    "11.99.0-release-ripped.1",
-    "11.95.1-release-ripped.0", 
-    "11.80.0-alpha.1", 
-    "11.82.0-beta.1", 
+    "11.99.0-release.1",
+    "11.99.0-release-ripped.1", 
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
@@ -196,4 +194,4 @@ Copyright (c) 2026 chihafuyu
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt and inoia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), and [inotia00](https://gitlab.com/inotia00/piko-shim/)
+> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt and inoia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), and [inotia00](https://gitlab.com/inotia00/x-shim/)

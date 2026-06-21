@@ -55,10 +55,8 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 # Piko
 $cfg_x_stable             = @(
     "12.0.0-release.0",
-    "11.99.0-release-ripped.1",
-    "11.95.1-release-ripped.0", 
-    "11.80.0-alpha.1", 
-    "11.82.0-beta.1", 
+    "11.99.0-release.1",
+    "11.99.0-release-ripped.1", 
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
@@ -427,8 +425,8 @@ function Invoke-PatchingWorkflow {
         Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
     }
     if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
-        Write-Host "Note for X (Twitter): Versions 11.82.0+ have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
-        Write-Host "You MUST use the custom '11.95.1-release-ripped.0' or '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
+        Write-Host "Note for X (Twitter): Versions 11.82.0+ generally have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
+        Write-Host "You MUST use the custom '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
         Write-Host "For v12.0.0-release.0, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
         Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
     }
