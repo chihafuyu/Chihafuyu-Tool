@@ -155,7 +155,7 @@ $cfg_sleep_stable         = @("20260526")
 $cfg_duolingo_stable      = @("6.83.4")
 $cfg_merriamwebster_stable= @("Any")
 $cfg_mimo_stable          = @("9.11")
-$cfg_windy_stable         = @("50.0.2")
+$cfg_windy_stable         = @("50.1.1")
 $cfg_xrecorder_stable     = @("2.5.1.1")
 $cfg_xodo_stable          = @("10.15.0")
 
