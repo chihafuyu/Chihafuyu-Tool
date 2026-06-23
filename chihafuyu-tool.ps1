@@ -88,7 +88,7 @@ $cfg_backdrops_stable     = @("6.1.2")
 $cfg_solidexplorer_stable = @("3.4.10")
 # ==============================================================================
 
-# Ensure JDK 21+ environment
+# Validate Java environment compliance
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java missing" }
@@ -121,13 +121,12 @@ function Get-ApkVersion {
     param([string]$FileName, [string]$AppKeyword)
     
     if ($FileName -notmatch '\.(apk|apkm|xapk|apks)$') { return $null }
-    
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Use lookarounds to safely parse versions containing underscores
+    # Match standard versions and 7+ digit date codes using lookarounds to bypass trailing underscores
     $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
-    # Isolate version strings from architecture tags
+    # Weight-based pattern matching to isolate version strings from architecture tags
     $patterns = @(
         @{ P = "$AppKeyword.*?[-_]$vPat(?=[-_]|$)"; W = 10 }
         @{ P = "$vPat[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a|armeabi)"; W = 9 }
@@ -140,15 +139,12 @@ function Get-ApkVersion {
         if ($baseName -match $regex.P) {
             $ext = $Matches[1]
             $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
-            
-            # Force PSCustomObject for reliable sorting
             $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
         }
     }
     
     if ($foundVersions.Count -eq 0) { return $null }
     
-    # Select highest weighted regex match
     $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -160,7 +156,6 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
-        # Validate minimum Android package requirements
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -176,7 +171,6 @@ function Test-IsUniversalApk {
 function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
-        # Handle global abort trigger
         $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
         
         if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -199,13 +193,14 @@ function Read-ValidatedInput {
 }
 
 function Resolve-Ecosystem {
-    Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
+    Write-Host "`n[SELECT] Target Ecosystem(s):" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
     Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. Go back to Main Menu"
+    
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,5]" -RegexPattern "^([1-5](,[1-5])*|6)$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas, or 6 to go back."
 
     if ($ecoChoice -eq "6") {
@@ -226,7 +221,7 @@ function Resolve-Ecosystem {
         
         $workspace = Join-Path $PSScriptRoot $projectName
 
-        # Scaffold workspace directories
+        # Scaffold workspace hierarchy
         if (-not (Test-Path -LiteralPath $workspace)) {
             New-Item -ItemType Directory -Path $workspace -Force | Out-Null
             Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
@@ -248,14 +243,14 @@ function Resolve-EnvironmentArtifacts {
     
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
-    # Locate and sort CLI artifacts descending, zero-padding semantic versions for accuracy
+    # PadLeft regex injection prevents semantic versioning sorting flaws (e.g., v10 > v9)
     $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
     $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
     $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
     $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
 
-    Write-Host "`n[SELECT] Patcher CLI Environment:" -ForegroundColor Yellow
+    Write-Host "`n[SELECT] Patcher CLI Environment ($ProjectName):" -ForegroundColor Yellow
     Write-Host -NoNewline "1. Latest Stable CLI "
     if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
     Write-Host -NoNewline "2. Latest Pre-release CLI "
@@ -266,14 +261,13 @@ function Resolve-EnvironmentArtifacts {
     $patchesChoice = "1"
     $extraPatches = @()
     if ($RequirePatches) {
-        # Locate and sort primary patch bundles
         $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
         $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
         $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
         $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
 
-        Write-Host "`n[SELECT] Patches Environment:" -ForegroundColor Yellow
+        Write-Host "`n[SELECT] Patches Environment ($ProjectName):" -ForegroundColor Yellow
         Write-Host -NoNewline "1. Latest Stable Patches "
         if ($patchStableDisplay -eq "[Not Found]") { Write-Host $patchStableDisplay -ForegroundColor Red } else { Write-Host $patchStableDisplay -ForegroundColor Green }
         Write-Host -NoNewline "2. Latest Pre-release Patches "
@@ -288,13 +282,13 @@ function Resolve-EnvironmentArtifacts {
     if ($RequirePatches) {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
         
-        # Discover companion patches (e.g., x-shim)
+        # Discover secondary/shim companion patches implicitly based on nomenclature
         if ($patchesFile) {
             $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
         }
     }
 
-    # Await required artifacts with 5-minute timeout
+    # Execute polling loop with a 5-minute timeout if required files are absent
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
@@ -324,7 +318,7 @@ function Resolve-EnvironmentArtifacts {
     $patchTrack = if ($patchesChoice -eq "1") { "stable" } else { "dev" }
 
     if ($cliChoice -eq "2" -or ($RequirePatches -and $patchesChoice -eq "2")) {
-        Write-Host "`n[WARNING] Pre-Release Environment Detected" -ForegroundColor Yellow
+        Write-Host "`n[WARNING] Pre-Release Environment Detected for $ProjectName" -ForegroundColor Yellow
         if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $null }
     }
     
@@ -340,18 +334,23 @@ function Invoke-PatchingWorkflow {
     $ecosystems = Resolve-Ecosystem
     if (-not $ecosystems) { return }
 
+    $batchJobs = @()
+
+    # PHASE 1: Build the execution queue per ecosystem
     foreach ($eco in $ecosystems) {
         $projectName = $eco.Name; $workspace = $eco.Workspace
         
-        Write-Host "`n==============================================" -ForegroundColor Cyan
-        Write-Host "       ECOSYSTEM: $($projectName.ToUpper())" -ForegroundColor Cyan
-        Write-Host "==============================================" -ForegroundColor Cyan
+        Write-Host "`n==============================================" -ForegroundColor Magenta
+        Write-Host "       PREPARING ECOSYSTEM: $($projectName.ToUpper())" -ForegroundColor Magenta
+        Write-Host "==============================================" -ForegroundColor Magenta
 
         $envArt = Resolve-EnvironmentArtifacts -Workspace $workspace -ProjectName $projectName -RequirePatches $true
-        if (-not $envArt) { continue }
-        $cliJar = $envArt.Cli; $patchesFile = $envArt.Patches; $patchTrack = $envArt.Track; $extraPatches = $envArt.ExtraPatches
+        if (-not $envArt) { 
+            Write-Host "  [!] Skipping $projectName due to aborted artifact selection." -ForegroundColor Red
+            continue 
+        }
 
-        Write-Host "`n[STEP 4] Select Target Application(s):" -ForegroundColor Yellow
+        Write-Host "`n[+] Select Target Application(s):" -ForegroundColor Yellow
         
         if ($projectName -eq "Morphe") {
             Write-Host "1. YouTube`n2. YouTube Music`n3. Reddit`n4. All Applications"
@@ -431,28 +430,23 @@ function Invoke-PatchingWorkflow {
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
-        Write-Host "Note: Universal .apk is highly recommended, but bundle formats are natively supported." -ForegroundColor Green
 
-        # Display application-specific notices
-        if ($selectedApps | Where-Object { $_.name -eq "Reddit" }) {
-            Write-Host "Note for Reddit: You can drop bundles directly if you don't have a Universal APK!" -ForegroundColor Magenta
-        }
+        # Print application-specific warnings
         if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
             Write-Host "Note for X (Twitter): Versions 11.82.0+ generally have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
             Write-Host "You MUST use the custom '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
             Write-Host "For v12.0.0-release.0, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
-            Write-Host "(For older versions, v11.69.0-release.0 is required if you enable 'Disunify xchat system')" -ForegroundColor DarkGray
         }
         if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
             Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build codes 383611190 and 383611231. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
-            Write-Host "Note for IbisPaint X: Make sure to select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
+            Write-Host "Note for IbisPaint X: Select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
         }
 
-        Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
+        Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
-        # Mitigate path confusion by filtering ReparsePoints
+        # Filter ReparsePoints to mitigate path traversal risks
         $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
         $hasMismatch = $false
         $missingApps = 0
@@ -495,13 +489,11 @@ function Invoke-PatchingWorkflow {
             $isBundle = [System.IO.Path]::GetExtension($chosenApk.FullName) -match "\.(apkm|xapk|apks)$"
             if (-not $isBundle -and -not (Test-IsUniversalApk $chosenApk.FullName)) {
                 Write-Host "`n  [!] WARNING: This .apk is missing required core files (Split/Corrupt)!" -ForegroundColor Yellow
-                Write-Host "     Please use a fully merged or standalone Universal .apk, or a supported bundle (.apkm/.xapk/.apks)." -ForegroundColor Yellow
                 if (-not (Get-YesNoPrompt "  Force continue anyway?")) { continue }
             }
 
             $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
             
-            # Prompt manual entry if version extraction fails
             if (-not $ver) {
                 $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^(\d+(?:[\.-]\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\d{7,})$" -ErrorMessage "Use format x.x.x, x-x-x, or a build number (e.g., 20260526)"
             }
@@ -514,344 +506,233 @@ function Invoke-PatchingWorkflow {
             }
         }
 
-        # Evaluate availability of target artifacts
         $validAppsCount = ($selectedApps | Where-Object { $null -ne $_.TargetApk }).Count
         if ($validAppsCount -eq 0) {
-            Write-Host "`n[!] No matching app files found in the Input folder. Skipping ecosystem." -ForegroundColor Red
+            Write-Host "`n[!] No matching app files found in the Input folder. Skipping ecosystem $projectName." -ForegroundColor Red
             Start-Sleep -Seconds 2
             continue
         }
         
         if ($missingApps -gt 0) {
-            if (-not (Get-YesNoPrompt "`nSome selected apps are missing. Continue patching the available ones?")) { continue }
+            if (-not (Get-YesNoPrompt "`nSome selected apps are missing in $projectName. Continue patching the available ones?")) { continue }
         }
         
-        if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected. Force patch?")) { continue }
+        if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected in $projectName. Force patch?")) { continue }
 
-        Write-Host "`n[STEP 6] Select Target Architecture:" -ForegroundColor Yellow
-        Write-Host "  [i] Heads up! Make sure you pick the architecture that matches your device." -ForegroundColor DarkGray
-        Write-Host "      Picking the wrong one could mean a sluggish app, or worse, crashes/broken functionality." -ForegroundColor DarkGray
-        Write-Host "      Not sure? Grab an app like AIDA64 or CPU-Z and check the 'CPU ABI' or 'System Architecture' info." -ForegroundColor DarkGray
-        Write-Host "1. arm64-v8a`n2. armeabi-v7a`n3. x86_64`n4. x86`n5. Universal"
-        $archChoice = Read-ValidatedInput -Prompt "Choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input."
-        
-        $targetArch = switch ($archChoice) {
-            "1" { "arm64-v8a" } "2" { "armeabi-v7a" } "3" { "x86_64" } "4" { "x86" } "5" { "universal" }
+        $validApps = $selectedApps | Where-Object { $null -ne $_.TargetApk }
+        $batchJobs += [PSCustomObject]@{
+            Eco = $eco
+            Env = $envArt
+            Apps = $validApps
         }
+    }
 
-        Write-Host "`n[STEP 7] Configuration:" -ForegroundColor Yellow
-        $useCustomKeystore = Get-YesNoPrompt "Use custom keystore?"
-        
-        $keystoreFile = $null; $keystoreAlias = $null; $securePass = $null; $secureEntryPass = $null; $customSigner = $null
-        
-        if ($useCustomKeystore) {
-            Write-Host "  1. Enter credentials manually"
-            Write-Host "  2. Load from 'custom-keystore.txt'"
-            $ksMethod = Read-ValidatedInput -Prompt "Choice (1-2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+    if ($batchJobs.Count -eq 0) {
+        Write-Host "`n[!] No valid jobs queued across all selected ecosystems. Aborting workflow." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+        return
+    }
 
-            if ($ksMethod -eq "2") {
-                $ksConfigFile = Join-Path $PSScriptRoot "custom-keystore.txt"
-                
-                if (-not (Test-Path -LiteralPath $ksConfigFile)) {
-                    $template = "# Keystore configuration file`n" +
-                                "# KeystorePath: Enter the filename (if placed in the same folder as this script) OR the full path (e.g., C:\Keys\my-release-key.keystore)`n" +
-                                "KeystorePath=my-release-key.keystore`n" +
-                                "KeystoreAlias=MyAlias`n" +
-                                "KeystorePassword=my_password`n" +
-                                "KeystoreEntryPassword=my_entry_password`n" +
-                                "# Note: SignerName must be max 8 chars, NO SPACES (Android META-INF limitation)`n" +
-                                "SignerName=MySigner"
-                    Set-Content -LiteralPath $ksConfigFile -Value $template -Encoding UTF8
-                    Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
-                    Write-Host "      Please fill in your details, save the file, and run the script again." -ForegroundColor Yellow
-                    Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
-                    $null = Read-Host
-                    continue
-                }
-                
-                Write-Host "  [i] Reading 'custom-keystore.txt'..." -ForegroundColor DarkGray
-                
-                $ksConfig = @{}
-                Get-Content -LiteralPath $ksConfigFile | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
-                    $split = $_ -split '=', 2
-                    $ksConfig[$split[0].Trim()] = $split[1].Trim()
-                }
-                
-                $ks = $ksConfig['KeystorePath']
-                if (-not [string]::IsNullOrWhiteSpace($ks)) {
-                    if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
-                    if (Test-Path -LiteralPath $ks -PathType Leaf) { 
-                        $keystoreFile = $ks 
-                    } else {
-                        Write-Host "  [!] Keystore file not found at: $ks" -ForegroundColor Red
-                        Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
-                        $null = Read-Host
-                        continue
-                    }
-                } else {
-                    Write-Host "  [!] KeystorePath is empty or missing in config." -ForegroundColor Red
-                    Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
-                    $null = Read-Host
-                    continue
-                }
-                
-                $rawAlias = $ksConfig['KeystoreAlias']
-                if (-not [string]::IsNullOrWhiteSpace($rawAlias)) {
-                    $keystoreAlias = $rawAlias
-                } else {
-                    $keystoreAlias = "Morphe"
-                }
-                
-                $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
-                $securePass = ConvertTo-SecureString $rawPass -AsPlainText -Force
-                $rawPass = $null
-                
-                $rawEntryPass = if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }
-                $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
-                $rawEntryPass = $null
-                
-                $rawSigner = $ksConfig['SignerName']
-                if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
-                    $sanitizedSigner = $rawSigner -replace '[^a-zA-Z0-9_\-]', ''
-                    if ($sanitizedSigner.Length -gt 8) {
-                        $sanitizedSigner = $sanitizedSigner.Substring(0, 8)
-                    }
-                    
-                    if ($rawSigner -ne $sanitizedSigner) {
-                        Write-Host "  [i] SignerName '$rawSigner' auto-formatted to '$sanitizedSigner' to comply with Android 8-char limit." -ForegroundColor Yellow
-                    }
-                    $customSigner = $sanitizedSigner
-                } else {
-                    $customSigner = $null
-                }
-                
-                Write-Host "  [✓] Keystore configuration loaded successfully." -ForegroundColor Green
-                
-            } else {
-                while ($true) {
-                    # Handle manual path entry with abort support
-                    $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
-                    if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
-                    if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
-                    if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
-                    Write-Host "  File not found: $ks" -ForegroundColor Red
-                }
-                $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Alphanumeric, spaces, underscores, and dashes only."
-                $securePass = Read-Host "Password" -AsSecureString
-                $secureEntryPass = Read-Host "Entry Password" -AsSecureString
-                
-                $useCustomSigner = Get-YesNoPrompt "Use custom signer?"
-                if ($useCustomSigner) { 
-                    Write-Host "  [i] Android limits META-INF signatures (SignerName) to max 8 characters, NO spaces." -ForegroundColor DarkGray
-                    $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
-                }
+    # PHASE 2: Collect Global Configurations (Applies to all jobs in the queue)
+    Write-Host "`n==============================================" -ForegroundColor Cyan
+    Write-Host "           GLOBAL CONFIGURATIONS              " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+
+    Write-Host "`n[+] Select Global Target Architecture:" -ForegroundColor Yellow
+    Write-Host "1. arm64-v8a`n2. armeabi-v7a`n3. x86_64`n4. x86`n5. Universal"
+    $archChoice = Read-ValidatedInput -Prompt "Choice (1-5)" -RegexPattern "^[1-5]$" -ErrorMessage "Invalid input."
+    $targetArch = switch ($archChoice) { "1" { "arm64-v8a" } "2" { "armeabi-v7a" } "3" { "x86_64" } "4" { "x86" } "5" { "universal" } }
+
+    Write-Host "`n[+] Global Keystore Configuration:" -ForegroundColor Yellow
+    $useCustomKeystore = Get-YesNoPrompt "Use custom keystore?"
+    $keystoreFile = $null; $keystoreAlias = $null; $securePass = $null; $secureEntryPass = $null; $customSigner = $null
+    
+    if ($useCustomKeystore) {
+        Write-Host "  1. Enter credentials manually"
+        Write-Host "  2. Load from 'custom-keystore.txt'"
+        $ksMethod = Read-ValidatedInput -Prompt "Choice (1-2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+
+        if ($ksMethod -eq "2") {
+            $ksConfigFile = Join-Path $PSScriptRoot "custom-keystore.txt"
+            if (-not (Test-Path -LiteralPath $ksConfigFile)) {
+                $template = "# Keystore configuration file`nKeystorePath=my-release-key.keystore`nKeystoreAlias=MyAlias`nKeystorePassword=my_password`nKeystoreEntryPassword=my_entry_password`nSignerName=MySigner"
+                Set-Content -LiteralPath $ksConfigFile -Value $template -Encoding UTF8
+                Write-Host "  [!] 'custom-keystore.txt' not found. A template has been created in the root folder." -ForegroundColor Yellow
+                Write-Host "`nPress Enter to restart session..." -ForegroundColor DarkGray
+                $null = Read-Host
+                return
+            }
+            
+            $ksConfig = @{}
+            Get-Content -LiteralPath $ksConfigFile | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
+                $split = $_ -split '=', 2
+                $ksConfig[$split[0].Trim()] = $split[1].Trim()
+            }
+            
+            $ks = $ksConfig['KeystorePath']
+            if (-not [string]::IsNullOrWhiteSpace($ks)) {
+                if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
+                if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks } else { return }
+            } else { return }
+            
+            $rawAlias = $ksConfig['KeystoreAlias']
+            $keystoreAlias = if (-not [string]::IsNullOrWhiteSpace($rawAlias)) { $rawAlias } else { "Morphe" }
+            $securePass = ConvertTo-SecureString (if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }) -AsPlainText -Force
+            $secureEntryPass = ConvertTo-SecureString (if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }) -AsPlainText -Force
+            
+            $rawSigner = $ksConfig['SignerName']
+            if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
+                $customSigner = ($rawSigner -replace '[^a-zA-Z0-9_\-]', '').Substring(0, [math]::Min($rawSigner.Length, 8))
+            }
+            Write-Host "  [✓] Keystore configuration loaded successfully." -ForegroundColor Green
+        } else {
+            while ($true) {
+                $ks = (Read-Host "Keystore filename/path (or 'B' to go back)").Trim().Trim('"').Trim("'")
+                if ($ks -match '^[bB]$') { throw "BACK_TO_MAIN" }
+                if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
+                if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks; break }
+                Write-Host "  File not found: $ks" -ForegroundColor Red
+            }
+            $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Alphanumeric, spaces, underscores, and dashes only."
+            $securePass = Read-Host "Password" -AsSecureString
+            $secureEntryPass = Read-Host "Entry Password" -AsSecureString
+            
+            if (Get-YesNoPrompt "Use custom signer?") { 
+                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
             }
         }
+    }
 
-        Write-Host "`n[STEP 8] Exporting Available Patches List..." -ForegroundColor Yellow
+    $isWindowsOS = ($env:OS -eq 'Windows_NT')
+    $bytecodeMode = $null
+    
+    Write-Host "`n[+] Global Execution Preferences:" -ForegroundColor Yellow
+    if ($isWindowsOS) {
+        Write-Host "  [i] Bytecode Mode: Forced FULL (Windows compatibility requirement)." -ForegroundColor DarkGray
+    } else {
+        if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
+            Write-Host "1. FULL`n2. STRIP_FAST`n3. STRIP_SAFE"
+            $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
+            $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
+        }
+    }
+
+    $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
+    $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk)"
+    $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
+
+    # PHASE 3: Generate reference lists and JSON option files for all queued jobs
+    Write-Host "`n==============================================" -ForegroundColor Cyan
+    Write-Host "          GENERATING OPTION FILES             " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+
+    foreach ($job in $batchJobs) {
+        $workspace = $job.Eco.Workspace
+        $cliAbsPath = $job.Env.Cli.FullName
+        $patchAbsPath = $job.Env.Patches.FullName
+        $extraPatches = $job.Env.ExtraPatches
+        $patchTrack = $job.Env.Track
+
         $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
+        if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
         
-        if (Test-Path -LiteralPath $patchesListFile) {
-            try {
-                Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction Stop
-            } catch {
-                Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked by another process." -ForegroundColor Yellow
-            }
-        }
-        
-        $cliAbsPath = $cliJar.FullName
-        $patchAbsPath = $patchesFile.FullName
-        
-        $listArgs = @(
-            "-jar", 
-            $cliAbsPath, 
-            "list-patches", 
-            "--with-packages", 
-            "--with-versions", 
-            "--with-options", 
-            "--out=$patchesListFile", 
-            "--patches=$patchAbsPath"
-        )
-        
-        # Append dynamic patch bundles
-        if ($extraPatches) {
-            foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
-        }
+        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+        if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" } }
         
         $null = & java $listArgs 2>&1
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $patchesListFile)) {
-            Write-Host "  Failed to create patches reference file." -ForegroundColor Red
-        } else {
-            $headerText  = "========================================================================`n"
-            $headerText += " Generated via Chihafuyu Tool`n"
-            $headerText += " This tool utilizes patches and code from $projectName.`n"
-            if ($projectName -eq "Morphe") {
-                $headerText += " To learn more, visit https://morphe.software`n"
-            } elseif ($projectName -eq "Piko") {
-                $headerText += " To learn more, visit https://github.com/crimera/piko`n"
-            } elseif ($projectName -eq "hoo-dles") {
-                $headerText += " To learn more, visit https://github.com/hoo-dles/morphe-patches`n"
-            } elseif ($projectName -eq "De-ReVanced") {
-                $headerText += " To learn more, visit https://github.com/RookieEnough/De-ReVanced`n"
-            } elseif ($projectName -eq "BholeyKaBhakt") {
-                $headerText += " To learn more, visit https://github.com/BholeyKaBhakt/android-patches-xtra`n"
-            }
-            $headerText += "========================================================================`n`n"
-            
-            $originalContent = Get-Content -LiteralPath $patchesListFile -Raw
-            Set-Content -LiteralPath $patchesListFile -Value ($headerText + $originalContent) -Encoding UTF8
-            
-            Write-Host "  Reference file created: $(Split-Path $patchesListFile -Leaf)" -ForegroundColor Green
+        if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
+            Write-Host "  [✓] Reference list created: $(Split-Path $patchesListFile -Leaf) ($($job.Eco.Name))" -ForegroundColor Green
         }
 
-        Write-Host "`n[STEP 9] Generating Option Files..." -ForegroundColor Yellow
-
-        foreach ($app in $selectedApps) {
-            if (-not $app.TargetApk) { continue }
-            
+        foreach ($app in $job.Apps) {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
+            if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
             
-            # Remove existing options to prevent CLI conflicts
-            if (Test-Path -LiteralPath $jsonFileName) {
-                try {
-                    Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction Stop
-                } catch {
-                    Write-Host "  [!] Warning: Could not remove existing options JSON. It may be locked by another process." -ForegroundColor Yellow
-                }
-            }
-            
-            $optArgs = @(
-                "-jar", 
-                $cliAbsPath, 
-                "options-create", 
-                "--patches=$patchAbsPath", 
-                "--out=$jsonFileName", 
-                "--filter-package-name=$($app.package)"
-            )
-            
-            if ($extraPatches) {
-                foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" }
-            }
+            $optArgs = @("-jar", $cliAbsPath, "options-create", "--patches=$patchAbsPath")
+            if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" } }
+            $optArgs += @("--out=$jsonFileName", "--filter-package-name=$($app.package)")
             
             $null = & java $optArgs 2>&1
-            
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $jsonFileName)) {
-                Write-Host "  [!] Options generation failed for $($app.name). Skipping ecosystem." -ForegroundColor Red
-                continue
+            if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
+                Write-Host "  [✓] Options generated for $($app.name) ($($job.Eco.Name))" -ForegroundColor Green
+            } else {
+                Write-Host "  [!] Options generation failed for $($app.name)." -ForegroundColor Red
             }
-            Write-Host "  [✓] Options generated for $($app.name)" -ForegroundColor Green
         }
+    }
 
-        Write-Host "`n[STEP 10] Options Generated Successfully." -ForegroundColor Cyan
-        if (Get-YesNoPrompt "Modify JSON files before patching?") {
-            Write-Host "  [TIP] Confused on what to edit? Check the '$(Split-Path $patchesListFile -Leaf)' file generated in Step 8 for reference." -ForegroundColor DarkGray
-            Write-Host "Awaiting manual modifications. Press any key to resume..." -ForegroundColor Magenta
-            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        }
+    # PHASE 4: Global Pause & JSON Constraint Evaluation
+    Write-Host "`n[OPTIONS READY] All configuration files have been generated." -ForegroundColor Cyan
+    if (Get-YesNoPrompt "Modify JSON files before patching?") {
+        Write-Host "  [TIP] Check the 'list-patches-xxx.txt' files in each workspace for reference." -ForegroundColor DarkGray
+        Write-Host "Awaiting manual modifications. Setup your workspaces, then press any key to initiate the Batch Sequence..." -ForegroundColor Magenta
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    }
 
-        $constraintError = $false
-        foreach ($app in $selectedApps) {
+    $abortBatch = $false
+    foreach ($job in $batchJobs) {
+        foreach ($app in $job.Apps) {
             if ($app.name -eq "X_Twitter" -and $app.TargetVersion -ne "11.69.0-release.0") {
-                $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
+                $jsonFileName = Join-Path $job.Eco.Workspace "$($app.name.ToLower().Replace('_','-'))-options-$($job.Env.Track).json"
                 if (Test-Path -LiteralPath $jsonFileName) {
                     try {
-                        # Enforce version constraints for specific patches
                         $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
                         if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
                             Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
                             Write-Host "    You enabled the 'Disunify xchat system' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
                             Write-Host "    This specific patch ONLY supports v11.69.0-release.0." -ForegroundColor Red
-                            $constraintError = $true
+                            if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
                         }
                     } catch { }
                 }
             }
         }
+    }
+    if ($abortBatch) { Write-Host "`n[i] Operations aborted due to constraint violation." -ForegroundColor Yellow; Start-Sleep -Seconds 2; return }
+
+    # PHASE 5: Unattended Batch Execution
+    Write-Host "`n==============================================" -ForegroundColor Cyan
+    Write-Host "           BATCH PATCHING EXECUTION           " -ForegroundColor Cyan
+    Write-Host "==============================================" -ForegroundColor Cyan
+
+    $heapSize = "2G"
+    try {
+        $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
+        if ($ramInfo) {
+            $sysRamGB = [math]::Round($ramInfo.TotalPhysicalMemory / 1GB)
+            if ($sysRamGB -ge 8) { $heapSize = "4G" } elseif ($sysRamGB -ge 6) { $heapSize = "3G" }
+            Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
+        }
+    } catch { }
+    
+    try {
+        $plainPass = $null; $plainEntryPass = $null
+        $bstr1 = [IntPtr]::Zero; $bstr2 = [IntPtr]::Zero
         
-        if ($constraintError) {
-            if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to fail/crash)")) {
-                continue
-            }
+        if ($useCustomKeystore) {
+            $bstr1 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePass)
+            $plainPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr1)
+            $bstr2 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureEntryPass)
+            $plainEntryPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr2)
         }
 
-        Write-Host "`n[STEP 11] Bytecode Mode Configuration..." -ForegroundColor Yellow
-        $bytecodeMode = $null
-        
-        $isWindowsOS = ($env:OS -eq 'Windows_NT')
-        
-        if ($isWindowsOS) {
-            Write-Host "  [i] Skipped. Morphe CLI currently forces 'FULL' bytecode mode on Windows." -ForegroundColor DarkGray
-        } else {
-            if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
-                Write-Host "1. FULL       (Legacy: rebuilds all dex, slow, highest memory)"
-                Write-Host "2. STRIP_FAST (CLI Default: fastest, least memory, bigger APK)"
-                Write-Host "3. STRIP_SAFE (Manager Default: balanced speed, memory, and APK size)"
-                $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
-                $bytecodeMode = switch ($bcChoice) {
-                    "1" { "FULL" }
-                    "2" { "STRIP_FAST" }
-                    "3" { "STRIP_SAFE" }
-                }
-            }
-        }
+        foreach ($job in $batchJobs) {
+            $workspace = $job.Eco.Workspace
+            $projectName = $job.Eco.Name
+            $cliAbsPath = $job.Env.Cli.FullName
+            $patchAbsPath = $job.Env.Patches.FullName
+            $extraPatches = $job.Env.ExtraPatches
+            $patchTrack = $job.Env.Track
+            $cliJar = $job.Env.Cli
 
-        Write-Host "`n[STEP 12] Signing Configuration..." -ForegroundColor Yellow
-        $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
+            $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
+            if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
-        Write-Host "`n[STEP 13] Verification Configuration..." -ForegroundColor Yellow
-        $verifyWithSdk = Get-YesNoPrompt "Verify the patched app with a local Android SDK? (--verify-with-sdk)"
-        if ($verifyWithSdk) {
-            Write-Host "  [i] Just a heads up: You'll need a proper Android SDK installed on your machine for this to work," -ForegroundColor DarkGray
-            Write-Host "      specifically the 'build-tools' and 'platforms' packages." -ForegroundColor DarkGray
-            Write-Host "      If Morphe CLI can't find them, the patching process will throw an error and abort." -ForegroundColor DarkGray
-        }
-
-        Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
-        $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
-        
-        # Dynamically allocate JVM heap size based on system RAM
-        $heapSize = "2G"
-        try {
-            $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
-            if ($ramInfo) {
-                $sysRamGB = [math]::Round($ramInfo.TotalPhysicalMemory / 1GB)
-                if ($sysRamGB -ge 8) { 
-                    $heapSize = "4G" 
-                } elseif ($sysRamGB -ge 6) { 
-                    $heapSize = "3G" 
-                }
-                Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
-            }
-        } catch {
-            Write-Host "  [i] Could not detect RAM. Using safe fallback Java Heap Space: -$heapSize" -ForegroundColor DarkGray
-        }
-        
-        $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
-        if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
-        
-        # Initialize keystore credentials
-        try {
-            $plainPass = $null; $plainEntryPass = $null
-            $bstr1 = [IntPtr]::Zero; $bstr2 = [IntPtr]::Zero
-            
-            if ($useCustomKeystore) {
-                $bstr1 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePass)
-                $plainPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr1)
-                $bstr2 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureEntryPass)
-                $plainEntryPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr2)
-            }
-
-            foreach ($app in $selectedApps) {
-                if (-not $app.TargetApk) { continue }
-                
-                # Enforce x-shim requirement for X/Twitter v12
-                if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0") {
-                    if (-not $extraPatches) {
-                        Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'x-shim' patch!" -ForegroundColor Red
-                        Write-Host "      Please download it from https://gitlab.com/inotia00/x-shim/-/releases" -ForegroundColor Red
-                        Write-Host "      and place the .mpp file inside your Piko folder before patching." -ForegroundColor Yellow
-                        continue
-                    }
+            foreach ($app in $job.Apps) {
+                # Shim enforcement gate
+                if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0" -and -not $extraPatches) {
+                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'x-shim' patch! Skipping..." -ForegroundColor Red
+                    continue
                 }
                 
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
@@ -860,30 +741,15 @@ function Invoke-PatchingWorkflow {
                 $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -Force -ErrorAction Ignore }
                 
-                Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) <<<" -ForegroundColor Magenta
+                Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) [$projectName] <<<" -ForegroundColor Magenta
                 
                 $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
                 Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
                 
-                $baseArgs = @(
-                    "-Xmx$heapSize",
-                    "-jar", 
-                    $cliAbsPath, 
-                    "patch", 
-                    "--patches=$patchAbsPath"
-                )
+                $baseArgs = @("-Xmx$heapSize", "-jar", $cliAbsPath, "patch", "--patches=$patchAbsPath")
+                if ($extraPatches) { foreach ($ep in $extraPatches) { $baseArgs += "--patches=$($ep.FullName)" } }
                 
-                if ($extraPatches) {
-                    foreach ($ep in $extraPatches) { $baseArgs += "--patches=$($ep.FullName)" }
-                }
-                
-                $baseArgs += @(
-                    "--options-file=$jsonFileName", 
-                    $app.TargetApk, 
-                    "--out=$outputApkAbs", 
-                    "--result-file=$tempResultFile",
-                    "--purge"
-                )
+                $baseArgs += @("--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkAbs", "--result-file=$tempResultFile", "--purge")
                 
                 if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
                 if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
@@ -896,22 +762,14 @@ function Invoke-PatchingWorkflow {
                     if ($customSigner) { $baseArgs += "--signer=$customSigner" }
                 }
                 
-                # Enforce architecture stripping
-                if ($app.strip -and ($targetArch -ne "universal")) { 
-                    $baseArgs += "--striplibs=$targetArch" 
-                }
-
+                if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs=$targetArch" }
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
-                Write-Host "  Executing Patcher CLI..." -ForegroundColor DarkGray
-                
-                # Stream output to console and log file
                 & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
                 
-                # Implement retry loop to bypass lingering JVM file locks on Windows
+                # Relentless cleanup loop for Windows file locks
                 if ($isWindowsOS) {
                     Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
-                    
                     Start-Sleep -Seconds 3
                     
                     $morpheTmpDirs = @(
@@ -923,19 +781,11 @@ function Invoke-PatchingWorkflow {
                     foreach ($tmpDir in $morpheTmpDirs) {
                         if (Test-Path -LiteralPath $tmpDir) {
                             $patchDirs = Get-ChildItem -LiteralPath $tmpDir -Filter "patching-*" -Directory -ErrorAction SilentlyContinue
-                            
                             foreach ($pDir in $patchDirs) {
-                                $retry = 0
-                                $deleted = $false
+                                $retry = 0; $deleted = $false
                                 while (-not $deleted -and $retry -lt 5) {
                                     Remove-Item -LiteralPath $pDir.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                                    
-                                    if (-not (Test-Path -LiteralPath $pDir.FullName)) {
-                                        $deleted = $true
-                                    } else {
-                                        $retry++
-                                        Start-Sleep -Seconds 2
-                                    }
+                                    if (-not (Test-Path -LiteralPath $pDir.FullName)) { $deleted = $true } else { $retry++; Start-Sleep -Seconds 2 }
                                 }
                             }
                         }
@@ -949,54 +799,58 @@ function Invoke-PatchingWorkflow {
                     Write-Host "  [✓] Patching SUCCEEDED" -ForegroundColor Green
                 }
             }
-        } finally {
-            # Free unmanaged memory pointers
-            if ($bstr1 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr1) }
-            if ($bstr2 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr2) }
-            
-            # Trigger Garbage Collection for sensitive strings
-            if ($plainPass) { 
-                $plainPass = $null; Clear-Variable plainPass -ErrorAction Ignore
-                [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() 
-            }
-            if ($plainEntryPass) { 
-                $plainEntryPass = $null; Clear-Variable plainEntryPass -ErrorAction Ignore
-                [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() 
-            }
-            
-            if ($securePass) { $securePass.Dispose() }
-            if ($secureEntryPass) { $secureEntryPass.Dispose() }
         }
+    } finally {
+        # Secure string memory flush
+        if ($bstr1 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr1) }
+        if ($bstr2 -ne [IntPtr]::Zero) { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr2) }
+        if ($plainPass) { $plainPass = $null; Clear-Variable plainPass -ErrorAction Ignore; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() }
+        if ($plainEntryPass) { $plainEntryPass = $null; Clear-Variable plainEntryPass -ErrorAction Ignore; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers() }
+        if ($securePass) { $securePass.Dispose() }
+        if ($secureEntryPass) { $secureEntryPass.Dispose() }
+    }
 
-        Write-Host "`n[SUCCESS] Operations concluded for $projectName." -ForegroundColor Green
+    # PHASE 6: Post-Execution Exports
+    Write-Host "`n[SUCCESS] Batch operations concluded." -ForegroundColor Green
 
-        if (Get-YesNoPrompt "`nExport patching logs for $projectName?") {
-            $logPath = Join-Path $workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+    if (Get-YesNoPrompt "`nExport patching logs?") {
+        foreach ($job in $batchJobs) {
+            $logPath = Join-Path $job.Eco.Workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+            $tempLogFile = Join-Path $job.Eco.Workspace "Output\temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) { 
                 Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf) 
-                Write-Host "  -> Log exported successfully to: .\Output\$(Split-Path $logPath -Leaf)" -ForegroundColor Green
+                Write-Host "  -> Log exported: .\$($job.Eco.Name)\Output\$(Split-Path $logPath -Leaf)" -ForegroundColor Green
             }
-        } else {
+        }
+    } else {
+        foreach ($job in $batchJobs) {
+            $tempLogFile = Join-Path $job.Eco.Workspace "Output\temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -ErrorAction Ignore }
         }
+    }
 
-        if (Get-YesNoPrompt "Export patching result JSON for $projectName? (--result-file)") {
-            foreach ($app in $selectedApps) {
-                $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+    if (Get-YesNoPrompt "Export patching result JSONs? (--result-file)") {
+        foreach ($job in $batchJobs) {
+            foreach ($app in $job.Apps) {
+                $tempResultFile = Join-Path $job.Eco.Workspace "Output\temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) {
                     $finalResultName = "Result_$($app.name)_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
                     Rename-Item -LiteralPath $tempResultFile -NewName $finalResultName
-                    Write-Host "  -> JSON result exported to: .\Output\$finalResultName" -ForegroundColor Green
+                    Write-Host "  -> JSON result exported: .\$($job.Eco.Name)\Output\$finalResultName" -ForegroundColor Green
                 }
             }
-        } else {
-            foreach ($app in $selectedApps) {
-                $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+        }
+    } else {
+        foreach ($job in $batchJobs) {
+            foreach ($app in $job.Apps) {
+                $tempResultFile = Join-Path $job.Eco.Workspace "Output\temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -ErrorAction Ignore }
             }
         }
+    }
 
-        if (Get-YesNoPrompt "Open $projectName output directory?") { Invoke-Item "$workspace\Output" }
+    if (Get-YesNoPrompt "Open output directories?") { 
+        foreach ($job in $batchJobs) { Invoke-Item "$($job.Eco.Workspace)\Output" } 
     }
     
     Write-Host "`nPress Enter to return to Main Menu..." -ForegroundColor Magenta
