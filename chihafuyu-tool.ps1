@@ -64,15 +64,16 @@ $cfg_ig_stable            = @("430.0.0.53.80")
 
 # hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
-$cfg_ibispaint_stable     = @("14.0.1")
+$cfg_ibispaint_stable     = @("14.0.4")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.15.5.2604080000")
 $cfg_sleep_stable         = @("20260526")
-$cfg_duolingo_stable      = @("6.82.3")
+$cfg_duolingo_stable      = @("6.83.4")
 $cfg_merriamwebster_stable= @("Any")
 $cfg_mimo_stable          = @("9.11")
 $cfg_windy_stable         = @("50.0.2")
 $cfg_xrecorder_stable     = @("2.5.1.1")
+$cfg_xodo_stable          = @("10.15.0")
 
 # De-ReVanced
 $cfg_photos_stable        = @("Any")
@@ -201,7 +202,7 @@ function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem:" -ForegroundColor Yellow
     Write-Host "1. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "2. Piko (X/Twitter, Instagram)"
-    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android)"
+    Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. Go back to Main Menu"
@@ -369,8 +370,9 @@ function Invoke-PatchingWorkflow {
         Write-Host "8. Mimo"
         Write-Host "9. Windy"
         Write-Host "10. XRecorder"
-        Write-Host "11. All Applications"
-        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 11]" -RegexPattern "^(1[0-1]|[1-9])(,(1[0-1]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-11 separated by commas."
+        Write-Host "11. Xodo"
+        Write-Host "12. All Applications"
+        $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 12]" -RegexPattern "^(1[0-2]|[1-9])(,(1[0-2]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-12 separated by commas."
         
         $masterApps = @(
             @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
@@ -382,7 +384,8 @@ function Invoke-PatchingWorkflow {
             @{ id = "7"; name = "Merriam_Webster"; package = "com.merriamwebster"; keys = @("merriam", "webster", "merriamwebster"); exclude = @(); strip = $true; stable = $cfg_merriamwebster_stable },
             @{ id = "8"; name = "Mimo"; package = "com.getmimo"; keys = @("mimo"); exclude = @(); strip = $true; stable = $cfg_mimo_stable },
             @{ id = "9"; name = "Windy"; package = "com.windyty.android"; keys = @("windy", "windyty"); exclude = @(); strip = $true; stable = $cfg_windy_stable },
-            @{ id = "10"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable }
+            @{ id = "10"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable },
+            @{ id = "11"; name = "Xodo"; package = "com.xodo.pdf.reader"; keys = @("xodo"); exclude = @(); strip = $true; stable = $cfg_xodo_stable }
         )
     } elseif ($projectName -eq "De-ReVanced") {
         Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
@@ -414,7 +417,7 @@ function Invoke-PatchingWorkflow {
 
     # Cast to ensure it's always an array even if a single item is selected
     $choices = $appSelection.Split(',')
-    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"11"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} }
+    $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} }
     $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
     Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -1119,7 +1122,8 @@ function Invoke-UtilityWorkflow {
                   @{pkg="com.merriamwebster"; name="merriam-webster"},
                   @{pkg="com.getmimo"; name="mimo"},
                   @{pkg="com.windyty.android"; name="windy"},
-                  @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"})
+                  @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"},
+                  @{pkg="com.xodo.pdf.reader"; name="xodo"})
             } elseif ($eco.Name -eq "De-ReVanced") {
                 @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
                   @{pkg="com.rarlab.rar"; name="rar"})

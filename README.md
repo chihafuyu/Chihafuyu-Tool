@@ -148,15 +148,16 @@ $cfg_ig_stable            = @("430.0.0.53.80")
 
 # hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
-$cfg_ibispaint_stable     = @("14.0.1")
+$cfg_ibispaint_stable     = @("14.0.4")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.15.5.2604080000")
 $cfg_sleep_stable         = @("20260526")
-$cfg_duolingo_stable      = @("6.82.3")
+$cfg_duolingo_stable      = @("6.83.4")
 $cfg_merriamwebster_stable= @("Any")
 $cfg_mimo_stable          = @("9.11")
 $cfg_windy_stable         = @("50.0.2")
 $cfg_xrecorder_stable     = @("2.5.1.1")
+$cfg_xodo_stable          = @("10.15.0")
 
 # De-ReVanced
 $cfg_photos_stable        = @("Any")
@@ -194,4 +195,4 @@ Copyright (c) 2026 chihafuyu
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt and inoia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), and [inotia00](https://gitlab.com/inotia00/x-shim/)
+> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt and inotia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), and [inotia00](https://gitlab.com/inotia00/x-shim/)
