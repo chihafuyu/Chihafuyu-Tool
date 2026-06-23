@@ -124,15 +124,16 @@ function Get-ApkVersion {
     
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
-    # Regex logic: Match 7+ digit date codes (e.g., 20260526) or standard version formats.
-    # Suffix parsing is clamped to explicitly prevent matching APKMirror tags (e.g., build code, DPI, arch).
-    $vPat = "(\b\d{7,}\b|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
+    # We use negative lookbehinds/lookaheads for digits (?<!\d) and (?!\d) instead of \b.
+    # This prevents the regex from choking on underscores (like in Duolingo), which are technically word characters.
+    $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
+    # We use a positive lookahead (?=[-_]|$) to strictly cut off garbage APKMirror suffixes (like -arm64 or _arm64)
     $patterns = @(
-        @{ P = "$AppKeyword.*?[-_]$vPat\b"; W = 10 }
+        @{ P = "$AppKeyword.*?[-_]$vPat(?=[-_]|$)"; W = 10 }
         @{ P = "$vPat[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a|armeabi)"; W = 9 }
-        @{ P = "v$vPat\b"; W = 7 }
-        @{ P = "(?<!\d)$vPat\b"; W = 5 }
+        @{ P = "v$vPat(?=[-_]|$)"; W = 7 }
+        @{ P = "(?<!\d)$vPat(?=[-_]|$)"; W = 5 }
     )
     
     $foundVersions = @()
@@ -148,7 +149,7 @@ function Get-ApkVersion {
     
     if ($foundVersions.Count -eq 0) { return $null }
     
-    # Fallback weight system to pick the most accurate version string if multiple matches occur
+    # Fallback weight system: picks the most accurate regex hit if multiple patterns match
     $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -160,7 +161,7 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
-        # Basic validation to ensure the file is a valid Android package structure
+        # Super quick sniff test to see if the file is a valid Android package structure
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -176,7 +177,7 @@ function Test-IsUniversalApk {
 function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
-        # Global abort trigger: typing 'B' or 'b' throws an exception to safely return to the main menu
+        # Global abort trigger: typing 'B' throws an exception to safely return to the main menu
         $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
         
         if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -222,7 +223,7 @@ function Resolve-Ecosystem {
     
     $workspace = Join-Path $PSScriptRoot $projectName
 
-    # Create the directory structure if it does not exist
+    # Scaffolding: Create the environment directories automatically if they don't exist
     if (-not (Test-Path -LiteralPath $workspace)) {
         New-Item -ItemType Directory -Path $workspace -Force | Out-Null
         Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
@@ -241,8 +242,8 @@ function Resolve-EnvironmentArtifacts {
     
     Set-Location -LiteralPath $Workspace -ErrorAction Stop
 
-    # Scan root and workspace directories for CLI engine jars
-    # Implement zero-padding regex to accurately sort semantic versions (e.g., preventing v10.0 being sorted below v9.0)
+    # Scan the root directory and the target workspace for CLI engine jars
+    # PadLeft is our secret weapon here to accurately sort semantic versions (e.g., preventing v10.0 being sorted below v9.0)
     $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
     $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
@@ -282,13 +283,13 @@ function Resolve-EnvironmentArtifacts {
     if ($RequirePatches) {
         $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
         
-        # Discover secondary/shim patches (e.g., x-shim) present in the same directory
+        # Shim Discovery logic: Hunts down secondary patches (like x-shim.mpp) if they exist alongside the main patch
         if ($patchesFile) {
             $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
         }
     }
 
-    # Pause execution and monitor directory if required files are missing with a 5-minute hard timeout
+    # Pause execution and monitor directory if required files are missing (with a 5-minute hard timeout)
     if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
         Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
         if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
@@ -442,7 +443,7 @@ function Invoke-PatchingWorkflow {
 
     Write-Host "`n[STEP 5] Validating Dependencies..." -ForegroundColor Yellow
     
-    # Filter out potential Symlinks or ReparsePoints to prevent path confusion abuse
+    # Filter out potential Symlinks or ReparsePoints to prevent path confusion abuse (Security best practice)
     $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
     $hasMismatch = $false
     $missingApps = 0
@@ -491,7 +492,7 @@ function Invoke-PatchingWorkflow {
 
         $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
         
-        # Fallback to manual entry if our regex fails to catch the version
+        # Fallback: If our regex is confused by a heavily mangled filename, we just ask the user directly
         if (-not $ver) {
             $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^(\d+(?:[\.-]\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\d{7,})$" -ErrorMessage "Use format x.x.x, x-x-x, or a build number (e.g., 20260526)"
         }
@@ -701,6 +702,7 @@ function Invoke-PatchingWorkflow {
         
         $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
         
+        # Sweep out old JSON options before generating new ones so the Morphe CLI doesn't throw a silent fit
         if (Test-Path -LiteralPath $jsonFileName) {
             try {
                 Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction Stop
@@ -798,7 +800,8 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[STEP 14] Patching & Cleanup Sequence..." -ForegroundColor Yellow
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
     
-    # JVM Heap Allocation: Calculate physical RAM and set a safe -Xmx limit to prevent OutOfMemory crashes
+    # Smart JVM Heap Allocation
+    # Java is a memory hog. We check your physical RAM and feed Java the optimal -Xmx value so it doesn't crash mid-patch.
     $heapSize = "2G"
     try {
         $ramInfo = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
@@ -833,7 +836,7 @@ function Invoke-PatchingWorkflow {
         foreach ($app in $selectedApps) {
             if (-not $app.TargetApk) { continue }
             
-            # Enforce strict dual-patch requirement for X v12
+            # Hard limit: X v12 literally bootloops without the inotia00 shim, so we forcefully block the process here if it's missing
             if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0") {
                 if (-not $extraPatches) {
                     Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'x-shim' patch!" -ForegroundColor Red
@@ -899,7 +902,9 @@ function Invoke-PatchingWorkflow {
             # Stream the Java output to the console and temp log file simultaneously
             & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
             
-            # Bypass JVM memory-mapped file locks on Windows
+            # Windows File Lock Workaround
+            # Java processes tend to hold onto memory-mapped .dex files even after they die.
+            # We use a relentless retry loop to delete the folder until Windows finally lets it go.
             if ($isWindowsOS) {
                 Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
                 
