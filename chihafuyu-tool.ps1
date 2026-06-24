@@ -139,12 +139,15 @@ function Get-ApkVersion {
         if ($baseName -match $regex.P) {
             $ext = $Matches[1]
             $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
+            
+            # Force PSCustomObject for reliable sorting
             $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
         }
     }
     
     if ($foundVersions.Count -eq 0) { return $null }
     
+    # Select highest weighted regex match
     $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -156,6 +159,7 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
+        # Validate minimum Android package requirements
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -171,6 +175,7 @@ function Test-IsUniversalApk {
 function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
+        # Handle global abort trigger
         $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
         
         if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
@@ -221,7 +226,7 @@ function Resolve-Ecosystem {
         
         $workspace = Join-Path $PSScriptRoot $projectName
 
-        # Scaffold workspace hierarchy
+        # Scaffold workspace directories
         if (-not (Test-Path -LiteralPath $workspace)) {
             New-Item -ItemType Directory -Path $workspace -Force | Out-Null
             Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
@@ -577,8 +582,14 @@ function Invoke-PatchingWorkflow {
             
             $rawAlias = $ksConfig['KeystoreAlias']
             $keystoreAlias = if (-not [string]::IsNullOrWhiteSpace($rawAlias)) { $rawAlias } else { "Morphe" }
-            $securePass = ConvertTo-SecureString (if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }) -AsPlainText -Force
-            $secureEntryPass = ConvertTo-SecureString (if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }) -AsPlainText -Force
+            
+            $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
+            $securePass = ConvertTo-SecureString $rawPass -AsPlainText -Force
+            $rawPass = $null
+            
+            $rawEntryPass = if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }
+            $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
+            $rawEntryPass = $null
             
             $rawSigner = $ksConfig['SignerName']
             if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
