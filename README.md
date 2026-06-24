@@ -13,13 +13,13 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, etc.), De-ReVanced (`Google Photos`, `RAR`), and BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`) workspaces in a single script.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), and BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,5`) to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard and root-mount modes), or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
 - **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`), and validates them against an array of supported versions.
-- **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" patch is forced on an incompatible Twitter APK).
+- **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific `Disunify xchat system` or `Block redirecting to X Lite` patch is forced on an incompatible Twitter APK).
 - **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
 - **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
@@ -57,7 +57,7 @@ Before spinning up the tool, make sure you have these ready:
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). 
    * **For certain X (Twitter) versions**, standard APKs might crash due to 'pairiplib.so' protection. If they crash, use the ripped APKs (like `11.99.0-release-ripped.1`) from the [Piko Telegram](https://t.me/pikopatches).
-   * **For X (Twitter) v12.0.0-release.0**, you need an additional third-party patch from `inotia00`. Download `x-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/x-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
+   * **For X (Twitter) versions 12.0.0 and above**, you need an additional third-party patch from `inotia00`. Download `x-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/x-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
@@ -119,7 +119,9 @@ Before spinning up the tool, make sure you have these ready:
 >
 > Inside your generated `options.json`, you might notice patches like `Override certificate pinning`, `Change package name`, and `Disable Play Store updates`. These are **Universal Patches** designed to work on *any* app.
 > 
-> However, they have a major weakness: **they do NOT support every app out there**. For example, applying them to random, unsupported apps (like banking apps or heavily secured games) will likely fail or cause crashes. Use them with caution!
+> Keep in mind: Each ecosystem (Morphe, Piko, hoo-dles, etc.) explicitly bundles its *own* specific set of universal patches inside their respective `.mpp` files. They are not globally shared across different patchers.
+>
+> Furthermore, they have a major weakness: **they do NOT support every app out there**. For example, applying them to random, unsupported apps (like banking apps or heavily secured games) will likely fail or cause crashes. Use them with caution!
 
 ---
 
@@ -138,13 +140,13 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
 $cfg_x_stable             = @(
+    "12.2.0-release.0",
     "12.0.0-release.0",
-    "11.99.0-release.1",
     "11.99.0-release-ripped.1", 
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
-$cfg_ig_stable            = @("430.0.0.53.80")
+$cfg_ig_stable            = @("435.0.0.37.76")
 
 # hoo-dles
 $cfg_adguard_stable       = @("4.12.81")

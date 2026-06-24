@@ -54,13 +54,13 @@ $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
 $cfg_x_stable             = @(
+    "12.2.0-release.0",
     "12.0.0-release.0",
-    "11.99.0-release.1",
     "11.99.0-release-ripped.1", 
     "11.81.0-release.0", 
     "11.69.0-release.0"
 )
-$cfg_ig_stable            = @("430.0.0.53.80")
+$cfg_ig_stable            = @("435.0.0.37.76")
 
 # hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
@@ -436,14 +436,14 @@ function Invoke-PatchingWorkflow {
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
 
-        # Print application-specific warnings
+        # Display application-specific notices
         if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
             Write-Host "Note for X (Twitter): Versions 11.82.0+ generally have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
             Write-Host "You MUST use the custom '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
-            Write-Host "For v12.0.0-release.0, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
+            Write-Host "For v12.0.0+ releases, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
         }
         if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
-            Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build codes 383611190 and 383611231. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
+            Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384109456. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
             Write-Host "Note for IbisPaint X: Select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
@@ -451,7 +451,7 @@ function Invoke-PatchingWorkflow {
 
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
-        # Filter ReparsePoints to mitigate path traversal risks
+        # Mitigate path confusion by filtering ReparsePoints
         $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
         $hasMismatch = $false
         $missingApps = 0
@@ -499,6 +499,7 @@ function Invoke-PatchingWorkflow {
 
             $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
             
+            # Prompt manual entry if version extraction fails
             if (-not $ver) {
                 $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^(\d+(?:[\.-]\d+)*(?:-[a-zA-Z0-9\-\.]+)?|\d{7,})$" -ErrorMessage "Use format x.x.x, x-x-x, or a build number (e.g., 20260526)"
             }
@@ -683,16 +684,35 @@ function Invoke-PatchingWorkflow {
     $abortBatch = $false
     foreach ($job in $batchJobs) {
         foreach ($app in $job.Apps) {
-            if ($app.name -eq "X_Twitter" -and $app.TargetVersion -ne "11.69.0-release.0") {
+            if ($app.name -eq "X_Twitter") {
                 $jsonFileName = Join-Path $job.Eco.Workspace "$($app.name.ToLower().Replace('_','-'))-options-$($job.Env.Track).json"
                 if (Test-Path -LiteralPath $jsonFileName) {
                     try {
                         $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
-                        if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
-                            Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
-                            Write-Host "    You enabled the 'Disunify xchat system' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
-                            Write-Host "    This specific patch ONLY supports v11.69.0-release.0." -ForegroundColor Red
-                            if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
+                        
+                        # Constraint 1: Disunify xchat system
+                        if ($app.TargetVersion -ne "11.69.0-release.0") {
+                            if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
+                                Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
+                                Write-Host "    You enabled the 'Disunify xchat system' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
+                                Write-Host "    This specific patch ONLY supports v11.69.0-release.0." -ForegroundColor Red
+                                if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
+                            }
+                        }
+                        
+                        # Constraint 2: Block redirecting to X Lite
+                        $verMatch = [regex]::Match($app.TargetVersion, "^(\d+)\.(\d+)")
+                        if ($verMatch.Success) {
+                            $major = [int]$verMatch.Groups[1].Value
+                            $minor = [int]$verMatch.Groups[2].Value
+                            if ($major -lt 11 -or ($major -eq 11 -and $minor -lt 98)) {
+                                if ($null -ne $jsonContent."Block redirecting to X Lite" -and $jsonContent."Block redirecting to X Lite".enabled -eq $true) {
+                                    Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
+                                    Write-Host "    You enabled the 'Block redirecting to X Lite' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
+                                    Write-Host "    This specific patch requires v11.98.0-release.0 or higher." -ForegroundColor Red
+                                    if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
+                                }
+                            }
                         }
                     } catch { }
                 }
@@ -741,8 +761,8 @@ function Invoke-PatchingWorkflow {
 
             foreach ($app in $job.Apps) {
                 # Shim enforcement gate
-                if ($app.name -eq "X_Twitter" -and $app.TargetVersion -eq "12.0.0-release.0" -and -not $extraPatches) {
-                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter v12.0.0-release.0 requires the 'x-shim' patch! Skipping..." -ForegroundColor Red
+                if ($app.name -eq "X_Twitter" -and $app.TargetVersion -match "^12\." -and -not $extraPatches) {
+                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter $($app.TargetVersion) requires the 'x-shim' patch! Skipping..." -ForegroundColor Red
                     continue
                 }
                 
