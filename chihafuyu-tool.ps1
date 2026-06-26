@@ -86,6 +86,9 @@ $cfg_proto_stable         = @("1.49.0", "1.48.0")
 $cfg_vpnify_stable        = @("2.2.9")
 $cfg_backdrops_stable     = @("6.1.2")
 $cfg_solidexplorer_stable = @("3.4.10")
+
+# browzomje
+$cfg_pinterest_stable     = @("14.23.0")
 # ==============================================================================
 
 # Validate Java environment compliance
@@ -204,11 +207,12 @@ function Resolve-Ecosystem {
     Write-Host "3. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
-    Write-Host "6. Go back to Main Menu"
+    Write-Host "6. browzomje (Pinterest)"
+    Write-Host "7. Go back to Main Menu"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,5]" -RegexPattern "^([1-5](,[1-5])*|6)$" -ErrorMessage "Invalid input. Enter numbers 1-5 separated by commas, or 6 to go back."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,6]" -RegexPattern "^([1-6](,[1-6])*|7)$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas, or 7 to go back."
 
-    if ($ecoChoice -eq "6") {
+    if ($ecoChoice -eq "7") {
         return $null
     }
 
@@ -222,6 +226,7 @@ function Resolve-Ecosystem {
             "3" { "hoo-dles" }
             "4" { "De-ReVanced" }
             "5" { "BholeyKaBhakt" }
+            "6" { "browzomje" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -428,10 +433,18 @@ function Invoke-PatchingWorkflow {
                 @{ id = "5"; name = "Backdrops"; package = "com.backdrops.wallpapers"; keys = @("backdrops"); exclude = @(); strip = $true; stable = $cfg_backdrops_stable },
                 @{ id = "6"; name = "Solid_Explorer"; package = "pl.solidexplorer2"; keys = @("solid", "explorer"); exclude = @(); strip = $true; stable = $cfg_solidexplorer_stable }
             )
+        } elseif ($projectName -eq "browzomje") {
+            Write-Host "1. Pinterest"
+            Write-Host "2. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable }
+            )
         }
 
         $choices = $appSelection.Split(',')
-        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} }
+        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -1027,6 +1040,8 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"},
                       @{pkg="com.backdrops.wallpapers"; name="backdrops"},
                       @{pkg="pl.solidexplorer2"; name="solid-explorer"})
+                } elseif ($eco.Name -eq "browzomje") {
+                    @(@{pkg="com.pinterest"; name="pinterest"})
                 }
                 
                 foreach ($app in $apps) {
