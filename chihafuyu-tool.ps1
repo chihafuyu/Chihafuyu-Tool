@@ -208,13 +208,8 @@ function Resolve-Ecosystem {
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. browzomje (Pinterest)"
-    Write-Host "7. Go back to Main Menu"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,6]" -RegexPattern "^([1-6](,[1-6])*|7)$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas, or 7 to go back."
-
-    if ($ecoChoice -eq "7") {
-        return $null
-    }
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,6]" -RegexPattern "^([1-6](,[1-6])*)$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -913,13 +908,11 @@ function Invoke-UtilityWorkflow {
     Write-Host "3. Generate Options only"
     Write-Host "4. Generate list-patches only"
     Write-Host "5. Generate Custom Keystore (PKCS12)"
-    Write-Host "6. Go back to Main Menu"
     Write-Host "X. Close Tool"
     
-    $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-6xX]$" -ErrorMessage "Invalid input. Please enter 1-6, or X."
+    $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-5xX]$" -ErrorMessage "Invalid input. Please enter 1-5, or X."
     
     if ($utilChoice -match '^[xX]$') { exit 0 }
-    if ($utilChoice -eq '6') { return }
     
     if ($utilChoice -in @('1', '2')) {
         Write-Host "`n  [i] HEADS UP: This feature relies on ADB. Make sure you have Android 'platform-tools' installed and added to your system PATH!" -ForegroundColor Cyan
