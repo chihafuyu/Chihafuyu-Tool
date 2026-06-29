@@ -99,11 +99,11 @@ try {
     $regex = '"(?:1\.)?(\d+)'
     if ($javaVerOutput -match $regex) {
         $version = [int]$Matches[1]
-        if ($version -lt 21) {
+        if ($version -lt 25) {
             Clear-Host
-            Write-Host "[!] Java Development Kit (JDK) 21 or higher is required!" -ForegroundColor Red
+            Write-Host "[!] Java Development Kit (JDK) 25 or higher is required!" -ForegroundColor Red
             Write-Host "    You currently have Java $version installed." -ForegroundColor Yellow
-            Write-Host "    Please upgrade to Azul Zulu or Eclipse Temurin JDK 21 (LTS) and add it to PATH." -ForegroundColor Gray
+            Write-Host "    Please upgrade to Azul Zulu or Eclipse Temurin JDK 25 (LTS) and add it to PATH." -ForegroundColor Gray
             Write-Host "`nPress Enter to exit..." -ForegroundColor DarkGray
             $null = Read-Host
             exit 1
@@ -113,8 +113,8 @@ try {
     }
 } catch {
     Clear-Host
-    Write-Host "Java Development Kit (JDK) 21 is missing or misconfigured." -ForegroundColor Red
-    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 21 (LTS) and add it to PATH." -ForegroundColor Gray
+    Write-Host "Java Development Kit (JDK) 25 is missing or misconfigured." -ForegroundColor Red
+    Write-Host "Please install Azul Zulu or Eclipse Temurin JDK 25 (LTS) and add it to PATH." -ForegroundColor Gray
     Write-Host "`nPress Enter to exit..." -ForegroundColor DarkGray
     $null = Read-Host
     exit 1
@@ -623,18 +623,13 @@ function Invoke-PatchingWorkflow {
         }
     }
 
-    $isWindowsOS = ($env:OS -eq 'Windows_NT')
     $bytecodeMode = $null
-    
     Write-Host "`n[+] Global Execution Preferences:" -ForegroundColor Yellow
-    if ($isWindowsOS) {
-        Write-Host "  [i] Bytecode Mode: Forced FULL (Windows compatibility requirement)." -ForegroundColor DarkGray
-    } else {
-        if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
-            Write-Host "1. FULL`n2. STRIP_FAST`n3. STRIP_SAFE"
-            $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
-            $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
-        }
+    
+    if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
+        Write-Host "1. FULL`n2. STRIP_FAST`n3. STRIP_SAFE"
+        $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
+        $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
     }
 
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
@@ -805,31 +800,6 @@ function Invoke-PatchingWorkflow {
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
                 & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
-                
-                # Relentless cleanup loop for Windows file locks
-                if ($isWindowsOS) {
-                    Write-Host "  [i] Sweeping Morphe CLI native temp files (Windows workaround)..." -ForegroundColor DarkGray
-                    Start-Sleep -Seconds 3
-                    
-                    $morpheTmpDirs = @(
-                        (Join-Path -Path $cliJar.Directory.FullName -ChildPath "morphe-data\tmp"),
-                        (Join-Path -Path $PSScriptRoot -ChildPath "morphe-data\tmp"),
-                        (Join-Path -Path $env:USERPROFILE -ChildPath "morphe\tmp")
-                    ) | Select-Object -Unique
-                    
-                    foreach ($tmpDir in $morpheTmpDirs) {
-                        if (Test-Path -LiteralPath $tmpDir) {
-                            $patchDirs = Get-ChildItem -LiteralPath $tmpDir -Filter "patching-*" -Directory -ErrorAction SilentlyContinue
-                            foreach ($pDir in $patchDirs) {
-                                $retry = 0; $deleted = $false
-                                while (-not $deleted -and $retry -lt 5) {
-                                    Remove-Item -LiteralPath $pDir.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                                    if (-not (Test-Path -LiteralPath $pDir.FullName)) { $deleted = $true } else { $retry++; Start-Sleep -Seconds 2 }
-                                }
-                            }
-                        }
-                    }
-                }
 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "  [!] Patching FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red

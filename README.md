@@ -16,7 +16,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 - **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), and browzomje (`Pinterest`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,6`) to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard and root-mount modes), or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
-- **🛡️ Environment Validation**: Smartly checks for JDK 21+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
+- **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
 - **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`), and validates them against an array of supported versions.
 - **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" or "Block redirecting to X Lite" patch is forced on an incompatible Twitter APK).
@@ -41,9 +41,9 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 Before spinning up the tool, make sure you have these ready:
 
 1. **OS**: Windows 10/11. PowerShell 5.1+ is required (PowerShell 7+ is highly recommended). Download [here](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
-2. **Java Development Kit (JDK) 21**: The latest Morphe CLI requires JDK 21 (a standard JRE or older JDK 17 won't cut it). Pick and install **JUST ONE** of these reliable builds:
-   * [Azul Zulu JDK 21 (LTS)](https://www.azul.com/downloads/?version=java-21-lts&package=jdk)
-   * **OR** [Eclipse Temurin JDK 21 (LTS)](https://adoptium.net/temurin/releases/?version=21)
+2. **Java Development Kit (JDK) 25**: The latest Morphe CLI utilizes FFM APIs to natively resolve file locking issues on Windows, which strictly requires JDK 25 or higher (a standard JRE or older JDK 21 won't cut it). Pick and install **JUST ONE** of these reliable builds:
+   * [Azul Zulu JDK 25 (LTS)](https://www.azul.com/downloads/?version=java-25-lts&package=jdk)
+   * **OR** [Eclipse Temurin JDK 25 (LTS)](https://adoptium.net/temurin/releases/?version=25)
    
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
 3. **Android SDK Platform-Tools (For Utility Menu)**: If you want to use the script's install/uninstall features, you must have `adb` installed. Download [SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) and add it to your system PATH.
