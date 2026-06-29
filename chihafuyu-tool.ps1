@@ -623,13 +623,19 @@ function Invoke-PatchingWorkflow {
         }
     }
 
+    $isWindowsOS = ($env:OS -eq 'Windows_NT')
     $bytecodeMode = $null
-    Write-Host "`n[+] Global Execution Preferences:" -ForegroundColor Yellow
     
-    if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
-        Write-Host "1. FULL`n2. STRIP_FAST`n3. STRIP_SAFE"
-        $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
-        $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
+    Write-Host "`n[+] Global Execution Preferences:" -ForegroundColor Yellow
+    if ($isWindowsOS) {
+        Write-Host "  [i] Bytecode Mode: Forced FULL (Windows compatibility requirement)." -ForegroundColor DarkGray
+        $bytecodeMode = "FULL"
+    } else {
+        if (Get-YesNoPrompt "Configure custom bytecode mode? (--bytecode-mode)") {
+            Write-Host "1. FULL`n2. STRIP_FAST`n3. STRIP_SAFE"
+            $bcChoice = Read-ValidatedInput -Prompt "Choice (1-3)" -RegexPattern "^[1-3]$" -ErrorMessage "Invalid input."
+            $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
+        }
     }
 
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
@@ -651,7 +657,7 @@ function Invoke-PatchingWorkflow {
         $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
         if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
         
-        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--include-experimental", "--out=$patchesListFile", "--patches=$patchAbsPath")
         if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" } }
         
         $null = & java $listArgs 2>&1
@@ -1051,7 +1057,7 @@ function Invoke-UtilityWorkflow {
                     catch { Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked." -ForegroundColor Yellow }
                 }
                 
-                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--include-experimental", "--out=$patchesListFile", "--patches=$patchAbsPath")
                 
                 if ($extraPatches) {
                     foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
