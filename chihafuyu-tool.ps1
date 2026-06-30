@@ -656,7 +656,7 @@ function Invoke-PatchingWorkflow {
     # SDK Verification Gate
     $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
     if ($verifyWithSdk) {
-        Write-Host "`n  [!] This requires a proper Android SDK (build-tools & platforms):" -ForegroundColor Red
+        Write-Host "`n  [!] THIS REQUIRES A PROPER ANDROID SDK (BUILD-TOOLS & PLATFORMS)" -ForegroundColor Red
         Write-Host "      Many apps attempt to try/catch imports of classes that may or may not be available at runtime." -ForegroundColor Yellow
         Write-Host "      This causes 'missing class' FALSE NEGATIVES during verification, which is intentional and expected." -ForegroundColor Yellow
         Write-Host "      End users should NOT use this unless requested as part of a bug report.`n" -ForegroundColor Yellow
