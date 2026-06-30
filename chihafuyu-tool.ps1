@@ -465,9 +465,12 @@ function Invoke-PatchingWorkflow {
 
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
-        # Mitigate path confusion by forcing absolute search path internally
-        $inputPath = Join-Path $workspace "Input\*"
-        $allApks = Get-ChildItem -Path $inputPath -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
+        # Bypass PowerShell's buggy -Include wildcard resolution by using LiteralPath and Regex filtering
+        $inputDir = Join-Path $workspace "Input"
+        $allApks = Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object { 
+            $_.Extension -match '(?i)^\.(apk|apkm|xapk|apks)$' -and 
+            -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) 
+        }
         $hasMismatch = $false
         $missingApps = 0
 
