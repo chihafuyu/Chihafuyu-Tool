@@ -653,12 +653,21 @@ function Invoke-PatchingWorkflow {
 
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
     
-    # Verify SDK prompt with dev warning to prevent false negative panic
+    # SDK Verification Gate
     $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
     if ($verifyWithSdk) {
-        Write-Host "  [i] Heads up: This requires a proper Android SDK (build-tools & platforms)." -ForegroundColor DarkGray
-        Write-Host "      WARNING: This often throws FALSE NEGATIVES (missing classes in the original app)." -ForegroundColor DarkGray
-        Write-Host "      It's intended for patch developers. If patching fails here, just turn this off." -ForegroundColor DarkGray
+        Write-Host "`n  [!] This requires a proper Android SDK (build-tools & platforms):" -ForegroundColor Red
+        Write-Host "      Many apps attempt to try/catch imports of classes that may or may not be available at runtime." -ForegroundColor Yellow
+        Write-Host "      This causes 'missing class' FALSE NEGATIVES during verification, which is intentional and expected." -ForegroundColor Yellow
+        Write-Host "      End users should NOT use this unless requested as part of a bug report.`n" -ForegroundColor Yellow
+        
+        $confirmVerify = Get-YesNoPrompt "  Are you sure you want to proceed with verification? (For Developers Only)"
+        if (-not $confirmVerify) {
+            $verifyWithSdk = $false
+            Write-Host "  [i] SDK verification cancelled. Continuing with standard patching..." -ForegroundColor DarkGray
+        } else {
+            Write-Host "  [i] SDK verification enabled. Prepare for potential false negatives." -ForegroundColor DarkGray
+        }
     }
     
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
