@@ -465,8 +465,9 @@ function Invoke-PatchingWorkflow {
 
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
-        # Mitigate path confusion by filtering ReparsePoints
-        $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
+        # Mitigate path confusion by forcing absolute search path internally
+        $inputPath = Join-Path $workspace "Input\*"
+        $allApks = Get-ChildItem -Path $inputPath -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
         $hasMismatch = $false
         $missingApps = 0
 
@@ -644,9 +645,12 @@ function Invoke-PatchingWorkflow {
         }
     }
     
+    # Prompt user to include experimental versions in the output generation (e.g. options JSON & list patches)
     $includeExperimental = Get-YesNoPrompt "Include experimental app versions in the patch lists? (--include-experimental)"
+
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
     
+    # Verify SDK prompt with dev warning to prevent false negative panic
     $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
     if ($verifyWithSdk) {
         Write-Host "  [i] Heads up: This requires a proper Android SDK (build-tools & platforms)." -ForegroundColor DarkGray
