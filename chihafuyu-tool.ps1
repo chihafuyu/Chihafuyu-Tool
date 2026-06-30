@@ -637,9 +637,20 @@ function Invoke-PatchingWorkflow {
             $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
         }
     }
+    
+    # Prompt user to include experimental versions in the output generation (e.g. options JSON & list patches)
+    $includeExperimental = Get-YesNoPrompt "Include experimental app versions in the patch lists? (--include-experimental)"
 
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
-    $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk)"
+    
+    # Verify SDK prompt with dev warning to prevent false negative panic
+    $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
+    if ($verifyWithSdk) {
+        Write-Host "  [i] Heads up: This requires a proper Android SDK (build-tools & platforms)." -ForegroundColor DarkGray
+        Write-Host "      WARNING: This often throws FALSE NEGATIVES (missing classes in the original app)." -ForegroundColor DarkGray
+        Write-Host "      It's intended for patch developers. If patching fails here, just turn this off." -ForegroundColor DarkGray
+    }
+    
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
 
     # PHASE 3: Generate reference lists and JSON option files for all queued jobs
@@ -657,7 +668,8 @@ function Invoke-PatchingWorkflow {
         $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
         if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
         
-        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--include-experimental", "--out=$patchesListFile", "--patches=$patchAbsPath")
+        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+        if ($includeExperimental) { $listArgs += "--include-experimental" }
         if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" } }
         
         $null = & java $listArgs 2>&1
@@ -1056,8 +1068,11 @@ function Invoke-UtilityWorkflow {
                     try { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction Stop }
                     catch { Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked." -ForegroundColor Yellow }
                 }
+
+                $incExp = Get-YesNoPrompt "Include experimental app versions in the output? (--include-experimental)"
                 
-                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--include-experimental", "--out=$patchesListFile", "--patches=$patchAbsPath")
+                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+                if ($incExp) { $listArgs += "--include-experimental" }
                 
                 if ($extraPatches) {
                     foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
