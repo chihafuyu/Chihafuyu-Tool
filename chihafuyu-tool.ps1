@@ -466,8 +466,7 @@ function Invoke-PatchingWorkflow {
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
         # Mitigate path confusion by filtering ReparsePoints
-        $inputPath = Join-Path $workspace "Input\*"
-        $allApks = Get-ChildItem -Path $inputPath -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
+        $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
         $hasMismatch = $false
         $missingApps = 0
 
@@ -645,12 +644,9 @@ function Invoke-PatchingWorkflow {
         }
     }
     
-    # Prompt user to include experimental versions in the output generation (e.g. options JSON & list patches)
     $includeExperimental = Get-YesNoPrompt "Include experimental app versions in the patch lists? (--include-experimental)"
-
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
     
-    # Verify SDK prompt with dev warning to prevent false negative panic
     $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
     if ($verifyWithSdk) {
         Write-Host "  [i] Heads up: This requires a proper Android SDK (build-tools & platforms)." -ForegroundColor DarkGray
@@ -675,9 +671,10 @@ function Invoke-PatchingWorkflow {
         $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
         if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
         
-        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+        # Build array dynamically by appending string elements sequentially to safely bind CLI args.
+        $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out", $patchesListFile, "--patches", $patchAbsPath)
         if ($includeExperimental) { $listArgs += "--include-experimental" }
-        if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" } }
+        if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches"; $listArgs += $ep.FullName } }
         
         $null = & java $listArgs 2>&1
         if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
@@ -688,9 +685,9 @@ function Invoke-PatchingWorkflow {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
             
-            $optArgs = @("-jar", $cliAbsPath, "options-create", "--patches=$patchAbsPath")
-            if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" } }
-            $optArgs += @("--out=$jsonFileName", "--filter-package-name=$($app.package)")
+            $optArgs = @("-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
+            if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
+            $optArgs += @("--out", $jsonFileName, "--filter-package-name", $app.package)
             
             $null = & java $optArgs 2>&1
             if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
@@ -804,23 +801,24 @@ function Invoke-PatchingWorkflow {
                 $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
                 Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
                 
-                $baseArgs = @("-Xmx$heapSize", "-jar", $cliAbsPath, "patch", "--patches=$patchAbsPath")
-                if ($extraPatches) { foreach ($ep in $extraPatches) { $baseArgs += "--patches=$($ep.FullName)" } }
+                # Append discrete array components to prevent flag concatenation failures in upstream JVM parser
+                $baseArgs = @("-Xmx$heapSize", "-jar", $cliAbsPath, "patch", "--patches", $patchAbsPath)
+                if ($extraPatches) { foreach ($ep in $extraPatches) { $baseArgs += "--patches"; $baseArgs += $ep.FullName } }
                 
-                $baseArgs += @("--options-file=$jsonFileName", $app.TargetApk, "--out=$outputApkAbs", "--result-file=$tempResultFile", "--purge")
+                $baseArgs += @("--options-file", $jsonFileName, $app.TargetApk, "--out", $outputApkAbs, "--result-file", $tempResultFile, "--purge")
                 
-                if ($bytecodeMode) { $baseArgs += "--bytecode-mode=$bytecodeMode" }
+                if ($bytecodeMode) { $baseArgs += "--bytecode-mode"; $baseArgs += $bytecodeMode }
                 if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
                 if ($verifyWithSdk) { $baseArgs += "--verify-with-sdk" }
                 
                 if ($disableSigning) {
                     $baseArgs += "--unsigned"
                 } elseif ($useCustomKeystore) { 
-                    $baseArgs += "--keystore=$keystoreFile", "--keystore-entry-alias=$keystoreAlias", "--keystore-password=$plainPass", "--keystore-entry-password=$plainEntryPass" 
-                    if ($customSigner) { $baseArgs += "--signer=$customSigner" }
+                    $baseArgs += "--keystore", $keystoreFile, "--keystore-entry-alias", $keystoreAlias, "--keystore-password", $plainPass, "--keystore-entry-password", $plainEntryPass 
+                    if ($customSigner) { $baseArgs += "--signer"; $baseArgs += $customSigner }
                 }
                 
-                if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs=$targetArch" }
+                if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs"; $baseArgs += $targetArch }
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
                 & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
@@ -1039,22 +1037,9 @@ function Invoke-UtilityWorkflow {
                         catch { Write-Host "  [!] Warning: Could not remove existing options JSON. It may be locked." -ForegroundColor Yellow }
                     }
                     
-                    $optArgs = @(
-                        "-Xmx2G",
-                        "-jar", 
-                        $cliAbsPath,
-                        "options-create", 
-                        "--patches=$patchAbsPath"
-                    )
-                    
-                    if ($extraPatches) {
-                        foreach ($ep in $extraPatches) { $optArgs += "--patches=$($ep.FullName)" }
-                    }
-                    
-                    $optArgs += @(
-                        "--out=$jsonFileName", 
-                        "--filter-package-name=$($app.pkg)"
-                    )
+                    $optArgs = @("-Xmx2G", "-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
+                    if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
+                    $optArgs += @("--out", $jsonFileName, "--filter-package-name", $app.pkg)
                     
                     Write-Host "  Generating for $($app.pkg)..." -ForegroundColor DarkGray
                     & java $optArgs
@@ -1077,12 +1062,9 @@ function Invoke-UtilityWorkflow {
 
                 $incExp = Get-YesNoPrompt "Include experimental app versions in the output? (--include-experimental)"
                 
-                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out=$patchesListFile", "--patches=$patchAbsPath")
+                $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out", $patchesListFile, "--patches", $patchAbsPath)
                 if ($incExp) { $listArgs += "--include-experimental" }
-                
-                if ($extraPatches) {
-                    foreach ($ep in $extraPatches) { $listArgs += "--patches=$($ep.FullName)" }
-                }
+                if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches"; $listArgs += $ep.FullName } }
                 
                 & java $listArgs
                 
