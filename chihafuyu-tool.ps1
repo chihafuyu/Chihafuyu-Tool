@@ -775,7 +775,6 @@ function Invoke-PatchingWorkflow {
             $patchAbsPath = $job.Env.Patches.FullName
             $extraPatches = $job.Env.ExtraPatches
             $patchTrack = $job.Env.Track
-            $cliJar = $job.Env.Cli
 
             $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
