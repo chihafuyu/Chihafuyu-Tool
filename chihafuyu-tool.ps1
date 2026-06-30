@@ -162,7 +162,8 @@ function Test-IsUniversalApk {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
         
-        # Validate minimum Android package requirements
+        # Validate minimum Android package requirements directly via ZipFile header parsing
+        # (Orders of magnitude faster than Expand-Archive for simple existence checks)
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
@@ -246,88 +247,93 @@ function Resolve-Ecosystem {
 function Resolve-EnvironmentArtifacts {
     param([string]$Workspace, [string]$ProjectName, [bool]$RequirePatches)
     
-    Set-Location -LiteralPath $Workspace -ErrorAction Stop
+    # Push-Location preserves the original root path to prevent terminal drift
+    Push-Location -LiteralPath $Workspace -ErrorAction Stop
 
-    # PadLeft regex injection prevents semantic versioning sorting flaws (e.g., v10 > v9)
-    $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-    $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+    try {
+        # PadLeft regex injection prevents semantic versioning sorting flaws (e.g., v10 > v9)
+        $cliStableSearch = Get-ChildItem -Path "..\morphe-cli-*-all.jar", ".\morphe-cli-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+        $cliDevSearch = Get-ChildItem -Path "..\morphe-cli-*-dev.*-all.jar", ".\morphe-cli-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
-    $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
-    $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
+        $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
+        $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
 
-    Write-Host "`n[SELECT] Patcher CLI Environment ($ProjectName):" -ForegroundColor Yellow
-    Write-Host -NoNewline "1. Latest Stable CLI "
-    if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
-    Write-Host -NoNewline "2. Latest Pre-release CLI "
-    if ($cliDevDisplay -eq "[Not Found]") { Write-Host $cliDevDisplay -ForegroundColor Red } else { Write-Host $cliDevDisplay -ForegroundColor Green }
-    
-    $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
-
-    $patchesChoice = "1"
-    $extraPatches = @()
-    if ($RequirePatches) {
-        $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-        $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-
-        $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
-        $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
-
-        Write-Host "`n[SELECT] Patches Environment ($ProjectName):" -ForegroundColor Yellow
-        Write-Host -NoNewline "1. Latest Stable Patches "
-        if ($patchStableDisplay -eq "[Not Found]") { Write-Host $patchStableDisplay -ForegroundColor Red } else { Write-Host $patchStableDisplay -ForegroundColor Green }
-        Write-Host -NoNewline "2. Latest Pre-release Patches "
-        if ($patchDevDisplay -eq "[Not Found]") { Write-Host $patchDevDisplay -ForegroundColor Red } else { Write-Host $patchDevDisplay -ForegroundColor Green }
+        Write-Host "`n[SELECT] Patcher CLI Environment ($ProjectName):" -ForegroundColor Yellow
+        Write-Host -NoNewline "1. Latest Stable CLI "
+        if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
+        Write-Host -NoNewline "2. Latest Pre-release CLI "
+        if ($cliDevDisplay -eq "[Not Found]") { Write-Host $cliDevDisplay -ForegroundColor Red } else { Write-Host $cliDevDisplay -ForegroundColor Green }
         
-        $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
-    }
+        $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
 
-    $cliJar = if ($cliChoice -eq "1") { $cliStableSearch } else { $cliDevSearch }
-    $patchesFile = $null
-    
-    if ($RequirePatches) {
-        $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
-        
-        # Discover secondary/shim companion patches implicitly based on nomenclature
-        if ($patchesFile) {
-            $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
-        }
-    }
+        $patchesChoice = "1"
+        $extraPatches = @()
+        if ($RequirePatches) {
+            $patchStableSearch = Get-ChildItem -Path ".\patches-*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+            $patchDevSearch = Get-ChildItem -Path ".\patches-*-dev.*.mpp" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
-    # Execute polling loop with a 5-minute timeout if required files are absent
-    if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
-        Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
-        if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
-        if ($RequirePatches -and -not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in .\$ProjectName folder." -ForegroundColor Yellow }
-        
-        Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
-        
-        $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
-        $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
+            $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
+            $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
 
-        $timeout = (Get-Date).AddMinutes(5)
-        while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
-            if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
-            Start-Sleep -Seconds 2
+            Write-Host "`n[SELECT] Patches Environment ($ProjectName):" -ForegroundColor Yellow
+            Write-Host -NoNewline "1. Latest Stable Patches "
+            if ($patchStableDisplay -eq "[Not Found]") { Write-Host $patchStableDisplay -ForegroundColor Red } else { Write-Host $patchStableDisplay -ForegroundColor Green }
+            Write-Host -NoNewline "2. Latest Pre-release Patches "
+            if ($patchDevDisplay -eq "[Not Found]") { Write-Host $patchDevDisplay -ForegroundColor Red } else { Write-Host $patchDevDisplay -ForegroundColor Green }
             
-            $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-            if ($RequirePatches) {
-                $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-                if ($patchesFile) {
-                    $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
-                }
+            $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+        }
+
+        $cliJar = if ($cliChoice -eq "1") { $cliStableSearch } else { $cliDevSearch }
+        $patchesFile = $null
+        
+        if ($RequirePatches) {
+            $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
+            
+            # Discover secondary/shim companion patches implicitly based on nomenclature
+            if ($patchesFile) {
+                $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
             }
         }
-        Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
-    }
 
-    $patchTrack = if ($patchesChoice -eq "1") { "stable" } else { "dev" }
+        # Execute polling loop with a 5-minute timeout if required files are absent
+        if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
+            Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
+            if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in Root or .\$ProjectName folder." -ForegroundColor Yellow }
+            if ($RequirePatches -and -not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in .\$ProjectName folder." -ForegroundColor Yellow }
+            
+            Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
+            
+            $cliPrefix = if ($cliChoice -eq "1") { "morphe-cli-*-all.jar" } else { "morphe-cli-*-dev.*-all.jar" }
+            $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
 
-    if ($cliChoice -eq "2" -or ($RequirePatches -and $patchesChoice -eq "2")) {
-        Write-Host "`n[WARNING] Pre-Release Environment Detected for $ProjectName" -ForegroundColor Yellow
-        if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $null }
+            $timeout = (Get-Date).AddMinutes(5)
+            while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
+                if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
+                Start-Sleep -Seconds 2
+                
+                $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+                if ($RequirePatches) {
+                    $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+                    if ($patchesFile) {
+                        $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
+                    }
+                }
+            }
+            Write-Host "  [✓] Required artifacts found! Resuming process..." -ForegroundColor Green
+        }
+
+        $patchTrack = if ($patchesChoice -eq "1") { "stable" } else { "dev" }
+
+        if ($cliChoice -eq "2" -or ($RequirePatches -and $patchesChoice -eq "2")) {
+            Write-Host "`n[WARNING] Pre-Release Environment Detected for $ProjectName" -ForegroundColor Yellow
+            if (-not (Get-YesNoPrompt "Proceed with pre-release track?")) { return $null }
+        }
+        
+        return @{ Cli = $cliJar; Patches = $patchesFile; ExtraPatches = $extraPatches; Track = $patchTrack }
+    } finally {
+        Pop-Location
     }
-    
-    return @{ Cli = $cliJar; Patches = $patchesFile; ExtraPatches = $extraPatches; Track = $patchTrack }
 }
 
 function Invoke-PatchingWorkflow {
@@ -460,7 +466,8 @@ function Invoke-PatchingWorkflow {
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
         
         # Mitigate path confusion by filtering ReparsePoints
-        $allApks = Get-ChildItem -Path ".\Input\*" -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
+        $inputPath = Join-Path $workspace "Input\*"
+        $allApks = Get-ChildItem -Path $inputPath -Include *.apk, *.apkm, *.xapk, *.apks -File -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
         $hasMismatch = $false
         $missingApps = 0
 
@@ -1156,7 +1163,7 @@ function Invoke-MainMenu {
     Write-Host "X. Close"
 
     while ($true) {
-        $choice = (Read-Host "Enter choice (1, 2, or X)").Trim()
+        $choice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[12xX]$" -ErrorMessage "Invalid input. Please enter 1, 2, or X."
         
         if ($choice -match '^[xX]$') { 
             return $false 
@@ -1192,9 +1199,6 @@ function Invoke-MainMenu {
                 }
             }
             return $true
-        }
-        else {
-            Write-Host "  Invalid input. Please enter 1, 2, or X." -ForegroundColor Red
         }
     }
 }
