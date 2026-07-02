@@ -179,7 +179,7 @@ $cfg_backdrops_stable     = @("6.1.2")
 $cfg_solidexplorer_stable = @("3.4.10")
 
 # browzomje
-$cfg_pinterest_stable     = @("14.23.0")
+$cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 # ==============================================================================
 ```
 
