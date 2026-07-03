@@ -1177,8 +1177,15 @@ function Invoke-UtilityWorkflow {
         $baseArgs = @("-jar", $cliAbsPath, "utility", "clear-cache", "--info")
         
         Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
-        & java $baseArgs
-        if ($LASTEXITCODE -eq 0) {
+        
+        # Capture the standard output of a Java process
+        $javaOutput = & java $baseArgs 2>&1
+        $exitStatus = $LASTEXITCODE
+        
+        # Print the output (including the byte count) to the screen
+        $javaOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+        
+        if ($exitStatus -eq 0) {
             Write-Host "  [✓] Cache cleared successfully." -ForegroundColor Green
         } else {
             Write-Host "  [!] Failed to clear cache." -ForegroundColor Red
