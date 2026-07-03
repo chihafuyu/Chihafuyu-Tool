@@ -824,7 +824,7 @@ function Invoke-PatchingWorkflow {
                 
                 # Included --options-update to automatically synchronize the options JSON file after patching.
                 # Removed the deprecated --purge flag since CLI automatically purges temp files by default.
-                $baseArgs += @("--options-file", $jsonFileName, $app.TargetApk, "--out", $outputApkAbs, "--result-file", $tempResultFile, "--options-update")
+                $baseArgs += @("--options-file", $jsonFileName, "--out", $outputApkAbs, "--result-file", $tempResultFile, "--options-update")
                 
                 if ($bytecodeMode) { $baseArgs += "--bytecode-mode"; $baseArgs += $bytecodeMode }
                 if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
@@ -839,6 +839,9 @@ function Invoke-PatchingWorkflow {
                 
                 if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs"; $baseArgs += $targetArch }
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
+
+                # Append positional argument (APK file) at the very end of the command array[cite: 7].
+                $baseArgs += $app.TargetApk
 
                 & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
 
