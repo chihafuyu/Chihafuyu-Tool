@@ -91,7 +91,7 @@ $cfg_solidexplorer_stable = @("3.4.10")
 $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 # ==============================================================================
 
-# Validate Java environment compliance. Morphe requires Java 21 or higher.
+# Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java is missing or not recognized." }
@@ -822,9 +822,9 @@ function Invoke-PatchingWorkflow {
                 $baseArgs = @("-Xmx$heapSize", "-jar", $cliAbsPath, "patch", "--patches", $patchAbsPath)
                 if ($extraPatches) { foreach ($ep in $extraPatches) { $baseArgs += "--patches"; $baseArgs += $ep.FullName } }
                 
-                # Included --options-update to automatically synchronize the options JSON file after patching.
-                # Removed the deprecated --purge flag since CLI automatically purges temp files by default.
-                $baseArgs += @("--options-file", $jsonFileName, "--out", $outputApkAbs, "--result-file", $tempResultFile, "--options-update")
+                # The --options-update flag is omitted here because options-create generates a fresh JSON file during Phase 3.
+                # The deprecated --purge flag is also omitted as the CLI purges temp files by default.
+                $baseArgs += @("--options-file", $jsonFileName, "--out", $outputApkAbs, "--result-file", $tempResultFile)
                 
                 if ($bytecodeMode) { $baseArgs += "--bytecode-mode"; $baseArgs += $bytecodeMode }
                 if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
@@ -840,7 +840,7 @@ function Invoke-PatchingWorkflow {
                 if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs"; $baseArgs += $targetArch }
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
-                # Append positional argument (APK file) at the very end of the command array[cite: 7].
+                # Append positional argument (APK file) at the very end of the command array.
                 $baseArgs += $app.TargetApk
 
                 & java $baseArgs 2>&1 | Tee-Object -FilePath $tempLogFile -Append | ForEach-Object { Write-Host $_ }
