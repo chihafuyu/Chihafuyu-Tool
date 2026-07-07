@@ -130,8 +130,8 @@ function Get-ApkVersion {
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
     # Match standard versioning and 7+ digit date codes using lookarounds to bypass trailing underscores.
-    # Updated to support underscore (_) delimited version formats (e.g., 4_10_0).
-    $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-\_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
+    # Properly uses [-_] character class without invalid escape sequences.
+    $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
     # Weight-based pattern matching to isolate version strings from architecture tags.
     $patterns = @(
