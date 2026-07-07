@@ -89,6 +89,9 @@ $cfg_solidexplorer_stable = @("3.4.10")
 
 # browzomje
 $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
+
+# PathxmOp
+$cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 # ==============================================================================
 
 # Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
@@ -209,8 +212,9 @@ function Resolve-Ecosystem {
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. browzomje (Pinterest)"
+    Write-Host "7. PathxmOp (Chess.com)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,6]" -RegexPattern "^([1-6](,[1-6])*)$" -ErrorMessage "Invalid input. Enter numbers 1-6 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,7]" -RegexPattern "^([1-7](,[1-7])*)$" -ErrorMessage "Invalid input. Enter numbers 1-7 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -223,6 +227,7 @@ function Resolve-Ecosystem {
             "4" { "De-ReVanced" }
             "5" { "BholeyKaBhakt" }
             "6" { "browzomje" }
+            "7" { "PathxmOp" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -443,10 +448,18 @@ function Invoke-PatchingWorkflow {
             $masterApps = @(
                 @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable }
             )
+        } elseif ($projectName -eq "PathxmOp") {
+            Write-Host "1. Chess.com"
+            Write-Host "2. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
+            )
         }
 
         $choices = $appSelection.Split(',')
-        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} }
+        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} "PathxmOp" {"2"} }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
