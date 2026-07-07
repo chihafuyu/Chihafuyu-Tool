@@ -130,7 +130,8 @@ function Get-ApkVersion {
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
     # Match standard versioning and 7+ digit date codes using lookarounds to bypass trailing underscores.
-    $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:-\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
+    # Updated to support underscore (_) delimited version formats (e.g., 4_10_0).
+    $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-\_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
     # Weight-based pattern matching to isolate version strings from architecture tags.
     $patterns = @(
@@ -144,7 +145,9 @@ function Get-ApkVersion {
     foreach ($regex in $patterns) {
         if ($baseName -match $regex.P) {
             $ext = $Matches[1]
-            $ext = [regex]::Replace($ext, '(?<=\d)-(?=\d)', '.')
+            
+            # Normalize version delimiter string from hyphens or underscores to periods.
+            $ext = [regex]::Replace($ext, '(?<=\d)[-_](?=\d)', '.')
             
             # Force PSCustomObject for reliable numerical sorting.
             $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
@@ -454,7 +457,7 @@ function Invoke-PatchingWorkflow {
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
+                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "268250"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
             )
         }
 
@@ -506,7 +509,9 @@ function Invoke-PatchingWorkflow {
             }
 
             $chosenApk = if ($matched.Count -eq 1) { 
-                $v = Get-ApkVersion -FileName $matched[0].Name -AppKeyword $app.keys[0]
+                $v = $null
+                foreach ($k in $app.keys) { $v = Get-ApkVersion -FileName $matched[0].Name -AppKeyword $k; if ($v) { break } }
+                
                 $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                 $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                 Write-Host "  [✓] $($app.name) -> $($matched[0].Name)$tag" -ForegroundColor $color
@@ -514,7 +519,9 @@ function Invoke-PatchingWorkflow {
             } else {
                 Write-Host "`nMultiple files detected for $($app.name):" -ForegroundColor Cyan
                 for ($i = 0; $i -lt $matched.Count; $i++) {
-                    $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeyword $app.keys[0]
+                    $v = $null
+                    foreach ($k in $app.keys) { $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeyword $k; if ($v) { break } }
+                    
                     $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                     $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                     Write-Host "  $($i + 1). $($matched[$i].Name)$tag" -ForegroundColor $color
@@ -529,7 +536,8 @@ function Invoke-PatchingWorkflow {
                 if (-not (Get-YesNoPrompt "  Force continue anyway?")) { continue }
             }
 
-            $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $app.keys[0]
+            $ver = $null
+            foreach ($k in $app.keys) { $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $k; if ($ver) { break } }
             
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
@@ -1078,6 +1086,8 @@ function Invoke-UtilityWorkflow {
                       @{pkg="pl.solidexplorer2"; name="solid-explorer"})
                 } elseif ($eco.Name -eq "browzomje") {
                     @(@{pkg="com.pinterest"; name="pinterest"})
+                } elseif ($eco.Name -eq "PathxmOp") {
+                    @(@{pkg="com.chess"; name="chess"})
                 }
                 
                 foreach ($app in $apps) {
