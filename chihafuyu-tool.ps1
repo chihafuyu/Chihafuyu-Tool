@@ -68,7 +68,7 @@ $cfg_ibispaint_stable     = @("14.0.6")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.20.0.2606230000")
 $cfg_sleep_stable         = @("20260526")
-$cfg_duolingo_stable      = @("6.85.7")
+$cfg_duolingo_stable      = @("6.86.5")
 $cfg_merriamwebster_stable= @("Any")
 $cfg_mimo_stable          = @("9.11")
 $cfg_windy_stable         = @("50.1.1")
@@ -457,7 +457,7 @@ function Invoke-PatchingWorkflow {
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "268250"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
+                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{5,8}_"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
             )
         }
 
@@ -1264,7 +1264,7 @@ function Invoke-MainMenu {
                     Start-Sleep -Seconds 1
                 } else {
                     Write-Host "`n[FATAL ERROR] $($_.Exception.Message)" -ForegroundColor Red
-                    Write-Host "Press Enter to exit..."
+                    Write-Host "Press Enter to exit......"
                     $null = Read-Host
                     exit 1
                 }
