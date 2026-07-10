@@ -160,7 +160,7 @@ $cfg_ig_stable            = @("435.0.0.37.76")
 
 # hoo-dles
 $cfg_adguard_stable       = @("4.12.81")
-$cfg_ibispaint_stable     = @("14.0.4")
+$cfg_ibispaint_stable     = @("14.0.6")
 $cfg_wps_stable           = @("18.24")
 $cfg_camscanner_stable    = @("7.20.0.2606230000")
 $cfg_sleep_stable         = @("20260526")
