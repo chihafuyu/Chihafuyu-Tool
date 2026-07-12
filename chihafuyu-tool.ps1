@@ -53,13 +53,7 @@ $cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
-$cfg_x_stable             = @(
-    "12.2.0-release.0",
-    "12.0.0-release.0",
-    "11.99.0-release-ripped.1", 
-    "11.81.0-release.0", 
-    "11.69.0-release.0"
-)
+$cfg_x_stable             = @("12.7.1-release.0")
 $cfg_ig_stable            = @("435.0.0.37.76")
 
 # hoo-dles
@@ -468,11 +462,6 @@ function Invoke-PatchingWorkflow {
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
 
         # Display application-specific notices.
-        if ($selectedApps | Where-Object { $_.name -eq "X_Twitter" }) {
-            Write-Host "Note for X (Twitter): Versions 11.82.0+ generally have 'pairiplib.so' protection. Standard APKs WILL CRASH!" -ForegroundColor Red
-            Write-Host "You MUST use the custom '11.99.0-release-ripped.1' APK from the Piko Telegram group: https://t.me/pikopatches" -ForegroundColor Magenta
-            Write-Host "For v12.0.0+ releases, you ALSO need the 'x-shim' patch file in your Piko folder!" -ForegroundColor Yellow
-        }
         if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
             Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384109456. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
@@ -822,12 +811,6 @@ function Invoke-PatchingWorkflow {
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
             foreach ($app in $job.Apps) {
-                # Shim enforcement gate
-                if ($app.name -eq "X_Twitter" -and $app.TargetVersion -match "^12\." -and -not $extraPatches) {
-                    Write-Host "`n  [!] CRITICAL ERROR: X/Twitter $($app.TargetVersion) requires the 'x-shim' patch! Skipping..." -ForegroundColor Red
-                    continue
-                }
-                
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
                 $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
                 
