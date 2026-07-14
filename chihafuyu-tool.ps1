@@ -253,18 +253,18 @@ function Resolve-EnvironmentArtifacts {
     Push-Location -LiteralPath $Workspace -ErrorAction Stop
 
     try {
-        # Scan for both `morphe-desktop` and `morphe-cli` executables.
+        # Scan for `morphe-desktop` executables.
         # PadLeft regex injection prevents semantic versioning sorting flaws (e.g., v10 resolving before v9).
-        $cliStableSearch = Get-ChildItem -Path "..\morphe-*-all.jar", ".\morphe-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "morphe-(cli|desktop)-" -and $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
-        $cliDevSearch = Get-ChildItem -Path "..\morphe-*-dev.*-all.jar", ".\morphe-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "morphe-(cli|desktop)-" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+        $cliStableSearch = Get-ChildItem -Path "..\morphe-desktop-*-all.jar", ".\morphe-desktop-*-all.jar" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "-dev" } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+        $cliDevSearch = Get-ChildItem -Path "..\morphe-desktop-*-dev.*-all.jar", ".\morphe-desktop-*-dev.*-all.jar" -File -ErrorAction SilentlyContinue | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
 
         $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
         $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
 
-        Write-Host "`n[SELECT] Patcher CLI Environment ($ProjectName):" -ForegroundColor Yellow
-        Write-Host -NoNewline "1. Latest Stable CLI "
+        Write-Host "`n[SELECT] Morphe Desktop Environment ($ProjectName):" -ForegroundColor Yellow
+        Write-Host -NoNewline "1. Latest Stable Release "
         if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
-        Write-Host -NoNewline "2. Latest Pre-release CLI "
+        Write-Host -NoNewline "2. Latest Pre-release "
         if ($cliDevDisplay -eq "[Not Found]") { Write-Host $cliDevDisplay -ForegroundColor Red } else { Write-Host $cliDevDisplay -ForegroundColor Green }
         
         $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
@@ -302,12 +302,12 @@ function Resolve-EnvironmentArtifacts {
         # Execute polling loop with a 5-minute timeout if required files are absent.
         if (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
             Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
-            if (-not $cliJar) { Write-Host "  - Missing Morphe CLI (.jar) in the Root or .\$ProjectName directory." -ForegroundColor Yellow }
+            if (-not $cliJar) { Write-Host "  - Missing Morphe Desktop (.jar) in the Root or .\$ProjectName directory." -ForegroundColor Yellow }
             if ($RequirePatches -and -not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in the .\$ProjectName directory." -ForegroundColor Yellow }
             
             Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
             
-            $cliPrefix = if ($cliChoice -eq "1") { "morphe-*-all.jar" } else { "morphe-*-dev.*-all.jar" }
+            $cliPrefix = if ($cliChoice -eq "1") { "morphe-desktop-*-all.jar" } else { "morphe-desktop-*-dev.*-all.jar" }
             $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
 
             $timeout = (Get-Date).AddMinutes(5)
@@ -315,7 +315,7 @@ function Resolve-EnvironmentArtifacts {
                 if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
                 Start-Sleep -Seconds 2
                 
-                $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($_.Name -match "morphe-(cli|desktop)-") -and (($cliChoice -eq "2") -or ($_.Name -notmatch "-dev")) } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
+                $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
                 if ($RequirePatches) {
                     $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
                     if ($patchesFile) {
@@ -811,6 +811,7 @@ function Invoke-PatchingWorkflow {
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
             foreach ($app in $job.Apps) {
+                
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
                 $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
                 

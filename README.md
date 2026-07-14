@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, and **PathxmOp** ecosystems via the **Morphe CLI**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, and **PathxmOp** ecosystems via **Morphe Desktop**.
 
 Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Sleep as Android`, `Pinterest`, `Chess.com`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
@@ -14,7 +14,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 ## ✨ Features
 
 - **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), and PathxmOp (`Chess.com`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,7`) to queue up batch patching across different platforms in a single run.
-- **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe CLI's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
+- **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
@@ -28,7 +28,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 > [!WARNING]
 > **🚨 Keystore Password Exposure Notice**
 > 
-> While this script uses advanced memory-handling to protect your passwords internally, the upstream `morphe-cli` Java engine currently requires passwords to be passed via standard command-line arguments (e.g., `--keystore-password`). 
+> While this script uses advanced memory-handling to protect your passwords internally, the upstream `morphe-desktop` Java engine currently requires passwords to be passed via standard command-line arguments (e.g., `--keystore-password`). 
 > 
 > This means your plaintext password **may be momentarily visible to system monitoring tools** (like Windows Task Manager or Process Explorer) while the patching process is actively running in the background. 
 > 
@@ -41,15 +41,15 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 Before spinning up the tool, make sure you have these ready:
 
 1. **OS**: Windows 10/11. PowerShell 5.1+ is required (PowerShell 7+ is highly recommended). Download [here](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
-2. **Java Development Kit (JDK) 25**: The latest Morphe CLI utilizes FFM APIs to natively resolve file locking issues on Windows, which strictly requires JDK 25 or higher (a standard JRE or older JDK 21 won't cut it). Pick and install **JUST ONE** of these reliable builds:
+2. **Java Development Kit (JDK) 25**: The latest Morphe Desktop utilizes FFM APIs to natively resolve file locking issues on Windows, which strictly requires JDK 25 or higher (a standard JRE or older JDK 21 won't cut it). Pick and install **JUST ONE** of these reliable builds:
    * [Azul Zulu JDK 25 (LTS)](https://www.azul.com/downloads/?version=java-25-lts&package=jdk)
    * **OR** [Eclipse Temurin JDK 25 (LTS)](https://adoptium.net/temurin/releases/?version=25)
    
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
 3. **Android SDK Platform-Tools (For Utility Menu)**: If you want to use the script's install/uninstall features, you must have `adb` installed. Download [SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) and add it to your system PATH.
 4. **Android SDK (For Verification)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured. Otherwise, the script will throw a fatal error.
-5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe CLI) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
-   * **Morphe CLI (Required for all)**: [morphe-cli releases](https://github.com/MorpheApp/morphe-cli/releases)
+5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe Desktop) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
+   * **Morphe Desktop (Required for all)**: [morphe-desktop releases](https://github.com/MorpheApp/morphe-desktop/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
    * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
@@ -57,9 +57,7 @@ Before spinning up the tool, make sure you have these ready:
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
    * **browzomje Patches**: [browzomje releases](https://github.com/browzomje/browzomje-patches/releases)
    * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
-6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). 
-   * **For certain X (Twitter) versions**, standard APKs might crash due to 'pairiplib.so' protection. If they crash, use the ripped APKs (like `11.99.0-release-ripped.1`) from the [Piko Telegram](https://t.me/pikopatches).
-   * **For X (Twitter) versions 12.0.0 and above**, you need an additional third-party patch from `inotia00`. Download `x-shim-xxx.mpp` from [inotia00's GitLab](https://gitlab.com/inotia00/x-shim/-/releases) and place it alongside the regular Piko `.mpp` patch. The script will automatically detect and apply both patches together!
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps).
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
@@ -75,12 +73,12 @@ Before spinning up the tool, make sure you have these ready:
 
 ## 🚀 How to Use
 
-1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Patcher/releases/latest) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Patcher/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-cli.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
+1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Tool/releases) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Tool/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-desktop-*.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
 2. **Folder Structure**: The script uses a smart multi-workspace architecture. When you run it, it will auto-create the necessary folders for you. Your root directory should look like this:
 ```text
 📁 Your-Working-Directory/
  ├── 📄 chihafuyu-tool.ps1           (The main script)
- ├── ☕ morphe-cli-x.x.x-all.jar     (CLI - Place here or inside the ecosystem folder)
+ ├── ☕ morphe-desktop-x.x.x-all.jar (CLI - Place here or inside the ecosystem folder)
  ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
  ├── 📁 Morphe/                      (Morphe Workspace)
@@ -89,7 +87,6 @@ Before spinning up the tool, make sure you have these ready:
  │    └── 📁 Output/                 
  ├── 📁 Piko/                        (Piko Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📦 x-shim-x.x.x.mpp         (Optional - For X v12+)
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
@@ -149,13 +146,7 @@ $cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
 # Piko
-$cfg_x_stable             = @(
-    "12.2.0-release.0",
-    "12.0.0-release.0",
-    "11.99.0-release-ripped.1", 
-    "11.81.0-release.0", 
-    "11.69.0-release.0"
-)
+$cfg_x_stable             = @("12.7.1-release.0")
 $cfg_ig_stable            = @("435.0.0.37.76")
 
 # hoo-dles

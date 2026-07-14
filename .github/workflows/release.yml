@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -43,7 +43,7 @@ jobs:
           zip -r Chihafuyu-Tool-${{ env.VERSION }}.zip . -x "*.git*" "Output/*" ".github/*"
 
       - name: Publish Automatic Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
