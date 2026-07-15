@@ -118,39 +118,41 @@ try {
 }
 
 function Get-ApkVersion {
-    param([string]$FileName, [string]$AppKeyword)
+    param([string]$FileName, [string[]]$AppKeywords)
     
     if ($FileName -notmatch '\.(apk|apkm|xapk|apks)$') { return $null }
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
     
     # Match standard versioning and 7+ digit date codes using lookarounds to bypass trailing underscores.
-    # Properly uses [-_] character class without invalid escape sequences.
     $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
     
-    # Weight-based pattern matching to isolate version strings from architecture tags.
-    $patterns = @(
-        @{ P = "$AppKeyword.*?[-_]$vPat(?=[-_]|$)"; W = 10 }
-        @{ P = "$vPat[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a|armeabi)"; W = 9 }
-        @{ P = "v$vPat(?=[-_]|$)"; W = 7 }
-        @{ P = "(?<!\d)$vPat(?=[-_]|$)"; W = 5 }
-    )
-    
     $foundVersions = @()
-    foreach ($regex in $patterns) {
-        if ($baseName -match $regex.P) {
-            $ext = $Matches[1]
-            
-            # Normalize version delimiter string from hyphens or underscores to periods.
-            $ext = [regex]::Replace($ext, '(?<=\d)[-_](?=\d)', '.')
-            
-            # Force PSCustomObject for reliable numerical sorting.
-            $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
+    
+    # Evaluate all keywords to ensure the highest weighted match is not skipped
+    foreach ($AppKeyword in $AppKeywords) {
+        # Weight-based pattern matching to isolate version strings from architecture tags.
+        $patterns = @(
+            @{ P = "$AppKeyword.*?[-_]$vPat(?=[-_]|$)"; W = 10 }
+            @{ P = "$vPat[_-]?(?:\d+[_-])?(?:universal|arm64|v8a|x86_64|v7a|armeabi)"; W = 9 }
+            @{ P = "v$vPat(?=[-_]|$)"; W = 7 }
+            @{ P = "(?<!\d)$vPat(?=[-_]|$)"; W = 5 }
+        )
+        
+        foreach ($regex in $patterns) {
+            if ($baseName -match $regex.P) {
+                $ext = $Matches[1]
+                
+                # Normalize version delimiter string from hyphens or underscores to periods.
+                $ext = [regex]::Replace($ext, '(?<=\d)[-_](?=\d)', '.')
+                
+                $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
+            }
         }
     }
     
     if ($foundVersions.Count -eq 0) { return $null }
     
-    # Select the highest weighted regex match.
+    # Select the absolute highest weighted regex match across all evaluated keywords.
     $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
 }
@@ -498,8 +500,7 @@ function Invoke-PatchingWorkflow {
             }
 
             $chosenApk = if ($matched.Count -eq 1) { 
-                $v = $null
-                foreach ($k in $app.keys) { $v = Get-ApkVersion -FileName $matched[0].Name -AppKeyword $k; if ($v) { break } }
+                $v = Get-ApkVersion -FileName $matched[0].Name -AppKeywords $app.keys
                 
                 $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                 $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
@@ -508,8 +509,7 @@ function Invoke-PatchingWorkflow {
             } else {
                 Write-Host "`nMultiple files detected for $($app.name):" -ForegroundColor Cyan
                 for ($i = 0; $i -lt $matched.Count; $i++) {
-                    $v = $null
-                    foreach ($k in $app.keys) { $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeyword $k; if ($v) { break } }
+                    $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeywords $app.keys
                     
                     $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                     $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
@@ -525,8 +525,7 @@ function Invoke-PatchingWorkflow {
                 if (-not (Get-YesNoPrompt "  Force continue anyway?")) { continue }
             }
 
-            $ver = $null
-            foreach ($k in $app.keys) { $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeyword $k; if ($ver) { break } }
+            $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeywords $app.keys
             
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
