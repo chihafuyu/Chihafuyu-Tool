@@ -48,7 +48,7 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
 # Morphe
-$cfg_youtube_stable       = @("20.51.39", "20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_stable       = @("21.04.223" "20.51.39", "20.47.62", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52")
 $cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
 
