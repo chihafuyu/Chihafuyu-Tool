@@ -86,6 +86,22 @@ $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 
 # PathxmOp
 $cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
+
+# Lain-Patches
+$cfg_atomic_stable       = @("4.7.0m")
+$cfg_audiorelay_stable   = @("0.26.1")
+$cfg_boorusama_stable    = @("4.5.1")
+$cfg_epic_stable         = @("3.141.43")
+$cfg_fakegps_stable      = @("113.0")
+$cfg_hermit_stable       = @("31.6.1")
+$cfg_hiddensets_stable   = @("7.34")
+$cfg_ilovepdf_stable     = @("4.0.1")
+$cfg_keymapper_stable    = @("4.2.1")
+$cfg_keymate_stable      = @("1.2.0")
+$cfg_mangaplus_stable    = @("2.4.1")
+$cfg_nekopoi_stable      = @("2.5.3-build01", "2.5.3")
+$cfg_pixellab_stable     = @("2.1.9")
+$cfg_timestampcam_stable = @("1.252")
 # ==============================================================================
 
 # Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
@@ -212,8 +228,9 @@ function Resolve-Ecosystem {
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. browzomje (Pinterest)"
     Write-Host "7. PathxmOp (Chess.com)"
+    Write-Host "8. Lain-Patches (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,7]" -RegexPattern "^([1-7](,[1-7])*)$" -ErrorMessage "Invalid input. Enter numbers 1-7 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,8]" -RegexPattern "^([1-8](,[1-8])*)$" -ErrorMessage "Invalid input. Enter numbers 1-8 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -227,6 +244,7 @@ function Resolve-Ecosystem {
             "5" { "BholeyKaBhakt" }
             "6" { "browzomje" }
             "7" { "PathxmOp" }
+            "8" { "Lain-Patches" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -453,12 +471,46 @@ function Invoke-PatchingWorkflow {
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{5,8}"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
+                @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{6,8}(?=_)"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
+            )
+        } elseif ($projectName -eq "Lain-Patches") {
+            Write-Host "1. Atomic"
+            Write-Host "2. AudioRelay"
+            Write-Host "3. Boorusama"
+            Write-Host "4. Epic!"
+            Write-Host "5. Fake GPS Location"
+            Write-Host "6. Hermit"
+            Write-Host "7. Hidden Settings"
+            Write-Host "8. iLovePDF"
+            Write-Host "9. Key Mapper"
+            Write-Host "10. Keymate"
+            Write-Host "11. Manga Plus"
+            Write-Host "12. Nekopoi [21+]"
+            Write-Host "13. PixelLab"
+            Write-Host "14. Timestamp Camera Free"
+            Write-Host "15. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 12, or 15]" -RegexPattern "^(1[0-5]|[1-9])(,(1[0-5]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-15 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Atomic"; package = "com.jlindemann.science"; keys = @("atomic", "science"); exclude = @(); strip = $true; stable = $cfg_atomic_stable },
+                @{ id = "2"; name = "AudioRelay"; package = "com.azefsw.audioconnect"; keys = @("audiorelay"); exclude = @(); strip = $true; stable = $cfg_audiorelay_stable },
+                @{ id = "3"; name = "Boorusama"; package = "com.degenk.boorusama"; keys = @("boorusama"); exclude = @(); strip = $true; stable = $cfg_boorusama_stable },
+                @{ id = "4"; name = "Epic"; package = "com.getepic.Epic"; keys = @("epic"); exclude = @(); strip = $true; stable = $cfg_epic_stable },
+                @{ id = "5"; name = "Fake_GPS_Location"; package = "com.hopefactory2021.fakegpslocation"; keys = @("fakegps", "fake-gps"); exclude = @(); strip = $true; stable = $cfg_fakegps_stable },
+                @{ id = "6"; name = "Hermit"; package = "com.chimbori.hermitcrab"; keys = @("hermit"); exclude = @(); strip = $true; stable = $cfg_hermit_stable },
+                @{ id = "7"; name = "Hidden_Settings"; package = "com.ceyhan.sets"; keys = @("hidden", "sets"); exclude = @(); strip = $true; stable = $cfg_hiddensets_stable },
+                @{ id = "8"; name = "iLovePDF"; package = "com.ilovepdf.www"; keys = @("ilovepdf"); exclude = @(); strip = $true; stable = $cfg_ilovepdf_stable },
+                @{ id = "9"; name = "Key_Mapper"; package = "io.github.sds100.keymapper"; keys = @("keymapper", "key-mapper"); exclude = @(); strip = $true; stable = $cfg_keymapper_stable },
+                @{ id = "10"; name = "Keymate"; package = "net.nemostudio.keymate"; keys = @("keymate"); exclude = @(); strip = $true; stable = $cfg_keymate_stable },
+                @{ id = "11"; name = "Manga_Plus"; package = "jp.co.shueisha.mangaplus"; keys = @("mangaplus", "manga-plus"); exclude = @(); strip = $true; stable = $cfg_mangaplus_stable },
+                @{ id = "12"; name = "Nekopoi"; package = "com.kcstream.cing"; keys = @("nekopoi", "cing", "^app\d{5}"); exclude = @(); strip = $true; stable = $cfg_nekopoi_stable }
+                @{ id = "13"; name = "PixelLab"; package = "com.imaginstudio.imagetools.pixellab"; keys = @("pixellab"); exclude = @(); strip = $true; stable = $cfg_pixellab_stable },
+                @{ id = "14"; name = "Timestamp_Camera"; package = "com.jeyluta.timestampcamerafree"; keys = @("timestamp"); exclude = @(); strip = $true; stable = $cfg_timestampcam_stable }
             )
         }
 
         $choices = $appSelection.Split(',')
-        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} "PathxmOp" {"2"} }
+        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} "PathxmOp" {"2"} "Lain-Patches" {"15"} }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -484,6 +536,22 @@ function Invoke-PatchingWorkflow {
 
         foreach ($app in $selectedApps) {
             $app.TargetApk = $null
+
+            # NSFW Safety Check for Nekopoi patching pipeline
+            if ($app.name -eq "Nekopoi") {
+                Write-Host "`n[!] WARNING: MATURE CONTENT DETECTED (21+)" -ForegroundColor Red
+                if (-not (Get-YesNoPrompt "You are about to patch an NSFW (21+) application. Are you sure you want to proceed?")) {
+                    Write-Host "  -> Skipping Nekopoi deployment by user request." -ForegroundColor DarkGray
+                    continue
+                }
+                
+                Write-Host "`n[!] RED GATES: INDEMNITY & LIABILITY DISCLAIMER" -ForegroundColor Red
+                Write-Host "I assume absolutely no responsibility or liability for any psychological issues, addiction, dependencies, or potential legal violations arising from the use of this un-censored software." -ForegroundColor Yellow
+                if (-not (Get-YesNoPrompt "Do you explicitly understand the risks and wish to continue anyway?")) {
+                    Write-Host "  -> Skipping Nekopoi deployment by user request." -ForegroundColor DarkGray
+                    continue
+                }
+            }
             
             $matched = @($allApks | Where-Object { 
                 $n = $_.Name.ToLower()
@@ -1071,6 +1139,21 @@ function Invoke-UtilityWorkflow {
                     @(@{pkg="com.pinterest"; name="pinterest"})
                 } elseif ($eco.Name -eq "PathxmOp") {
                     @(@{pkg="com.chess"; name="chess"})
+                } elseif ($eco.Name -eq "Lain-Patches") {
+                    @(@{pkg="com.jlindemann.science"; name="atomic"},
+                      @{pkg="com.azefsw.audioconnect"; name="audiorelay"},
+                      @{pkg="com.degenk.boorusama"; name="boorusama"},
+                      @{pkg="com.getepic.Epic"; name="epic"},
+                      @{pkg="com.hopefactory2021.fakegpslocation"; name="fake-gps-location"},
+                      @{pkg="com.chimbori.hermitcrab"; name="hermit"},
+                      @{pkg="com.ceyhan.sets"; name="hidden-settings"},
+                      @{pkg="com.ilovepdf.www"; name="ilovepdf"},
+                      @{pkg="io.github.sds100.keymapper"; name="key-mapper"},
+                      @{pkg="net.nemostudio.keymate"; name="keymate"},
+                      @{pkg="jp.co.shueisha.mangaplus"; name="manga-plus"},
+                      @{pkg="com.kcstream.cing"; name="nekopoi"},
+                      @{pkg="com.imaginstudio.imagetools.pixellab"; name="pixellab"},
+                      @{pkg="com.jeyluta.timestampcamerafree"; name="timestamp-camera"})
                 }
                 
                 foreach ($app in $apps) {

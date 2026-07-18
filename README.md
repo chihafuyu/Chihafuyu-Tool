@@ -1,8 +1,8 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, and **PathxmOp** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, **PathxmOp**, and **Lain-Patches** ecosystems via **Morphe Desktop**.
 
-Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Sleep as Android`, `Pinterest`, `Chess.com`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
+Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
@@ -13,13 +13,13 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), and PathxmOp (`Chess.com`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,7`) to queue up batch patching across different platforms in a single run.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), PathxmOp (`Chess.com`), and Lain-Patches (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,8`) to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
-- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z` or `x_y_z`), and validates them against an array of supported versions.
-- **🧠 JSON Logic Constraints**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if the specific "Disunify xchat system" or "Block redirecting to X Lite" patch is forced on an incompatible Twitter APK).
+- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`, `x_y_z`, or even abstract names like `app25301.apk`), and validates them against an array of supported versions.
+- **🧠 JSON Logic Constraints & Content Warnings**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if specific Twitter patches are forced on incompatible versions). The script also enforces mandatory indemnity warnings before processing NSFW/21+ targeted applications.
 - **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
 - **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
@@ -57,6 +57,7 @@ Before spinning up the tool, make sure you have these ready:
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
    * **browzomje Patches**: [browzomje releases](https://github.com/browzomje/browzomje-patches/releases)
    * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
+   * **Lain-Patches**: [Lain-Patches releases](https://github.com/kiraio-moe/Lain-Patches/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps).
 
 > [!NOTE]
@@ -64,8 +65,9 @@ Before spinning up the tool, make sure you have these ready:
 >
 > * While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also natively supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 > * **Don't worry about messy file names!** If you download directly from APKMirror or external CDNs, your file might look something like this:
->     `com.google.android.youtube_20.51.39-1558707648_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk` or `268250_4_10_0_googleplay_universal_1782902190270.apk`
->     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. Alternatively, if you prefer keeping things clean and simple, you can easily rename it to something like `com.google.android.youtube-20.51.39-universal.apk` for `YouTube` or `com.google.android.apps.youtube.music-8.51.51-arm64-v8a.apkm` for `YT Music`. For other supported apps, you can just follow the same naming convention.
+>     `com.google.android.youtube_20.51.39-1558707648_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`.
+>     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. 
+> * **Abstract File Names:** If you download a file with a completely abstract name (e.g., `app25301.apk`), **you must rename it** to include the app's name (e.g., `nekopoi_2.5.3.apk`) so the script can identify which app it belongs to. Once identified, if the regex engine still struggles to parse the version from your custom name, the script will gracefully fallback and ask you to enter the version manually!
 
 7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
@@ -105,7 +107,11 @@ Before spinning up the tool, make sure you have these ready:
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
- └── 📁 PathxmOp/                    (PathxmOp Workspace)
+ ├── 📁 PathxmOp/                    (PathxmOp Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ └── 📁 Lain-Patches/                (Lain-Patches Workspace)
       ├── 📦 patches-x.x.x.mpp       
       ├── 📁 Input/                  
       └── 📁 Output/
@@ -179,6 +185,22 @@ $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 
 # PathxmOp
 $cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
+
+# Lain-Patches
+$cfg_atomic_stable       = @("4.7.0m")
+$cfg_audiorelay_stable   = @("0.26.1")
+$cfg_boorusama_stable    = @("4.5.1")
+$cfg_epic_stable         = @("3.141.43")
+$cfg_fakegps_stable      = @("113.0")
+$cfg_hermit_stable       = @("31.6.1")
+$cfg_hiddensets_stable   = @("7.34")
+$cfg_ilovepdf_stable     = @("4.0.1")
+$cfg_keymapper_stable    = @("4.2.1")
+$cfg_keymate_stable      = @("1.2.0")
+$cfg_mangaplus_stable    = @("2.4.1")
+$cfg_nekopoi_stable      = @("2.5.3-build01", "2.5.3")
+$cfg_pixellab_stable     = @("2.1.9")
+$cfg_timestampcam_stable = @("1.252")
 # ==============================================================================
 ```
 
@@ -206,4 +228,4 @@ Basically: you are free to use, modify, and distribute this tool for any purpose
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt, browzomje, PrathxmOp and inotia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [PrathxmOp](https://github.com/PrathxmOp/Prathxm-Patches) and [inotia00](https://gitlab.com/inotia00/x-shim/)
+> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt, browzomje, kiraio-moe, PrathxmOp, and inotia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches), [PrathxmOp](https://github.com/PrathxmOp/Prathxm-Patches) and [inotia00](https://gitlab.com/inotia00/x-shim/)
