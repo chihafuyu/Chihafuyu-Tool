@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, **PathxmOp**, and **Lain-Patches** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, **PathxmOp**, and **kiraio-moe** ecosystems via **Morphe Desktop**.
 
 Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
@@ -13,7 +13,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), PathxmOp (`Chess.com`), and Lain-Patches (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,8`) to queue up batch patching across different platforms in a single run.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), PathxmOp (`Chess.com`), and kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,8`) to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
@@ -57,7 +57,7 @@ Before spinning up the tool, make sure you have these ready:
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
    * **browzomje Patches**: [browzomje releases](https://github.com/browzomje/browzomje-patches/releases)
    * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
-   * **Lain-Patches**: [Lain-Patches releases](https://github.com/kiraio-moe/Lain-Patches/releases)
+   * **kiraio-moe**: [kiraio-moe releases](https://github.com/kiraio-moe/Lain-Patches/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps).
 
 > [!NOTE]
@@ -83,22 +83,6 @@ Before spinning up the tool, make sure you have these ready:
  ├── ☕ morphe-desktop-x.x.x-all.jar (CLI - Place here or inside the ecosystem folder)
  ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
- ├── 📁 Morphe/                      (Morphe Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/                 
- ├── 📁 Piko/                        (Piko Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 hoo-dles/                    (hoo-dles Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 De-ReVanced/                 (De-ReVanced Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
  ├── 📁 BholeyKaBhakt/               (BholeyKaBhakt Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
@@ -107,11 +91,27 @@ Before spinning up the tool, make sure you have these ready:
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
+ ├── 📁 De-ReVanced/                 (De-ReVanced Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 hoo-dles/                    (hoo-dles Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 kiraio-moe/                  (kiraio-moe Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 Morphe/                      (Morphe Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
  ├── 📁 PathxmOp/                    (PathxmOp Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
- └── 📁 Lain-Patches/                (Lain-Patches Workspace)
+ └── 📁 Piko/                        (Piko Workspace)
       ├── 📦 patches-x.x.x.mpp       
       ├── 📁 Input/                  
       └── 📁 Output/
@@ -186,7 +186,7 @@ $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 # PathxmOp
 $cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 
-# Lain-Patches
+# kiraio-moe
 $cfg_atomic_stable       = @("4.7.0m")
 $cfg_audiorelay_stable   = @("0.26.1")
 $cfg_boorusama_stable    = @("4.5.1")

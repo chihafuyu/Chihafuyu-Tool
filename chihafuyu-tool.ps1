@@ -87,7 +87,7 @@ $cfg_pinterest_stable     = @("14.23.0", "14.24.0")
 # PathxmOp
 $cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 
-# Lain-Patches
+# kiraio-moe
 $cfg_atomic_stable       = @("4.7.0m")
 $cfg_audiorelay_stable   = @("0.26.1")
 $cfg_boorusama_stable    = @("4.5.1")
@@ -228,7 +228,7 @@ function Resolve-Ecosystem {
     Write-Host "5. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "6. browzomje (Pinterest)"
     Write-Host "7. PathxmOp (Chess.com)"
-    Write-Host "8. Lain-Patches (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
+    Write-Host "8. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
     
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,8]" -RegexPattern "^([1-8](,[1-8])*)$" -ErrorMessage "Invalid input. Enter numbers 1-8 separated by commas."
 
@@ -244,7 +244,7 @@ function Resolve-Ecosystem {
             "5" { "BholeyKaBhakt" }
             "6" { "browzomje" }
             "7" { "PathxmOp" }
-            "8" { "Lain-Patches" }
+            "8" { "kiraio-moe" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -473,7 +473,7 @@ function Invoke-PatchingWorkflow {
             $masterApps = @(
                 @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{6,8}(?=_)"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
             )
-        } elseif ($projectName -eq "Lain-Patches") {
+        } elseif ($projectName -eq "kiraio-moe") {
             Write-Host "1. Atomic"
             Write-Host "2. AudioRelay"
             Write-Host "3. Boorusama"
@@ -510,7 +510,7 @@ function Invoke-PatchingWorkflow {
         }
 
         $choices = $appSelection.Split(',')
-        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} "PathxmOp" {"2"} "Lain-Patches" {"15"} }
+        $selectAllId = switch ($projectName) { "Morphe" {"4"} "Piko" {"3"} "hoo-dles" {"12"} "De-ReVanced" {"3"} "BholeyKaBhakt" {"7"} "browzomje" {"2"} "PathxmOp" {"2"} "kiraio-moe" {"15"} }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
         Write-Host "`n[INFO] Place original .apk, .apkm, .xapk, or .apks files in '.\$projectName\Input'." -ForegroundColor DarkGray
@@ -1139,7 +1139,7 @@ function Invoke-UtilityWorkflow {
                     @(@{pkg="com.pinterest"; name="pinterest"})
                 } elseif ($eco.Name -eq "PathxmOp") {
                     @(@{pkg="com.chess"; name="chess"})
-                } elseif ($eco.Name -eq "Lain-Patches") {
+                } elseif ($eco.Name -eq "kiraio-moe") {
                     @(@{pkg="com.jlindemann.science"; name="atomic"},
                       @{pkg="com.azefsw.audioconnect"; name="audiorelay"},
                       @{pkg="com.degenk.boorusama"; name="boorusama"},
