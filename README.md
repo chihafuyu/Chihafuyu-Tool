@@ -1,8 +1,8 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **Morphe**, **Piko**, **hoo-dles**, **De-ReVanced**, **BholeyKaBhakt**, **browzomje**, **PathxmOp**, and **kiraio-moe** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **arandomhooman**, **BholeyKaBhakt**, **browzomje**, **De-ReVanced**, **hoo-dles**, **icysymmetra**, **kiraio-moe**, **Morphe**, **PathxmOp**, and **Piko** ecosystems via **Morphe Desktop**.
 
-Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
+Whether you're patching `YouTube`, `TikTok`, `Advanced Download Manager`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
@@ -13,7 +13,7 @@ Whether you're patching `YouTube`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuar
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between Morphe (`YouTube`, `YouTube Music`, `Reddit`), Piko (`X/Twitter`, `Instagram`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), De-ReVanced (`Google Photos`, `RAR`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), PathxmOp (`Chess.com`), and kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`) workspaces in a single script. Select multiple ecosystems at once (e.g., `1,2,8`) to queue up batch patching across different platforms in a single run.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`), De-ReVanced (`Google Photos`, `RAR`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), icysymmetra (`TikTok Global`), kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`), Morphe (`YouTube`, `YouTube Music`, `Reddit`), PathxmOp (`Chess.com`), and Piko (`X/Twitter`, `Instagram`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
@@ -50,15 +50,17 @@ Before spinning up the tool, make sure you have these ready:
 4. **Android SDK (For Verification)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured. Otherwise, the script will throw a fatal error.
 5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe Desktop) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
    * **Morphe Desktop (Required for all)**: [morphe-desktop releases](https://github.com/MorpheApp/morphe-desktop/releases)
-   * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
-   * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
-   * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
-   * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
+   * **arandomhooman Patches**: [hoomans-morphe-patches releases](https://github.com/arandomhooman/hoomans-morphe-patches/releases)
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
    * **browzomje Patches**: [browzomje releases](https://github.com/browzomje/browzomje-patches/releases)
+   * **De-ReVanced Patches**: [De-ReVanced releases](https://github.com/RookieEnough/De-ReVanced/releases)
+   * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
+   * **icysymmetra Patches**: [tiktok-patches-for-morphe releases](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases)
+   * **kiraio-moe Patches**: [kiraio-moe releases](https://github.com/kiraio-moe/Lain-Patches/releases)
+   * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
-   * **kiraio-moe**: [kiraio-moe releases](https://github.com/kiraio-moe/Lain-Patches/releases)
-6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps).
+   * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). **Note for Nekopoi:** Please download the raw APK directly from their official source (`https://linkpoi.me/app`). There are many fake and scam sites out there impersonating them, so stay safe!
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
@@ -83,6 +85,10 @@ Before spinning up the tool, make sure you have these ready:
  ├── ☕ morphe-desktop-x.x.x-all.jar (CLI - Place here or inside the ecosystem folder)
  ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
  ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
+ ├── 📁 arandomhooman/               (arandomhooman Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
  ├── 📁 BholeyKaBhakt/               (BholeyKaBhakt Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
@@ -96,6 +102,10 @@ Before spinning up the tool, make sure you have these ready:
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 icysymmetra/                 (icysymmetra Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
@@ -146,61 +156,83 @@ Whenever new stable patch bundles are released with updated app version targets,
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
-# Morphe
-$cfg_youtube_stable       = @("21.04.223", "20.51.39", "20.47.62", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable = @("9.15.51", "8.51.51", "7.29.52")
-$cfg_reddit_stable        = @("2026.14.0", "2026.04.0")
-
-# Piko
-$cfg_x_stable             = @("12.7.1-release.0")
-$cfg_ig_stable            = @("435.0.0.37.76")
-
-# hoo-dles
-$cfg_adguard_stable       = @("4.12.81")
-$cfg_ibispaint_stable     = @("14.0.6")
-$cfg_wps_stable           = @("18.24")
-$cfg_camscanner_stable    = @("7.20.0.2606230000")
-$cfg_sleep_stable         = @("20260526")
-$cfg_duolingo_stable      = @("6.86.5")
-$cfg_merriamwebster_stable= @("Any")
-$cfg_mimo_stable          = @("9.11")
-$cfg_windy_stable         = @("50.1.1")
-$cfg_xrecorder_stable     = @("2.5.1.1")
-$cfg_xodo_stable          = @("10.15.0")
-
-# De-ReVanced
-$cfg_photos_stable        = @("Any")
-$cfg_rar_stable           = @("Any")
+# arandomhooman
+$cfg_adm_stable             = @("14.0.39")
+$cfg_alphaprog_stable       = @("7.1.1")
+$cfg_bandlab_stable         = @("11.25.3")
+$cfg_batteryguru_stable     = @("2.4.8.1", "2.5.0.2-beta1")
+$cfg_cronometer_stable      = @("4.56.0")
+$cfg_directchat_stable      = @("1.9.8")
+$cfg_finch_stable           = @("3.73.179")
+$cfg_flightradar_stable     = @("11.6.1")
+$cfg_foldersync_stable      = @("4.9.3")
+$cfg_inshot_stable          = @("2.214.1539")
+$cfg_liquidgallery_stable   = @("2.1.11")
+$cfg_poweramp_stable        = @("build-1025-bundle-play", "build-1025-uni")
+$cfg_smartaudiobook_stable  = @("11.7.8")
+$cfg_symfonium_stable       = @("14.1.0")
+$cfg_tumblr_stable          = @("45.0.0.109")
+$cfg_videoconverter_stable  = @("3.2.2")
+$cfg_webtoon_stable         = @("3.9.5")
 
 # BholeyKaBhakt
-$cfg_speedtest_stable     = @("7.0.4")
-$cfg_stellarium_stable    = @("1.16.3", "1.16.2")
-$cfg_proto_stable         = @("1.49.0", "1.48.0")
-$cfg_vpnify_stable        = @("2.2.9")
-$cfg_backdrops_stable     = @("6.1.2")
-$cfg_solidexplorer_stable = @("3.4.10")
+$cfg_speedtest_stable       = @("7.0.4")
+$cfg_stellarium_stable      = @("1.16.3", "1.16.2")
+$cfg_proto_stable           = @("1.49.0", "1.48.0")
+$cfg_vpnify_stable          = @("2.2.9")
+$cfg_backdrops_stable       = @("6.1.2")
+$cfg_solidexplorer_stable   = @("3.4.10")
 
 # browzomje
-$cfg_pinterest_stable     = @("14.23.0", "14.24.0")
+$cfg_pinterest_stable       = @("14.23.0", "14.24.0")
 
-# PathxmOp
-$cfg_chess_stable         = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
+# De-ReVanced
+$cfg_photos_stable          = @("Any")
+$cfg_rar_stable             = @("Any")
+
+# hoo-dles
+$cfg_adguard_stable         = @("4.12.81")
+$cfg_ibispaint_stable       = @("14.0.6")
+$cfg_wps_stable             = @("18.24")
+$cfg_camscanner_stable      = @("7.20.0.2606230000")
+$cfg_sleep_stable           = @("20260526")
+$cfg_duolingo_stable        = @("6.86.5")
+$cfg_merriamwebster_stable  = @("Any")
+$cfg_mimo_stable            = @("9.11")
+$cfg_windy_stable           = @("50.1.1")
+$cfg_xrecorder_stable       = @("2.5.1.1")
+$cfg_xodo_stable            = @("10.15.0")
+
+# icysymmetra
+$cfg_tiktok_stable          = @("43.8.3")
 
 # kiraio-moe
-$cfg_atomic_stable       = @("4.7.0m")
-$cfg_audiorelay_stable   = @("0.26.1")
-$cfg_boorusama_stable    = @("4.5.1")
-$cfg_epic_stable         = @("3.141.43")
-$cfg_fakegps_stable      = @("113.0")
-$cfg_hermit_stable       = @("31.6.1")
-$cfg_hiddensets_stable   = @("7.34")
-$cfg_ilovepdf_stable     = @("4.0.1")
-$cfg_keymapper_stable    = @("4.2.1")
-$cfg_keymate_stable      = @("1.2.0")
-$cfg_mangaplus_stable    = @("2.4.1")
-$cfg_nekopoi_stable      = @("2.5.3-build01", "2.5.3")
-$cfg_pixellab_stable     = @("2.1.9")
-$cfg_timestampcam_stable = @("1.252")
+$cfg_atomic_stable          = @("4.7.0m")
+$cfg_audiorelay_stable      = @("0.26.1")
+$cfg_boorusama_stable       = @("4.5.1")
+$cfg_epic_stable            = @("3.141.43")
+$cfg_fakegps_stable         = @("113.0")
+$cfg_hermit_stable          = @("31.6.1")
+$cfg_hiddensets_stable      = @("7.34")
+$cfg_ilovepdf_stable        = @("4.0.1")
+$cfg_keymapper_stable       = @("4.2.1")
+$cfg_keymate_stable         = @("1.2.0")
+$cfg_mangaplus_stable       = @("2.4.1")
+$cfg_nekopoi_stable         = @("2.5.3-build01", "2.5.3")
+$cfg_pixellab_stable        = @("2.1.9")
+$cfg_timestampcam_stable    = @("1.252")
+
+# Morphe
+$cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.47.62", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable   = @("9.15.51", "8.51.51", "7.29.52")
+$cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
+
+# PathxmOp
+$cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
+
+# Piko
+$cfg_x_stable               = @("12.7.1-release.0")
+$cfg_ig_stable              = @("435.0.0.37.76")
 # ==============================================================================
 ```
 
@@ -228,4 +260,4 @@ Basically: you are free to use, modify, and distribute this tool for any purpose
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt, browzomje, kiraio-moe, PrathxmOp, and inotia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches), [PrathxmOp](https://github.com/PrathxmOp/Prathxm-Patches) and [inotia00](https://gitlab.com/inotia00/x-shim/)
+> This tool utilizes patches and code from Morphe, Piko, hoo-dles, De-ReVanced, BholeyKaBhakt, browzomje, kiraio-moe, PrathxmOp, and inotia00. To learn more, visit [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [De-ReVanced](https://github.com/RookieEnough/De-ReVanced), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches), [PrathxmOp](https://github.com/PrathxmOp/Prathxm-Patches), [arandomhooman](https://github.com/arandomhooman/hoomans-morphe-patches/releases), [icysymmetra](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases) and [inotia00](https://gitlab.com/inotia00/x-shim/)
