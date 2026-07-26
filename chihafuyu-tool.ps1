@@ -686,7 +686,7 @@ function Invoke-PatchingWorkflow {
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
                 $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni)"
-            }}
+            }
 
             $app.TargetApk = $chosenApk.FullName
             $app.TargetVersion = $ver
