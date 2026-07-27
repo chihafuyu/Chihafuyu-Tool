@@ -122,8 +122,8 @@ $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 $cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 
 # Piko
-$cfg_x_stable               = @("12.7.1-release.0")
-$cfg_ig_stable              = @("435.0.0.37.76")
+$cfg_x_stable               = @("12.11.0-release.0")
+$cfg_ig_stable              = @("439.0.0.37.89")
 # ==============================================================================
 
 # Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
@@ -602,7 +602,7 @@ function Invoke-PatchingWorkflow {
 
         # Display application-specific notices.
         if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
-            Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384109456. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
+            Write-Host "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384510827. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
             Write-Host "Note for IbisPaint X: Select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta
