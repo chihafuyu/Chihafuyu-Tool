@@ -897,17 +897,7 @@ function Invoke-PatchingWorkflow {
                     try {
                         $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
                         
-                        # Constraint 1: Disunify xchat system
-                        if ($app.TargetVersion -ne "11.69.0-release.0") {
-                            if ($null -ne $jsonContent."Disunify xchat system" -and $jsonContent."Disunify xchat system".enabled -eq $true) {
-                                Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
-                                Write-Host "    You enabled the 'Disunify xchat system' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
-                                Write-Host "    This specific patch ONLY supports v11.69.0-release.0." -ForegroundColor Red
-                                if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
-                            }
-                        }
-                        
-                        # Constraint 2: Block redirecting to X Lite
+                        # Constraint 1: Block redirecting to X Lite
                         $verMatch = [regex]::Match($app.TargetVersion, "^(\d+)\.(\d+)")
                         if ($verMatch.Success) {
                             $major = [int]$verMatch.Groups[1].Value
