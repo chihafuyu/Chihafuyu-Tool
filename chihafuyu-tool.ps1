@@ -76,6 +76,7 @@ $cfg_solidexplorer_stable   = @("3.4.10")
 
 # browzomje
 $cfg_pinterest_stable       = @("14.23.0", "14.24.0")
+$cfg_easysudoku_stable      = @("5.70.0")
 
 # De-ReVanced
 $cfg_photos_stable          = @("Any")
@@ -245,7 +246,7 @@ function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem(s):" -ForegroundColor Yellow
     Write-Host "1. arandomhooman (ADM, Alpha Progression, BandLab, Battery Guru, Cronometer, DirectChat, Finch, Flightradar24, FolderSync, InShot, Liquid Gallery, Poweramp, Smart AudioBook Player, Symfonium, Tumblr, Video Converter, WEBTOON)"
     Write-Host "2. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
-    Write-Host "3. browzomje (Pinterest)"
+    Write-Host "3. browzomje (Pinterest, Easy Sudoku)"
     Write-Host "4. De-ReVanced (Google Photos, RAR)"
     Write-Host "5. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
     Write-Host "6. icysymmetra (TikTok Global)"
@@ -472,11 +473,13 @@ function Invoke-PatchingWorkflow {
             )
         } elseif ($projectName -eq "browzomje") {
             Write-Host "1. Pinterest"
-            Write-Host "2. All Applications"
-            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
+            Write-Host "2. Easy Sudoku"
+            Write-Host "3. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable }
+                @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable },
+                @{ id = "2"; name = "Easy_Sudoku"; package = "easy.sudoku.puzzle.solver.free"; keys = @("easysudoku", "sudoku"); exclude = @(); strip = $true; stable = $cfg_easysudoku_stable }
             )
         } elseif ($projectName -eq "De-ReVanced") {
             Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
@@ -587,7 +590,7 @@ function Invoke-PatchingWorkflow {
         $selectAllId = switch ($projectName) { 
             "arandomhooman" {"18"} 
             "BholeyKaBhakt" {"7"} 
-            "browzomje" {"2"} 
+            "browzomje" {"3"} 
             "De-ReVanced" {"3"} 
             "hoo-dles" {"12"} 
             "icysymmetra" {"2"} 
@@ -1210,7 +1213,8 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.backdrops.wallpapers"; name="backdrops"},
                       @{pkg="pl.solidexplorer2"; name="solid-explorer"})
                 } elseif ($eco.Name -eq "browzomje") {
-                    @(@{pkg="com.pinterest"; name="pinterest"})
+                    @(@{pkg="com.pinterest"; name="pinterest"},
+                      @{pkg="easy.sudoku.puzzle.solver.free"; name="easy-sudoku"})
                 } elseif ($eco.Name -eq "De-ReVanced") {
                     @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
                       @{pkg="com.rarlab.rar"; name="rar"})
