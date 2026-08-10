@@ -140,7 +140,7 @@ Before spinning up the tool, make sure you have these ready:
 > [!WARNING]
 > **🚨 UNIVERSAL PATCHES LIMITATION 🚨**
 >
-> Inside your generated `options.json`, you might notice patches like `Override certificate pinning`, `Change package name`, and `Disable Play Store updates`. These are **Universal Patches** designed to work on *any* app.
+> Inside your generated `options.json`, you might notice patches like `Override certificate pinning`, `Clone app`, `Change installer source` and `Disable Play Store updates`. These are **Universal Patches** designed to work on *any* app.
 > 
 > Keep in mind: Each ecosystem (Morphe, Piko, hoo-dles, etc.) explicitly bundles its *own* specific set of universal patches inside their respective `.mpp` files. They are not globally shared across different patchers.
 >
@@ -184,14 +184,15 @@ $cfg_backdrops_stable       = @("6.1.2")
 $cfg_solidexplorer_stable   = @("3.4.10")
 
 # browzomje
-$cfg_pinterest_stable       = @("14.23.0", "14.24.0")
+$cfg_pinterest_stable       = @("14.23.0", "14.28.0")
+$cfg_easysudoku_stable      = @("5.70.0")
 
 # De-ReVanced
 $cfg_photos_stable          = @("Any")
 $cfg_rar_stable             = @("Any")
 
 # hoo-dles
-$cfg_adguard_stable         = @("4.12.81")
+$cfg_adguard_stable         = @("4.13.1")
 $cfg_ibispaint_stable       = @("14.0.6")
 $cfg_wps_stable             = @("18.24")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
@@ -204,7 +205,7 @@ $cfg_xrecorder_stable       = @("2.5.1.1")
 $cfg_xodo_stable            = @("10.15.0")
 
 # icysymmetra
-$cfg_tiktok_stable          = @("43.8.3")
+$cfg_tiktok_stable          = @("46.2.3")
 
 # kiraio-moe
 $cfg_atomic_stable          = @("4.7.0m")
@@ -223,8 +224,8 @@ $cfg_pixellab_stable        = @("2.1.9")
 $cfg_timestampcam_stable    = @("1.252")
 
 # Morphe
-$cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.47.62", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable   = @("9.15.51", "8.51.51", "7.29.52")
+$cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable   = @("9.15.51")
 $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 
 # PathxmOp
