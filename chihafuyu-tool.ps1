@@ -47,6 +47,17 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 # ==============================================================================
 # RECOMMENDED APP VERSIONS
 # ==============================================================================
+# ajstrick81
+$cfg_disneyplus_stable      = @("26.12.1+rc1-2026.07.15")
+$cfg_primevideo_stable      = @("6.23.23+v15.5.0.70-armv7a")
+$cfg_netflix_stable         = @("13.0.1 build 25028")
+$cfg_hbomax_stable          = @("7.7.0.78", "7.5.0.73")
+$cfg_peacock_stable         = @("7.6.100")
+$cfg_tubi_stable            = @("10.28.5000")
+$cfg_vix_stable             = @("4.47.2_tv")
+$cfg_plutotv_stable         = @("5.66.0-leanback")
+$cfg_paramount_stable       = @("16.17.0", "16.8.0")
+
 # arandomhooman
 $cfg_adm_stable             = @("14.0.39")
 $cfg_alphaprog_stable       = @("7.1.1")
@@ -244,34 +255,36 @@ function Read-ValidatedInput {
 
 function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem(s):" -ForegroundColor Yellow
-    Write-Host "1. arandomhooman (ADM, Alpha Progression, BandLab, Battery Guru, Cronometer, DirectChat, Finch, Flightradar24, FolderSync, InShot, Liquid Gallery, Poweramp, Smart AudioBook Player, Symfonium, Tumblr, Video Converter, WEBTOON)"
-    Write-Host "2. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
-    Write-Host "3. browzomje (Pinterest, Easy Sudoku)"
-    Write-Host "4. De-ReVanced (Google Photos, RAR)"
-    Write-Host "5. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
-    Write-Host "6. icysymmetra (TikTok Global)"
-    Write-Host "7. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
-    Write-Host "8. Morphe (YouTube, YT Music, Reddit)"
-    Write-Host "9. PathxmOp (Chess.com)"
-    Write-Host "10. Piko (X/Twitter, Instagram)"
+    Write-Host "1. ajstrick81 (Disney+, Prime Video, Netflix, HBO Max, Peacock, Tubi, ViX, Pluto TV, Paramount+)"
+    Write-Host "2. arandomhooman (ADM, Alpha Progression, BandLab, Battery Guru, Cronometer, DirectChat, Finch, Flightradar24, FolderSync, InShot, Liquid Gallery, Poweramp, Smart AudioBook Player, Symfonium, Tumblr, Video Converter, WEBTOON)"
+    Write-Host "3. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
+    Write-Host "4. browzomje (Pinterest, Easy Sudoku)"
+    Write-Host "5. De-ReVanced (Google Photos, RAR)"
+    Write-Host "6. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
+    Write-Host "7. icysymmetra (TikTok Global)"
+    Write-Host "8. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
+    Write-Host "9. Morphe (YouTube, YT Music, Reddit)"
+    Write-Host "10. PathxmOp (Chess.com)"
+    Write-Host "11. Piko (X/Twitter, Instagram)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,10]" -RegexPattern "^([1-9]|10)(,([1-9]|10))*$" -ErrorMessage "Invalid input. Enter numbers 1-10 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,11]" -RegexPattern "^(1[0-1]|[1-9])(,(1[0-1]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-11 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
 
     foreach ($c in $choices) {
         $projectName = switch ($c) {
-            "1"  { "arandomhooman" }
-            "2"  { "BholeyKaBhakt" }
-            "3"  { "browzomje" }
-            "4"  { "De-ReVanced" }
-            "5"  { "hoo-dles" }
-            "6"  { "icysymmetra" }
-            "7"  { "kiraio-moe" }
-            "8"  { "Morphe" }
-            "9"  { "PathxmOp" }
-            "10" { "Piko" }
+            "1"  { "ajstrick81" }
+            "2"  { "arandomhooman" }
+            "3"  { "BholeyKaBhakt" }
+            "4"  { "browzomje" }
+            "5"  { "De-ReVanced" }
+            "6"  { "hoo-dles" }
+            "7"  { "icysymmetra" }
+            "8"  { "kiraio-moe" }
+            "9"  { "Morphe" }
+            "10" { "PathxmOp" }
+            "11" { "Piko" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -413,7 +426,31 @@ function Invoke-PatchingWorkflow {
 
         Write-Host "`n[+] Select Target Application(s):" -ForegroundColor Yellow
         
-        if ($projectName -eq "arandomhooman") {
+        if ($projectName -eq "ajstrick81") {
+            Write-Host "1. Disney+"
+            Write-Host "2. Prime Video"
+            Write-Host "3. Netflix"
+            Write-Host "4. HBO Max"
+            Write-Host "5. Peacock"
+            Write-Host "6. Tubi"
+            Write-Host "7. ViX"
+            Write-Host "8. Pluto TV"
+            Write-Host "9. Paramount+"
+            Write-Host "10. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 3, or 10]" -RegexPattern "^(10|[1-9])(,(10|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-10 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "DisneyPlus"; package = "com.disney.disneyplus"; keys = @("disney", "disneyplus"); exclude = @(); strip = $true; stable = $cfg_disneyplus_stable },
+                @{ id = "2"; name = "Prime_Video"; package = "com.amazon.amazonvideo.livingroom"; keys = @("prime", "amazonvideo", "livingroom"); exclude = @(); strip = $true; stable = $cfg_primevideo_stable },
+                @{ id = "3"; name = "Netflix"; package = "com.netflix.ninja"; keys = @("netflix", "ninja"); exclude = @(); strip = $true; stable = $cfg_netflix_stable },
+                @{ id = "4"; name = "HBO_Max"; package = "com.wbd.hbomax"; keys = @("hbo", "max", "hbomax"); exclude = @(); strip = $true; stable = $cfg_hbomax_stable },
+                @{ id = "5"; name = "Peacock"; package = "com.peacocktv.peacockandroid"; keys = @("peacock"); exclude = @(); strip = $true; stable = $cfg_peacock_stable },
+                @{ id = "6"; name = "Tubi"; package = "com.tubitv"; keys = @("tubi"); exclude = @(); strip = $true; stable = $cfg_tubi_stable },
+                @{ id = "7"; name = "ViX"; package = "com.univision.prendetv"; keys = @("vix", "univision", "prendetv"); exclude = @(); strip = $true; stable = $cfg_vix_stable },
+                @{ id = "8"; name = "Pluto_TV"; package = "tv.pluto.android"; keys = @("pluto"); exclude = @(); strip = $true; stable = $cfg_plutotv_stable },
+                @{ id = "9"; name = "ParamountPlus"; package = "com.cbs.ott"; keys = @("paramount", "cbs", "ott"); exclude = @(); strip = $true; stable = $cfg_paramount_stable }
+            )
+        } elseif ($projectName -eq "arandomhooman") {
             Write-Host "1. Advanced Download Manager"
             Write-Host "2. Alpha Progression"
             Write-Host "3. BandLab"
@@ -588,6 +625,7 @@ function Invoke-PatchingWorkflow {
 
         $choices = $appSelection.Split(',')
         $selectAllId = switch ($projectName) { 
+            "ajstrick81" {"10"}
             "arandomhooman" {"18"} 
             "BholeyKaBhakt" {"7"} 
             "browzomje" {"3"} 
@@ -688,7 +726,7 @@ function Invoke-PatchingWorkflow {
             
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
-                $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni)"
+                $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.\+ _]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni, 26.12.1+rc1-2026.07.15)"
             }
 
             $app.TargetApk = $chosenApk.FullName
@@ -1187,7 +1225,17 @@ function Invoke-UtilityWorkflow {
             if ($utilChoice -eq '3') {
                 Write-Host "`n[GENERATE OPTIONS] Running for all supported apps in $($eco.Name)..." -ForegroundColor Yellow
                 
-                $apps = if ($eco.Name -eq "arandomhooman") {
+                $apps = if ($eco.Name -eq "ajstrick81") {
+                    @(@{pkg="com.disney.disneyplus"; name="disneyplus"},
+                      @{pkg="com.amazon.amazonvideo.livingroom"; name="prime-video"},
+                      @{pkg="com.netflix.ninja"; name="netflix"},
+                      @{pkg="com.wbd.hbomax"; name="hbo-max"},
+                      @{pkg="com.peacocktv.peacockandroid"; name="peacock"},
+                      @{pkg="com.tubitv"; name="tubi"},
+                      @{pkg="com.univision.prendetv"; name="vix"},
+                      @{pkg="tv.pluto.android"; name="pluto-tv"},
+                      @{pkg="com.cbs.ott"; name="paramountplus"})
+                } elseif ($eco.Name -eq "arandomhooman") {
                     @(@{pkg="com.dv.adm"; name="advanced-download-manager"},
                       @{pkg="com.alphaprogression.alphaprogression"; name="alpha-progression"},
                       @{pkg="com.bandlab.bandlab"; name="bandlab"},
