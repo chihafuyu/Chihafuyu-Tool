@@ -89,9 +89,8 @@ $cfg_solidexplorer_stable   = @("3.4.10")
 $cfg_pinterest_stable       = @("14.23.0", "14.28.0")
 $cfg_easysudoku_stable      = @("5.70.0")
 
-# De-ReVanced
+# De-Vanced
 $cfg_photos_stable          = @("Any")
-$cfg_rar_stable             = @("Any")
 
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
@@ -136,6 +135,49 @@ $cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49
 # Piko
 $cfg_x_stable               = @("12.11.0-release.0")
 $cfg_ig_stable              = @("439.0.0.37.89")
+
+# rushiranpise
+$cfg_1dot1dot1dot1_stable   = @("6.38.8")
+$cfg_accubattery_stable     = @("2.1.8")
+$cfg_accuweather_stable     = @("21.1.14-5-rc")
+$cfg_adobescan_stable       = @("26.08.01")
+$cfg_aida64_stable          = @("2.21")
+$cfg_amoledpix_stable       = @("7.3")
+$cfg_ampere_stable          = @("v4.37.0")
+$cfg_animedepth_stable      = @("1.0.4")
+$cfg_apkmirror_stable       = @("2.0.3 (41-d04e542)")
+$cfg_calm_stable            = @("6.101.1")
+$cfg_canva_stable           = @("5.2.1")
+$cfg_colornote_stable       = @("4.8.6")
+$cfg_cpuz_stable            = @("1.60")
+$cfg_electron_stable        = @("3.0.3")
+$cfg_holavpn_stable         = @("AARCH64_1.248.400")
+$cfg_httpsniffer_stable     = @("2.11.7-ad_mob")
+$cfg_inure_stable           = @("build107.2.0")
+$cfg_kahoot_stable          = @("6.6.7")
+$cfg_kinemaster_stable      = @("8.1.13.36552.GP")
+$cfg_larkplayer_stable      = @("2026.12.5")
+$cfg_life360_stable         = @("26.29.0")
+$cfg_mlmanager_stable       = @("5.0")
+$cfg_mobioffice_stable      = @("16.5.60515")
+$cfg_netguard_stable        = @("2.337")
+$cfg_networkguru_stable     = @("2.0")
+$cfg_ninjavpn_stable        = @("1.4.7")
+$cfg_protonvpn_stable       = @("5.19.78.0")
+$cfg_proxyman_stable        = @("1.21.0")
+$cfg_psiphon_stable         = @("479")
+$cfg_rar_stable             = @("7.23.build134")
+$cfg_sdmaid_stable          = @("1.7.5-rc0")
+$cfg_stargazing_stable      = @("3.3.3")
+$cfg_stickerly_stable       = @("3.36.1")
+$cfg_strava_stable          = @("474.14")
+$cfg_terabox_stable         = @("4.22.6")
+$cfg_turboscan_stable       = @("1.7.3")
+$cfg_uptodown_stable        = @("7.37")
+$cfg_wallverse_stable       = @("4.2")
+$cfg_waze_stable            = @("5.22.0.3")
+$cfg_windscribe_stable      = @("4.2.2328")
+$cfg_wolfram_stable         = @("1.0.8.20260601651")
 # ==============================================================================
 
 # Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
@@ -259,15 +301,16 @@ function Resolve-Ecosystem {
     Write-Host "2. arandomhooman (ADM, Alpha Progression, BandLab, Battery Guru, Cronometer, DirectChat, Finch, Flightradar24, FolderSync, InShot, Liquid Gallery, Poweramp, Smart AudioBook Player, Symfonium, Tumblr, Video Converter, WEBTOON)"
     Write-Host "3. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
     Write-Host "4. browzomje (Pinterest, Easy Sudoku)"
-    Write-Host "5. De-ReVanced (Google Photos, RAR)"
+    Write-Host "5. De-Vanced (Google Photos)"
     Write-Host "6. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
     Write-Host "7. icysymmetra (TikTok Global)"
     Write-Host "8. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
     Write-Host "9. Morphe (YouTube, YT Music, Reddit)"
     Write-Host "10. PathxmOp (Chess.com)"
     Write-Host "11. Piko (X/Twitter, Instagram)"
+    Write-Host "12. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm, Canva, ColorNote, CPU-Z, Electron, Hola VPN, HTTP Sniffer, Inure, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown, Wallverse, Waze, Windscribe, WolframAlpha)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,11]" -RegexPattern "^(1[0-1]|[1-9])(,(1[0-1]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-11 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,12]" -RegexPattern "^(1[0-2]|[1-9])(,(1[0-2]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-12 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -278,13 +321,14 @@ function Resolve-Ecosystem {
             "2"  { "arandomhooman" }
             "3"  { "BholeyKaBhakt" }
             "4"  { "browzomje" }
-            "5"  { "De-ReVanced" }
+            "5"  { "De-Vanced" }
             "6"  { "hoo-dles" }
             "7"  { "icysymmetra" }
             "8"  { "kiraio-moe" }
             "9"  { "Morphe" }
             "10" { "PathxmOp" }
             "11" { "Piko" }
+            "12" { "rushiranpise" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -518,13 +562,13 @@ function Invoke-PatchingWorkflow {
                 @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable },
                 @{ id = "2"; name = "Easy_Sudoku"; package = "easy.sudoku.puzzle.solver.free"; keys = @("easysudoku", "sudoku"); exclude = @(); strip = $true; stable = $cfg_easysudoku_stable }
             )
-        } elseif ($projectName -eq "De-ReVanced") {
-            Write-Host "1. Google Photos`n2. RAR`n3. All Applications"
-            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
+        } elseif ($projectName -eq "De-Vanced") {
+            Write-Host "1. Google Photos"
+            Write-Host "2. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable },
-                @{ id = "2"; name = "RAR"; package = "com.rarlab.rar"; keys = @("rar"); exclude = @(); strip = $true; stable = $cfg_rar_stable }
+                @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable }
             )
         } elseif ($projectName -eq "hoo-dles") {
             Write-Host "1. AdGuard"
@@ -621,6 +665,94 @@ function Invoke-PatchingWorkflow {
                 @{ id = "1"; name = "X_Twitter"; package = "com.twitter.android"; keys = @("twitter", "x"); exclude = @(); strip = $true; stable = $cfg_x_stable },
                 @{ id = "2"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable }
             )
+        } elseif ($projectName -eq "rushiranpise") {
+            Write-Host "1. 1.1.1.1"
+            Write-Host "2. AccuBattery"
+            Write-Host "3. AccuWeather"
+            Write-Host "4. Adobe Scan"
+            Write-Host "5. AIDA64"
+            Write-Host "6. AmoledPix"
+            Write-Host "7. Ampere"
+            Write-Host "8. Anime Depth Wallpapers"
+            Write-Host "9. APKMirror Installer"
+            Write-Host "10. Calm: Sleep & Meditation"
+            Write-Host "11. Canva"
+            Write-Host "12. ColorNote"
+            Write-Host "13. CPU-Z"
+            Write-Host "14. Electron"
+            Write-Host "15. Hola VPN Proxy Plus"
+            Write-Host "16. HTTP Sniffer"
+            Write-Host "17. Inure App Manager"
+            Write-Host "18. Kahoot!"
+            Write-Host "19. KineMaster"
+            Write-Host "20. Lark Player"
+            Write-Host "21. Life360"
+            Write-Host "22. ML Manager"
+            Write-Host "23. MobiOffice"
+            Write-Host "24. NetGuard"
+            Write-Host "25. Network Guru"
+            Write-Host "26. Ninja VPN"
+            Write-Host "27. Proton VPN"
+            Write-Host "28. Proxyman"
+            Write-Host "29. Psiphon Pro"
+            Write-Host "30. RAR"
+            Write-Host "31. SD Maid SE"
+            Write-Host "32. Stargazing Hub"
+            Write-Host "33. Sticker.ly"
+            Write-Host "34. Strava"
+            Write-Host "35. TeraBox"
+            Write-Host "36. TurboScan"
+            Write-Host "37. Uptodown App Store"
+            Write-Host "38. Wallverse"
+            Write-Host "39. Waze"
+            Write-Host "40. Windscribe VPN"
+            Write-Host "41. WolframAlpha"
+            Write-Host "42. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 30, or 42]" -RegexPattern "^(4[0-2]|[1-3][0-9]|[1-9])(,(4[0-2]|[1-3][0-9]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-42 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "1dot1dot1dot1"; package = "com.cloudflare.onedotonedotonedotone"; keys = @("1.1.1.1", "cloudflare", "onedot"); exclude = @(); strip = $true; stable = $cfg_1dot1dot1dot1_stable },
+                @{ id = "2"; name = "AccuBattery"; package = "com.digibites.accubattery"; keys = @("accubattery"); exclude = @(); strip = $true; stable = $cfg_accubattery_stable },
+                @{ id = "3"; name = "AccuWeather"; package = "com.accuweather.android"; keys = @("accuweather"); exclude = @(); strip = $true; stable = $cfg_accuweather_stable },
+                @{ id = "4"; name = "Adobe_Scan"; package = "com.adobe.scan.android"; keys = @("adobe", "scan"); exclude = @(); strip = $true; stable = $cfg_adobescan_stable },
+                @{ id = "5"; name = "AIDA64"; package = "com.finalwire.aida64"; keys = @("aida64"); exclude = @(); strip = $true; stable = $cfg_aida64_stable },
+                @{ id = "6"; name = "AmoledPix"; package = "com.androholic.amoledpix"; keys = @("amoledpix"); exclude = @(); strip = $true; stable = $cfg_amoledpix_stable },
+                @{ id = "7"; name = "Ampere"; package = "com.gombosdev.ampere"; keys = @("ampere"); exclude = @(); strip = $true; stable = $cfg_ampere_stable },
+                @{ id = "8"; name = "Anime_Depth_Wallpapers"; package = "com.jndapp.anime.depth.live.wallpaper"; keys = @("anime", "depth", "wallpaper"); exclude = @(); strip = $true; stable = $cfg_animedepth_stable },
+                @{ id = "9"; name = "APKMirror_Installer"; package = "com.apkmirror.helper.prod"; keys = @("apkmirror", "installer", "helper"); exclude = @(); strip = $true; stable = $cfg_apkmirror_stable },
+                @{ id = "10"; name = "Calm"; package = "com.calm.android"; keys = @("calm"); exclude = @(); strip = $true; stable = $cfg_calm_stable },
+                @{ id = "11"; name = "Canva"; package = "com.canva.editor"; keys = @("canva"); exclude = @(); strip = $true; stable = $cfg_canva_stable },
+                @{ id = "12"; name = "ColorNote"; package = "com.socialnmobile.dictapps.notepad.color.note"; keys = @("colornote", "color_note", "color.note"); exclude = @(); strip = $true; stable = $cfg_colornote_stable },
+                @{ id = "13"; name = "CPU_Z"; package = "com.cpuid.cpu_z"; keys = @("cpu-z", "cpuz", "cpu_z"); exclude = @(); strip = $true; stable = $cfg_cpuz_stable },
+                @{ id = "14"; name = "Electron"; package = "com.mahersafadi.electron"; keys = @("electron"); exclude = @(); strip = $true; stable = $cfg_electron_stable },
+                @{ id = "15"; name = "Hola_VPN"; package = "org.hola.play"; keys = @("hola", "holavpn"); exclude = @(); strip = $true; stable = $cfg_holavpn_stable },
+                @{ id = "16"; name = "HTTP_Sniffer"; package = "com.anetcapture.mock"; keys = @("http", "sniffer", "anetcapture"); exclude = @(); strip = $true; stable = $cfg_httpsniffer_stable },
+                @{ id = "17"; name = "Inure"; package = "app.simple.inure.play"; keys = @("inure"); exclude = @(); strip = $true; stable = $cfg_inure_stable },
+                @{ id = "18"; name = "Kahoot"; package = "no.mobitroll.kahoot.android"; keys = @("kahoot"); exclude = @(); strip = $true; stable = $cfg_kahoot_stable },
+                @{ id = "19"; name = "KineMaster"; package = "com.nexstreaming.app.kinemasterfree"; keys = @("kinemaster"); exclude = @(); strip = $true; stable = $cfg_kinemaster_stable },
+                @{ id = "20"; name = "Lark_Player"; package = "com.dywx.larkplayer"; keys = @("lark", "larkplayer"); exclude = @(); strip = $true; stable = $cfg_larkplayer_stable },
+                @{ id = "21"; name = "Life360"; package = "com.life360.android.safetymapd"; keys = @("life360"); exclude = @(); strip = $true; stable = $cfg_life360_stable },
+                @{ id = "22"; name = "ML_Manager"; package = "com.javiersantos.mlmanager"; keys = @("ml_manager", "mlmanager"); exclude = @(); strip = $true; stable = $cfg_mlmanager_stable },
+                @{ id = "23"; name = "MobiOffice"; package = "com.mobisystems.office"; keys = @("mobioffice", "mobi", "office"); exclude = @("wps"); strip = $true; stable = $cfg_mobioffice_stable },
+                @{ id = "24"; name = "NetGuard"; package = "eu.faircode.netguard"; keys = @("netguard"); exclude = @(); strip = $true; stable = $cfg_netguard_stable },
+                @{ id = "25"; name = "Network_Guru"; package = "com.paget96.netspeedindicator"; keys = @("networkguru", "network_guru", "netspeedindicator"); exclude = @(); strip = $true; stable = $cfg_networkguru_stable },
+                @{ id = "26"; name = "Ninja_VPN"; package = "app.ninjavpn.android"; keys = @("ninjavpn", "ninja_vpn"); exclude = @(); strip = $true; stable = $cfg_ninjavpn_stable },
+                @{ id = "27"; name = "Proton_VPN"; package = "ch.protonvpn.android"; keys = @("proton", "protonvpn"); exclude = @(); strip = $true; stable = $cfg_protonvpn_stable },
+                @{ id = "28"; name = "Proxyman"; package = "com.proxyman.proxymanandroid"; keys = @("proxyman"); exclude = @(); strip = $true; stable = $cfg_proxyman_stable },
+                @{ id = "29"; name = "Psiphon_Pro"; package = "com.psiphon3.subscription"; keys = @("psiphon"); exclude = @(); strip = $true; stable = $cfg_psiphon_stable },
+                @{ id = "30"; name = "RAR"; package = "com.rarlab.rar"; keys = @("rar"); exclude = @(); strip = $true; stable = $cfg_rar_stable },
+                @{ id = "31"; name = "SD_Maid_SE"; package = "eu.darken.sdmse"; keys = @("sd_maid", "sdmaid", "sdmse"); exclude = @(); strip = $true; stable = $cfg_sdmaid_stable },
+                @{ id = "32"; name = "Stargazing_Hub"; package = "com.twtapp"; keys = @("stargazing", "stargazinghub"); exclude = @(); strip = $true; stable = $cfg_stargazing_stable },
+                @{ id = "33"; name = "Stickerly"; package = "com.snowcorp.stickerly.android"; keys = @("stickerly", "sticker.ly"); exclude = @(); strip = $true; stable = $cfg_stickerly_stable },
+                @{ id = "34"; name = "Strava"; package = "com.strava"; keys = @("strava"); exclude = @(); strip = $true; stable = $cfg_strava_stable },
+                @{ id = "35"; name = "TeraBox"; package = "com.dubox.drive"; keys = @("terabox", "dubox"); exclude = @(); strip = $true; stable = $cfg_terabox_stable },
+                @{ id = "36"; name = "TurboScan"; package = "com.piksoft.turboscan.free"; keys = @("turboscan"); exclude = @(); strip = $true; stable = $cfg_turboscan_stable },
+                @{ id = "37"; name = "Uptodown_App_Store"; package = "com.uptodown"; keys = @("uptodown"); exclude = @(); strip = $true; stable = $cfg_uptodown_stable },
+                @{ id = "38"; name = "Wallverse"; package = "com.wallverse.wallpapers"; keys = @("wallverse"); exclude = @(); strip = $true; stable = $cfg_wallverse_stable },
+                @{ id = "39"; name = "Waze"; package = "com.waze"; keys = @("waze"); exclude = @(); strip = $true; stable = $cfg_waze_stable },
+                @{ id = "40"; name = "Windscribe_VPN"; package = "com.windscribe.vpn"; keys = @("windscribe"); exclude = @(); strip = $true; stable = $cfg_windscribe_stable },
+                @{ id = "41"; name = "WolframAlpha"; package = "com.wolfram.android.alphapro"; keys = @("wolfram", "wolframalpha", "alphapro"); exclude = @(); strip = $true; stable = $cfg_wolfram_stable }
+            )
         }
 
         $choices = $appSelection.Split(',')
@@ -629,13 +761,14 @@ function Invoke-PatchingWorkflow {
             "arandomhooman" {"18"} 
             "BholeyKaBhakt" {"7"} 
             "browzomje" {"3"} 
-            "De-ReVanced" {"3"} 
+            "De-Vanced" {"2"} 
             "hoo-dles" {"12"} 
             "icysymmetra" {"2"} 
             "kiraio-moe" {"15"} 
             "Morphe" {"4"} 
             "PathxmOp" {"2"} 
             "Piko" {"3"} 
+            "rushiranpise" {"42"}
         }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
 
@@ -726,7 +859,7 @@ function Invoke-PatchingWorkflow {
             
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
-                $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.\+ _]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni, 26.12.1+rc1-2026.07.15)"
+                $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.\+ _\(\)]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni, 2.0.3 (41-d04e542))"
             }
 
             $app.TargetApk = $chosenApk.FullName
@@ -1263,9 +1396,8 @@ function Invoke-UtilityWorkflow {
                 } elseif ($eco.Name -eq "browzomje") {
                     @(@{pkg="com.pinterest"; name="pinterest"},
                       @{pkg="easy.sudoku.puzzle.solver.free"; name="easy-sudoku"})
-                } elseif ($eco.Name -eq "De-ReVanced") {
-                    @(@{pkg="com.google.android.apps.photos"; name="google-photos"},
-                      @{pkg="com.rarlab.rar"; name="rar"})
+                } elseif ($eco.Name -eq "De-Vanced") {
+                    @(@{pkg="com.google.android.apps.photos"; name="google-photos"})
                 } elseif ($eco.Name -eq "hoo-dles") {
                     @(@{pkg="com.adguard.android"; name="adguard"},
                       @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
@@ -1304,6 +1436,48 @@ function Invoke-UtilityWorkflow {
                 } elseif ($eco.Name -eq "Piko") {
                     @(@{pkg="com.twitter.android"; name="x-twitter"}, 
                       @{pkg="com.instagram.android"; name="instagram"}) 
+                } elseif ($eco.Name -eq "rushiranpise") {
+                    @(@{pkg="com.cloudflare.onedotonedotonedotone"; name="1dot1dot1dot1"},
+                      @{pkg="com.digibites.accubattery"; name="accubattery"},
+                      @{pkg="com.accuweather.android"; name="accuweather"},
+                      @{pkg="com.adobe.scan.android"; name="adobe-scan"},
+                      @{pkg="com.finalwire.aida64"; name="aida64"},
+                      @{pkg="com.androholic.amoledpix"; name="amoledpix"},
+                      @{pkg="com.gombosdev.ampere"; name="ampere"},
+                      @{pkg="com.jndapp.anime.depth.live.wallpaper"; name="anime-depth"},
+                      @{pkg="com.apkmirror.helper.prod"; name="apkmirror"},
+                      @{pkg="com.calm.android"; name="calm"},
+                      @{pkg="com.canva.editor"; name="canva"},
+                      @{pkg="com.socialnmobile.dictapps.notepad.color.note"; name="colornote"},
+                      @{pkg="com.cpuid.cpu_z"; name="cpuz"},
+                      @{pkg="com.mahersafadi.electron"; name="electron"},
+                      @{pkg="org.hola.play"; name="holavpn"},
+                      @{pkg="com.anetcapture.mock"; name="httpsniffer"},
+                      @{pkg="app.simple.inure.play"; name="inure"},
+                      @{pkg="no.mobitroll.kahoot.android"; name="kahoot"},
+                      @{pkg="com.nexstreaming.app.kinemasterfree"; name="kinemaster"},
+                      @{pkg="com.dywx.larkplayer"; name="lark-player"},
+                      @{pkg="com.life360.android.safetymapd"; name="life360"},
+                      @{pkg="com.javiersantos.mlmanager"; name="ml-manager"},
+                      @{pkg="com.mobisystems.office"; name="mobioffice"},
+                      @{pkg="eu.faircode.netguard"; name="netguard"},
+                      @{pkg="com.paget96.netspeedindicator"; name="network-guru"},
+                      @{pkg="app.ninjavpn.android"; name="ninjavpn"},
+                      @{pkg="ch.protonvpn.android"; name="protonvpn"},
+                      @{pkg="com.proxyman.proxymanandroid"; name="proxyman"},
+                      @{pkg="com.psiphon3.subscription"; name="psiphon-pro"},
+                      @{pkg="com.rarlab.rar"; name="rar"},
+                      @{pkg="eu.darken.sdmse"; name="sd-maid-se"},
+                      @{pkg="com.twtapp"; name="stargazing-hub"},
+                      @{pkg="com.snowcorp.stickerly.android"; name="stickerly"},
+                      @{pkg="com.strava"; name="strava"},
+                      @{pkg="com.dubox.drive"; name="terabox"},
+                      @{pkg="com.piksoft.turboscan.free"; name="turboscan"},
+                      @{pkg="com.uptodown"; name="uptodown"},
+                      @{pkg="com.wallverse.wallpapers"; name="wallverse"},
+                      @{pkg="com.waze"; name="waze"},
+                      @{pkg="com.windscribe.vpn"; name="windscribe-vpn"},
+                      @{pkg="com.wolfram.android.alphapro"; name="wolframalpha"})
                 }
                 
                 foreach ($app in $apps) {
