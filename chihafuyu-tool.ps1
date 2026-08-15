@@ -133,7 +133,7 @@ $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 $cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 
 # Piko
-$cfg_x_stable               = @("12.11.0-release.0")
+$cfg_x_stable               = @("12.17.0-release.0")
 $cfg_ig_stable              = @("439.0.0.37.89")
 
 # rushiranpise
