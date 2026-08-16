@@ -105,6 +105,11 @@ $cfg_windy_stable           = @("50.1.1")
 $cfg_xrecorder_stable       = @("2.5.1.1")
 $cfg_xodo_stable            = @("10.15.0")
 
+# hxreborn
+$cfg_projectivy_stable      = @("Any")
+$cfg_protonmail_stable      = @("7.10.4")
+$cfg_symfonium_stable       = @("14.1.0")
+
 # icysymmetra
 $cfg_tiktok_stable          = @("46.2.3")
 
@@ -303,14 +308,15 @@ function Resolve-Ecosystem {
     Write-Host "4. browzomje (Pinterest, Easy Sudoku)"
     Write-Host "5. De-Vanced (Google Photos)"
     Write-Host "6. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
-    Write-Host "7. icysymmetra (TikTok Global)"
-    Write-Host "8. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
-    Write-Host "9. Morphe (YouTube, YT Music, Reddit)"
-    Write-Host "10. PathxmOp (Chess.com)"
-    Write-Host "11. Piko (X/Twitter, Instagram)"
-    Write-Host "12. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm, Canva, ColorNote, CPU-Z, Electron, Hola VPN, HTTP Sniffer, Inure, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown, Wallverse, Waze, Windscribe, WolframAlpha)"
+    Write-Host "7. hxreborn (Projectivy Launcher, Proton Mail, Symfonium)"
+    Write-Host "8. icysymmetra (TikTok Global)"
+    Write-Host "9. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
+    Write-Host "10. Morphe (YouTube, YT Music, Reddit)"
+    Write-Host "11. PathxmOp (Chess.com)"
+    Write-Host "12. Piko (X/Twitter, Instagram)"
+    Write-Host "13. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm: Sleep & Meditation, Canva, ColorNote, CPU-Z, Electron, Hola VPN Proxy Plus, HTTP Sniffer, Inure App Manager, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown App Store, Wallverse, Waze, Windscribe VPN, WolframAlpha)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,12]" -RegexPattern "^(1[0-2]|[1-9])(,(1[0-2]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-12 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,13]" -RegexPattern "^(1[0-3]|[1-9])(,(1[0-3]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-13 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -323,12 +329,13 @@ function Resolve-Ecosystem {
             "4"  { "browzomje" }
             "5"  { "De-Vanced" }
             "6"  { "hoo-dles" }
-            "7"  { "icysymmetra" }
-            "8"  { "kiraio-moe" }
-            "9"  { "Morphe" }
-            "10" { "PathxmOp" }
-            "11" { "Piko" }
-            "12" { "rushiranpise" }
+            "7"  { "hxreborn" }
+            "8"  { "icysymmetra" }
+            "9"  { "kiraio-moe" }
+            "10" { "Morphe" }
+            "11" { "PathxmOp" }
+            "12" { "Piko" }
+            "13" { "rushiranpise" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -598,6 +605,18 @@ function Invoke-PatchingWorkflow {
                 @{ id = "10"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable },
                 @{ id = "11"; name = "Xodo"; package = "com.xodo.pdf.reader"; keys = @("xodo"); exclude = @(); strip = $true; stable = $cfg_xodo_stable }
             )
+        } elseif ($projectName -eq "hxreborn") {
+            Write-Host "1. Projectivy Launcher"
+            Write-Host "2. Proton Mail"
+            Write-Host "3. Symfonium"
+            Write-Host "4. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 4]" -RegexPattern "^[1-4](,[1-4])*$" -ErrorMessage "Invalid input. Enter numbers 1-4 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Projectivy_Launcher"; package = "com.spocky.projengmenu"; keys = @("projectivy", "projengmenu"); exclude = @(); strip = $true; stable = $cfg_projectivy_stable },
+                @{ id = "2"; name = "Proton_Mail"; package = "ch.protonmail.android"; keys = @("proton", "protonmail"); exclude = @("vpn"); strip = $true; stable = $cfg_protonmail_stable },
+                @{ id = "3"; name = "Symfonium"; package = "app.symfonik.music.player"; keys = @("symfonium"); exclude = @(); strip = $true; stable = $cfg_symfonium_stable }
+            )
         } elseif ($projectName -eq "icysymmetra") {
             Write-Host "1. TikTok Global"
             Write-Host "2. All Applications"
@@ -763,6 +782,7 @@ function Invoke-PatchingWorkflow {
             "browzomje" {"3"} 
             "De-Vanced" {"2"} 
             "hoo-dles" {"12"} 
+            "hxreborn" {"4"}
             "icysymmetra" {"2"} 
             "kiraio-moe" {"15"} 
             "Morphe" {"4"} 
@@ -1410,6 +1430,10 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.windyty.android"; name="windy"},
                       @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"},
                       @{pkg="com.xodo.pdf.reader"; name="xodo"})
+                } elseif ($eco.Name -eq "hxreborn") {
+                    @(@{pkg="com.spocky.projengmenu"; name="projectivy-launcher"},
+                      @{pkg="ch.protonmail.android"; name="proton-mail"},
+                      @{pkg="app.symfonik.music.player"; name="symfonium"})
                 } elseif ($eco.Name -eq "icysymmetra") {
                     @(@{pkg="com.zhiliaoapp.musically"; name="tiktok"})
                 } elseif ($eco.Name -eq "kiraio-moe") {

@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **ajstrick81**, **arandomhooman**, **BholeyKaBhakt**, **browzomje**, **De-Vanced**, **hoo-dles**, **icysymmetra**, **kiraio-moe**, **Morphe**, **PathxmOp**, **Piko**, and **rushiranpise** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **ajstrick81**, **arandomhooman**, **BholeyKaBhakt**, **browzomje**, **De-Vanced**, **hoo-dles**, **hxreborn**, **icysymmetra**, **kiraio-moe**, **Morphe**, **PathxmOp**, **Piko**, and **rushiranpise** ecosystems via **Morphe Desktop**.
 
 Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Download Manager`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Easy Sudoku`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
@@ -13,7 +13,7 @@ Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Dow
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between ajstrick81 (`Disney+`, `Prime Video`, `Netflix`, `HBO Max`, `Peacock`, `Tubi`, `ViX`, `Pluto TV`, `Paramount+`), arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`, `Easy Sudoku`), De-Vanced (`Google Photos`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), icysymmetra (`TikTok Global`), kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`), Morphe (`YouTube`, `YouTube Music`, `Reddit`), PathxmOp (`Chess.com`), Piko (`X/Twitter`, `Instagram`), and rushiranpise (`1.1.1.1`, `AccuBattery`, `AccuWeather`, `Adobe Scan`, `AIDA64`, `AmoledPix`, `Ampere`, `Anime Depth Wallpapers`, `APKMirror Installer`, `Calm: Sleep & Meditation`, `Canva`, `ColorNote`, `CPU-Z`, `Electron`, `Hola VPN Proxy Plus`, `HTTP Sniffer`, `Inure App Manager`, `Kahoot!`, `KineMaster`, `Lark Player`, `Life360`, `ML Manager`, `MobiOffice`, `NetGuard`, `Network Guru`, `Ninja VPN`, `Proton VPN`, `Proxyman`, `Psiphon Pro`, `RAR`, `SD Maid SE`, `Stargazing Hub`, `Sticker.ly`, `Strava`, `TeraBox`, `TurboScan`, `Uptodown App Store`, `Wallverse`, `Waze`, `Windscribe VPN`, `WolframAlpha`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between ajstrick81 (`Disney+`, `Prime Video`, `Netflix`, `HBO Max`, `Peacock`, `Tubi`, `ViX`, `Pluto TV`, `Paramount+`), arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`, `Easy Sudoku`), De-Vanced (`Google Photos`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), hxreborn (`Projectivy Launcher`, `Proton Mail`, `Symfonium`), icysymmetra (`TikTok Global`), kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`), Morphe (`YouTube`, `YouTube Music`, `Reddit`), PathxmOp (`Chess.com`), Piko (`X/Twitter`, `Instagram`), and rushiranpise (`1.1.1.1`, `AccuBattery`, `AccuWeather`, `Adobe Scan`, `AIDA64`, `AmoledPix`, `Ampere`, `Anime Depth Wallpapers`, `APKMirror Installer`, `Calm: Sleep & Meditation`, `Canva`, `ColorNote`, `CPU-Z`, `Electron`, `Hola VPN Proxy Plus`, `HTTP Sniffer`, `Inure App Manager`, `Kahoot!`, `KineMaster`, `Lark Player`, `Life360`, `ML Manager`, `MobiOffice`, `NetGuard`, `Network Guru`, `Ninja VPN`, `Proton VPN`, `Proxyman`, `Psiphon Pro`, `RAR`, `SD Maid SE`, `Stargazing Hub`, `Sticker.ly`, `Strava`, `TeraBox`, `TurboScan`, `Uptodown App Store`, `Wallverse`, `Waze`, `Windscribe VPN`, `WolframAlpha`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
@@ -53,11 +53,12 @@ Before spinning up the tool, make sure you have these ready:
    * **ajstrick81 Patches**: [morphe-androidtv-patches releases](https://github.com/ajstrick81/morphe-androidtv-patches/releases)
    * **arandomhooman Patches**: [hoomans-morphe-patches releases](https://github.com/arandomhooman/hoomans-morphe-patches/releases)
    * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
-   * **browzomje Patches**: [browzomje releases](https://github.com/browzomje/browzomje-patches/releases)
+   * **browzomje Patches**: [browzomje-patches releases](https://github.com/browzomje/browzomje-patches/releases)
    * **De-Vanced Patches**: [De-Vanced releases](https://github.com/RookieEnough/De-Vanced/releases)
-   * **hoo-dles Patches**: [hoo-dles releases](https://github.com/hoo-dles/morphe-patches/releases)
+   * **hoo-dles Patches**: [morphe-patches releases](https://github.com/hoo-dles/morphe-patches/releases)
+   * **hxreborn Patches**: [morphe-patches releases](https://github.com/hxreborn/morphe-patches/releases)
    * **icysymmetra Patches**: [tiktok-patches-for-morphe releases](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases)
-   * **kiraio-moe Patches**: [kiraio-moe releases](https://github.com/kiraio-moe/Lain-Patches/releases)
+   * **kiraio-moe Patches**: [Lain-Patches releases](https://github.com/kiraio-moe/Lain-Patches/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
@@ -108,6 +109,10 @@ Before spinning up the tool, make sure you have these ready:
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
+ │    ├── 📦 patches-x.x.x.mpp       
+ │    ├── 📁 Input/                  
+ │    └── 📁 Output/
+ ├── 📁 hxreborn/                    (hxreborn Workspace)
  │    ├── 📦 patches-x.x.x.mpp       
  │    ├── 📁 Input/                  
  │    └── 📁 Output/
@@ -224,6 +229,11 @@ $cfg_windy_stable           = @("50.1.1")
 $cfg_xrecorder_stable       = @("2.5.1.1")
 $cfg_xodo_stable            = @("10.15.0")
 
+# hxreborn
+$cfg_projectivy_stable      = @("Any")
+$cfg_protonmail_stable      = @("7.10.4")
+$cfg_symfonium_stable       = @("14.1.0")
+
 # icysymmetra
 $cfg_tiktok_stable          = @("46.2.3")
 
@@ -324,4 +334,4 @@ Distributed under the MIT License.
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from ajstrick81, arandomhooman, BholeyKaBhakt, browzomje, De-ReVanced, hoo-dles, icysymmetra, kiraio-moe, Morphe, PathxmOp, Piko, and inotia00. To learn more, visit [ajstrick81](https://github.com/ajstrick81/morphe-androidtv-patches/releases), [arandomhooman](https://github.com/arandomhooman/hoomans-morphe-patches/releases), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [De-Vanced](https://github.com/RookieEnough/De-Vanced), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [icysymmetra](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches), [Morphe](https://morphe.software), [PathxmOp](https://github.com/PrathxmOp/Prathxm-Patches), [Piko](https://github.com/crimera/piko), [rushiranpise](https://github.com/rushiranpise/morphe-patches) and [inotia00](https://gitlab.com/inotia00/x-shim/).
+> This tool utilizes patches and code from ajstrick81, arandomhooman, BholeyKaBhakt, browzomje, De-ReVanced, hoo-dles, icysymmetra, kiraio-moe, Morphe, PathxmOp, Piko, and inotia00. To learn more, visit [ajstrick81](https://github.com/ajstrick81/morphe-androidtv-patches/releases), [arandomhooman](https://github.com/arandomhooman/hoomans-morphe-patches/releases), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra), [browzomje](https://github.com/browzomje/browzomje-patches), [De-Vanced](https://github.com/RookieEnough/De-Vanced), [hoo-dles](https://github.com/hoo-dles/morphe-patches), [hxreborn](https://github.com/hxreborn/morphe-patches), [icysymmetra](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches), [Morphe](https://morphe.software), [PathxmOp](https://github.com/PrathxmOp/Prathxm-Patches), [Piko](https://github.com/crimera/piko), [rushiranpise](https://github.com/rushiranpise/morphe-patches) and [inotia00](https://gitlab.com/inotia00/x-shim/).
