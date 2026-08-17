@@ -219,7 +219,7 @@ $cfg_photos_stable          = @("Any")
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
-$cfg_duolingo_stable        = @("6.86.5")
+$cfg_duolingo_stable        = @("6.92.5")
 $cfg_ibispaint_stable       = @("14.0.6")
 $cfg_lightroom_stable       = @("11.4.5")
 $cfg_merriamwebster_stable  = @("Any")
