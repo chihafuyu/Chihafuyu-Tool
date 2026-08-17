@@ -2,7 +2,7 @@
 
 A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **ajstrick81**, **arandomhooman**, **BholeyKaBhakt**, **browzomje**, **De-Vanced**, **hoo-dles**, **hxreborn**, **icysymmetra**, **kiraio-moe**, **Morphe**, **PathxmOp**, **Piko**, and **rushiranpise** ecosystems via **Morphe Desktop**.
 
-Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Download Manager`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `IbisPaint X`, `Pinterest`, `Easy Sudoku`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
+Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Download Manager`, `Reddit`, `X (Twitter)`, `Instagram`, `AdGuard`, `Lightroom Mobile`, `Pinterest`, `Easy Sudoku`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
@@ -13,7 +13,7 @@ Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Dow
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between ajstrick81 (`Disney+`, `Prime Video`, `Netflix`, `HBO Max`, `Peacock`, `Tubi`, `ViX`, `Pluto TV`, `Paramount+`), arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`, `Easy Sudoku`), De-Vanced (`Google Photos`), hoo-dles (`AdGuard`, `IbisPaint X`, `WPS Office`, `CamScanner`, `Sleep as Android`, `Duolingo`, `Windy`, `Xodo`, etc.), hxreborn (`Projectivy Launcher`, `Proton Mail`, `Symfonium`), icysymmetra (`TikTok Global`), kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`), Morphe (`YouTube`, `YouTube Music`, `Reddit`), PathxmOp (`Chess.com`), Piko (`X/Twitter`, `Instagram`), and rushiranpise (`1.1.1.1`, `AccuBattery`, `AccuWeather`, `Adobe Scan`, `AIDA64`, `AmoledPix`, `Ampere`, `Anime Depth Wallpapers`, `APKMirror Installer`, `Calm: Sleep & Meditation`, `Canva`, `ColorNote`, `CPU-Z`, `Electron`, `Hola VPN Proxy Plus`, `HTTP Sniffer`, `Inure App Manager`, `Kahoot!`, `KineMaster`, `Lark Player`, `Life360`, `ML Manager`, `MobiOffice`, `NetGuard`, `Network Guru`, `Ninja VPN`, `Proton VPN`, `Proxyman`, `Psiphon Pro`, `RAR`, `SD Maid SE`, `Stargazing Hub`, `Sticker.ly`, `Strava`, `TeraBox`, `TurboScan`, `Uptodown App Store`, `Wallverse`, `Waze`, `Windscribe VPN`, `WolframAlpha`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between ajstrick81 (`Disney+`, `Prime Video`, `Netflix`, `HBO Max`, `Peacock`, `Tubi`, `ViX`, `Pluto TV`, `Paramount+`), arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Speedtest`, `Stellarium`, `PROTO`, `vpnify`, `Backdrops`, `Solid Explorer`), browzomje (`Pinterest`, `Easy Sudoku`), De-Vanced (`Google Photos`), hoo-dles (`AdGuard`, `CamScanner`, `Duolingo`, `IbisPaint X`, `Lightroom Mobile`, `Merriam-Webster`, `Mimo`, `MyFitnessPal`, `PyDroid3`, `Sleep as Android`, `Smart Launcher`, `Windy`, `WPS Office`, `Xodo`, `XRecorder`), hxreborn (`Projectivy Launcher`, `Proton Mail`, `Symfonium`), icysymmetra (`TikTok Global`), kiraio-moe (`Atomic`, `AudioRelay`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Timestamp Camera`), Morphe (`YouTube`, `YouTube Music`, `Reddit`), PathxmOp (`Chess.com`), Piko (`X/Twitter`, `Instagram`), and rushiranpise (`1.1.1.1`, `AccuBattery`, `AccuWeather`, `Adobe Scan`, `AIDA64`, `AmoledPix`, `Ampere`, `Anime Depth Wallpapers`, `APKMirror Installer`, `Calm: Sleep & Meditation`, `Canva`, `ColorNote`, `CPU-Z`, `Electron`, `Hola VPN Proxy Plus`, `HTTP Sniffer`, `Inure App Manager`, `Kahoot!`, `KineMaster`, `Lark Player`, `Life360`, `ML Manager`, `MobiOffice`, `NetGuard`, `Network Guru`, `Ninja VPN`, `Proton VPN`, `Proxyman`, `Psiphon Pro`, `RAR`, `SD Maid SE`, `Stargazing Hub`, `Sticker.ly`, `Strava`, `TeraBox`, `TurboScan`, `Uptodown App Store`, `Wallverse`, `Waze`, `Windscribe VPN`, `WolframAlpha`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
 - **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
@@ -218,16 +218,20 @@ $cfg_photos_stable          = @("Any")
 
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
-$cfg_ibispaint_stable       = @("14.0.6")
-$cfg_wps_stable             = @("18.24")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
-$cfg_sleep_stable           = @("20260526")
 $cfg_duolingo_stable        = @("6.86.5")
+$cfg_ibispaint_stable       = @("14.0.6")
+$cfg_lightroom_stable       = @("11.4.5")
 $cfg_merriamwebster_stable  = @("Any")
 $cfg_mimo_stable            = @("9.11")
+$cfg_myfitnesspal_stable    = @("26.31.0")
+$cfg_pydroid3_stable        = @("8.3_arm64")
+$cfg_sleep_stable           = @("20260526")
+$cfg_smartlauncher_stable   = @("6.6 build 016")
 $cfg_windy_stable           = @("50.1.1")
-$cfg_xrecorder_stable       = @("2.5.1.1")
+$cfg_wps_stable             = @("18.24")
 $cfg_xodo_stable            = @("10.15.0")
+$cfg_xrecorder_stable       = @("2.5.1.1")
 
 # hxreborn
 $cfg_projectivy_stable      = @("Any")

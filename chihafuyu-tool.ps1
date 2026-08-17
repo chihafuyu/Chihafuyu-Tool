@@ -45,18 +45,18 @@ if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
 }
 
 # ==============================================================================
-# RECOMMENDED APP VERSIONS
+# RECOMMENDED APP VERSIONS (SORTED A-Z)
 # ==============================================================================
 # ajstrick81
 $cfg_disneyplus_stable      = @("26.12.1+rc1-2026.07.15")
-$cfg_primevideo_stable      = @("6.23.23+v15.5.0.70-armv7a")
-$cfg_netflix_stable         = @("13.0.1 build 25028")
 $cfg_hbomax_stable          = @("7.7.0.78", "7.5.0.73")
+$cfg_netflix_stable         = @("13.0.1 build 25028")
+$cfg_paramount_stable       = @("16.17.0", "16.8.0")
 $cfg_peacock_stable         = @("7.6.100")
+$cfg_plutotv_stable         = @("5.66.0-leanback")
+$cfg_primevideo_stable      = @("6.23.23+v15.5.0.70-armv7a")
 $cfg_tubi_stable            = @("10.28.5000")
 $cfg_vix_stable             = @("4.47.2_tv")
-$cfg_plutotv_stable         = @("5.66.0-leanback")
-$cfg_paramount_stable       = @("16.17.0", "16.8.0")
 
 # arandomhooman
 $cfg_adm_stable             = @("14.0.39")
@@ -78,32 +78,36 @@ $cfg_videoconverter_stable  = @("3.2.2")
 $cfg_webtoon_stable         = @("3.9.5")
 
 # BholeyKaBhakt
+$cfg_backdrops_stable       = @("6.1.2")
+$cfg_proto_stable           = @("1.49.0", "1.48.0")
+$cfg_solidexplorer_stable   = @("3.4.10")
 $cfg_speedtest_stable       = @("7.0.4")
 $cfg_stellarium_stable      = @("1.16.3", "1.16.2")
-$cfg_proto_stable           = @("1.49.0", "1.48.0")
 $cfg_vpnify_stable          = @("2.2.9")
-$cfg_backdrops_stable       = @("6.1.2")
-$cfg_solidexplorer_stable   = @("3.4.10")
 
 # browzomje
-$cfg_pinterest_stable       = @("14.23.0", "14.28.0")
 $cfg_easysudoku_stable      = @("5.70.0")
+$cfg_pinterest_stable       = @("14.23.0", "14.28.0")
 
 # De-Vanced
 $cfg_photos_stable          = @("Any")
 
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
-$cfg_ibispaint_stable       = @("14.0.6")
-$cfg_wps_stable             = @("18.24")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
-$cfg_sleep_stable           = @("20260526")
 $cfg_duolingo_stable        = @("6.86.5")
+$cfg_ibispaint_stable       = @("14.0.6")
+$cfg_lightroom_stable       = @("11.4.5")
 $cfg_merriamwebster_stable  = @("Any")
 $cfg_mimo_stable            = @("9.11")
+$cfg_myfitnesspal_stable    = @("26.31.0")
+$cfg_pydroid3_stable        = @("8.3_arm64")
+$cfg_sleep_stable           = @("20260526")
+$cfg_smartlauncher_stable   = @("6.6 build 016")
 $cfg_windy_stable           = @("50.1.1")
-$cfg_xrecorder_stable       = @("2.5.1.1")
+$cfg_wps_stable             = @("18.24")
 $cfg_xodo_stable            = @("10.15.0")
+$cfg_xrecorder_stable       = @("2.5.1.1")
 
 # hxreborn
 $cfg_projectivy_stable      = @("Any")
@@ -130,16 +134,16 @@ $cfg_pixellab_stable        = @("2.1.9")
 $cfg_timestampcam_stable    = @("1.252")
 
 # Morphe
+$cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 $cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable   = @("9.15.51")
-$cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 
 # PathxmOp
 $cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
 
 # Piko
-$cfg_x_stable               = @("12.17.0-release.0")
 $cfg_ig_stable              = @("439.0.0.37.89")
+$cfg_x_stable               = @("12.17.0-release.0")
 
 # rushiranpise
 $cfg_1dot1dot1dot1_stable   = @("6.38.8")
@@ -152,7 +156,7 @@ $cfg_ampere_stable          = @("v4.37.0")
 $cfg_animedepth_stable      = @("1.0.4")
 $cfg_apkmirror_stable       = @("2.0.3 (41-d04e542)")
 $cfg_calm_stable            = @("6.101.1")
-$cfg_canva_stable           = @("5.2.1")
+$cfg_canva_stable           = @("2.372.0")
 $cfg_colornote_stable       = @("4.8.6")
 $cfg_cpuz_stable            = @("1.60")
 $cfg_electron_stable        = @("3.0.3")
@@ -302,18 +306,18 @@ function Read-ValidatedInput {
 
 function Resolve-Ecosystem {
     Write-Host "`n[SELECT] Target Ecosystem(s):" -ForegroundColor Yellow
-    Write-Host "1. ajstrick81 (Disney+, Prime Video, Netflix, HBO Max, Peacock, Tubi, ViX, Pluto TV, Paramount+)"
+    Write-Host "1. ajstrick81 (Disney+, HBO Max, Netflix, Paramount+, Peacock, Pluto TV, Prime Video, Tubi, ViX)"
     Write-Host "2. arandomhooman (ADM, Alpha Progression, BandLab, Battery Guru, Cronometer, DirectChat, Finch, Flightradar24, FolderSync, InShot, Liquid Gallery, Poweramp, Smart AudioBook Player, Symfonium, Tumblr, Video Converter, WEBTOON)"
-    Write-Host "3. BholeyKaBhakt (Speedtest, Stellarium, PROTO, vpnify, Backdrops, Solid Explorer)"
-    Write-Host "4. browzomje (Pinterest, Easy Sudoku)"
+    Write-Host "3. BholeyKaBhakt (Backdrops, PROTO, Solid Explorer, Speedtest, Stellarium, vpnify)"
+    Write-Host "4. browzomje (Easy Sudoku, Pinterest)"
     Write-Host "5. De-Vanced (Google Photos)"
-    Write-Host "6. hoo-dles (AdGuard, IbisPaint X, WPS Office, Duolingo, Merriam-Webster, Windy, Mimo, XRecorder, CamScanner, Sleep as Android, Xodo)"
+    Write-Host "6. hoo-dles (AdGuard, CamScanner, Duolingo, IbisPaint X, Lightroom Mobile, Merriam-Webster, Mimo, MyFitnessPal, PyDroid3, Sleep as Android, Smart Launcher, Windy, WPS Office, Xodo, XRecorder)"
     Write-Host "7. hxreborn (Projectivy Launcher, Proton Mail, Symfonium)"
     Write-Host "8. icysymmetra (TikTok Global)"
     Write-Host "9. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
-    Write-Host "10. Morphe (YouTube, YT Music, Reddit)"
+    Write-Host "10. Morphe (Reddit, YouTube, YT Music)"
     Write-Host "11. PathxmOp (Chess.com)"
-    Write-Host "12. Piko (X/Twitter, Instagram)"
+    Write-Host "12. Piko (Instagram, X/Twitter)"
     Write-Host "13. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm: Sleep & Meditation, Canva, ColorNote, CPU-Z, Electron, Hola VPN Proxy Plus, HTTP Sniffer, Inure App Manager, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown App Store, Wallverse, Waze, Windscribe VPN, WolframAlpha)"
     
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,13]" -RegexPattern "^(1[0-3]|[1-9])(,(1[0-3]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-13 separated by commas."
@@ -479,27 +483,27 @@ function Invoke-PatchingWorkflow {
         
         if ($projectName -eq "ajstrick81") {
             Write-Host "1. Disney+"
-            Write-Host "2. Prime Video"
+            Write-Host "2. HBO Max"
             Write-Host "3. Netflix"
-            Write-Host "4. HBO Max"
+            Write-Host "4. Paramount+"
             Write-Host "5. Peacock"
-            Write-Host "6. Tubi"
-            Write-Host "7. ViX"
-            Write-Host "8. Pluto TV"
-            Write-Host "9. Paramount+"
+            Write-Host "6. Pluto TV"
+            Write-Host "7. Prime Video"
+            Write-Host "8. Tubi"
+            Write-Host "9. ViX"
             Write-Host "10. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 3, or 10]" -RegexPattern "^(10|[1-9])(,(10|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-10 separated by commas."
             
             $masterApps = @(
                 @{ id = "1"; name = "DisneyPlus"; package = "com.disney.disneyplus"; keys = @("disney", "disneyplus"); exclude = @(); strip = $true; stable = $cfg_disneyplus_stable },
-                @{ id = "2"; name = "Prime_Video"; package = "com.amazon.amazonvideo.livingroom"; keys = @("prime", "amazonvideo", "livingroom"); exclude = @(); strip = $true; stable = $cfg_primevideo_stable },
+                @{ id = "2"; name = "HBO_Max"; package = "com.wbd.hbomax"; keys = @("hbo", "max", "hbomax"); exclude = @(); strip = $true; stable = $cfg_hbomax_stable },
                 @{ id = "3"; name = "Netflix"; package = "com.netflix.ninja"; keys = @("netflix", "ninja"); exclude = @(); strip = $true; stable = $cfg_netflix_stable },
-                @{ id = "4"; name = "HBO_Max"; package = "com.wbd.hbomax"; keys = @("hbo", "max", "hbomax"); exclude = @(); strip = $true; stable = $cfg_hbomax_stable },
+                @{ id = "4"; name = "ParamountPlus"; package = "com.cbs.ott"; keys = @("paramount", "cbs", "ott"); exclude = @(); strip = $true; stable = $cfg_paramount_stable },
                 @{ id = "5"; name = "Peacock"; package = "com.peacocktv.peacockandroid"; keys = @("peacock"); exclude = @(); strip = $true; stable = $cfg_peacock_stable },
-                @{ id = "6"; name = "Tubi"; package = "com.tubitv"; keys = @("tubi"); exclude = @(); strip = $true; stable = $cfg_tubi_stable },
-                @{ id = "7"; name = "ViX"; package = "com.univision.prendetv"; keys = @("vix", "univision", "prendetv"); exclude = @(); strip = $true; stable = $cfg_vix_stable },
-                @{ id = "8"; name = "Pluto_TV"; package = "tv.pluto.android"; keys = @("pluto"); exclude = @(); strip = $true; stable = $cfg_plutotv_stable },
-                @{ id = "9"; name = "ParamountPlus"; package = "com.cbs.ott"; keys = @("paramount", "cbs", "ott"); exclude = @(); strip = $true; stable = $cfg_paramount_stable }
+                @{ id = "6"; name = "Pluto_TV"; package = "tv.pluto.android"; keys = @("pluto"); exclude = @(); strip = $true; stable = $cfg_plutotv_stable },
+                @{ id = "7"; name = "Prime_Video"; package = "com.amazon.amazonvideo.livingroom"; keys = @("prime", "amazonvideo", "livingroom"); exclude = @(); strip = $true; stable = $cfg_primevideo_stable },
+                @{ id = "8"; name = "Tubi"; package = "com.tubitv"; keys = @("tubi"); exclude = @(); strip = $true; stable = $cfg_tubi_stable },
+                @{ id = "9"; name = "ViX"; package = "com.univision.prendetv"; keys = @("vix", "univision", "prendetv"); exclude = @(); strip = $true; stable = $cfg_vix_stable }
             )
         } elseif ($projectName -eq "arandomhooman") {
             Write-Host "1. Advanced Download Manager"
@@ -542,32 +546,32 @@ function Invoke-PatchingWorkflow {
                 @{ id = "17"; name = "WEBTOON"; package = "com.naver.linewebtoon"; keys = @("webtoon", "linewebtoon"); exclude = @(); strip = $true; stable = $cfg_webtoon_stable }
             )
         } elseif ($projectName -eq "BholeyKaBhakt") {
-            Write-Host "1. Speedtest"
-            Write-Host "2. Stellarium"
-            Write-Host "3. PROTO"
-            Write-Host "4. vpnify"
-            Write-Host "5. Backdrops"
-            Write-Host "6. Solid Explorer"
+            Write-Host "1. Backdrops"
+            Write-Host "2. PROTO"
+            Write-Host "3. Solid Explorer"
+            Write-Host "4. Speedtest"
+            Write-Host "5. Stellarium"
+            Write-Host "6. vpnify"
             Write-Host "7. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 7]" -RegexPattern "^[1-7](,[1-7])*$" -ErrorMessage "Invalid input. Enter numbers 1-7 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Speedtest"; package = "org.zwanoo.android.speedtest"; keys = @("speedtest"); exclude = @(); strip = $true; stable = $cfg_speedtest_stable },
-                @{ id = "2"; name = "Stellarium"; package = "com.noctuasoftware.stellarium_free"; keys = @("stellarium"); exclude = @(); strip = $true; stable = $cfg_stellarium_stable },
-                @{ id = "3"; name = "PROTO"; package = "com.proto.circuitsimulator"; keys = @("proto", "circuit", "simulator"); exclude = @(); strip = $true; stable = $cfg_proto_stable },
-                @{ id = "4"; name = "vpnify"; package = "com.vpn.free.hotspot.secure.vpnify"; keys = @("vpnify"); exclude = @(); strip = $true; stable = $cfg_vpnify_stable },
-                @{ id = "5"; name = "Backdrops"; package = "com.backdrops.wallpapers"; keys = @("backdrops"); exclude = @(); strip = $true; stable = $cfg_backdrops_stable },
-                @{ id = "6"; name = "Solid_Explorer"; package = "pl.solidexplorer2"; keys = @("solid", "explorer"); exclude = @(); strip = $true; stable = $cfg_solidexplorer_stable }
+                @{ id = "1"; name = "Backdrops"; package = "com.backdrops.wallpapers"; keys = @("backdrops"); exclude = @(); strip = $true; stable = $cfg_backdrops_stable },
+                @{ id = "2"; name = "PROTO"; package = "com.proto.circuitsimulator"; keys = @("proto", "circuit", "simulator"); exclude = @(); strip = $true; stable = $cfg_proto_stable },
+                @{ id = "3"; name = "Solid_Explorer"; package = "pl.solidexplorer2"; keys = @("solid", "explorer"); exclude = @(); strip = $true; stable = $cfg_solidexplorer_stable },
+                @{ id = "4"; name = "Speedtest"; package = "org.zwanoo.android.speedtest"; keys = @("speedtest"); exclude = @(); strip = $true; stable = $cfg_speedtest_stable },
+                @{ id = "5"; name = "Stellarium"; package = "com.noctuasoftware.stellarium_free"; keys = @("stellarium"); exclude = @(); strip = $true; stable = $cfg_stellarium_stable },
+                @{ id = "6"; name = "vpnify"; package = "com.vpn.free.hotspot.secure.vpnify"; keys = @("vpnify"); exclude = @(); strip = $true; stable = $cfg_vpnify_stable }
             )
         } elseif ($projectName -eq "browzomje") {
-            Write-Host "1. Pinterest"
-            Write-Host "2. Easy Sudoku"
+            Write-Host "1. Easy Sudoku"
+            Write-Host "2. Pinterest"
             Write-Host "3. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable },
-                @{ id = "2"; name = "Easy_Sudoku"; package = "easy.sudoku.puzzle.solver.free"; keys = @("easysudoku", "sudoku"); exclude = @(); strip = $true; stable = $cfg_easysudoku_stable }
+                @{ id = "1"; name = "Easy_Sudoku"; package = "easy.sudoku.puzzle.solver.free"; keys = @("easysudoku", "sudoku"); exclude = @(); strip = $true; stable = $cfg_easysudoku_stable },
+                @{ id = "2"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable }
             )
         } elseif ($projectName -eq "De-Vanced") {
             Write-Host "1. Google Photos"
@@ -579,31 +583,39 @@ function Invoke-PatchingWorkflow {
             )
         } elseif ($projectName -eq "hoo-dles") {
             Write-Host "1. AdGuard"
-            Write-Host "2. IbisPaint X"
-            Write-Host "3. WPS Office"
-            Write-Host "4. CamScanner"
-            Write-Host "5. Sleep as Android"
-            Write-Host "6. Duolingo"
-            Write-Host "7. Merriam-Webster"
-            Write-Host "8. Mimo"
-            Write-Host "9. Windy"
-            Write-Host "10. XRecorder"
-            Write-Host "11. Xodo"
-            Write-Host "12. All Applications"
-            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 12]" -RegexPattern "^(1[0-2]|[1-9])(,(1[0-2]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-12 separated by commas."
+            Write-Host "2. CamScanner"
+            Write-Host "3. Duolingo"
+            Write-Host "4. IbisPaint X"
+            Write-Host "5. Lightroom Mobile"
+            Write-Host "6. Merriam-Webster"
+            Write-Host "7. Mimo"
+            Write-Host "8. MyFitnessPal"
+            Write-Host "9. PyDroid3"
+            Write-Host "10. Sleep as Android"
+            Write-Host "11. Smart Launcher"
+            Write-Host "12. Windy"
+            Write-Host "13. WPS Office"
+            Write-Host "14. Xodo"
+            Write-Host "15. XRecorder"
+            Write-Host "16. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 16]" -RegexPattern "^(1[0-6]|[1-9])(,(1[0-6]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-16 separated by commas."
             
             $masterApps = @(
                 @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
-                @{ id = "2"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint", "ibis", "ibis-paint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
-                @{ id = "3"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
-                @{ id = "4"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable },
-                @{ id = "5"; name = "Sleep_as_Android"; package = "com.urbandroid.sleep"; keys = @("sleep", "urbandroid"); exclude = @(); strip = $true; stable = $cfg_sleep_stable },
-                @{ id = "6"; name = "Duolingo"; package = "com.duolingo"; keys = @("duolingo"); exclude = @(); strip = $true; stable = $cfg_duolingo_stable },
-                @{ id = "7"; name = "Merriam_Webster"; package = "com.merriamwebster"; keys = @("merriam", "webster", "merriamwebster"); exclude = @(); strip = $true; stable = $cfg_merriamwebster_stable },
-                @{ id = "8"; name = "Mimo"; package = "com.getmimo"; keys = @("mimo"); exclude = @(); strip = $true; stable = $cfg_mimo_stable },
-                @{ id = "9"; name = "Windy"; package = "com.windyty.android"; keys = @("windy", "windyty"); exclude = @(); strip = $true; stable = $cfg_windy_stable },
-                @{ id = "10"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable },
-                @{ id = "11"; name = "Xodo"; package = "com.xodo.pdf.reader"; keys = @("xodo"); exclude = @(); strip = $true; stable = $cfg_xodo_stable }
+                @{ id = "2"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable },
+                @{ id = "3"; name = "Duolingo"; package = "com.duolingo"; keys = @("duolingo"); exclude = @(); strip = $true; stable = $cfg_duolingo_stable },
+                @{ id = "4"; name = "IbisPaint_X"; package = "jp.ne.ibis.ibispaintx.app"; keys = @("ibispaint", "ibis", "ibis-paint"); exclude = @(); strip = $true; stable = $cfg_ibispaint_stable },
+                @{ id = "5"; name = "Lightroom_Mobile"; package = "com.adobe.lrmobile"; keys = @("lightroom", "lrmobile"); exclude = @(); strip = $true; stable = $cfg_lightroom_stable },
+                @{ id = "6"; name = "Merriam_Webster"; package = "com.merriamwebster"; keys = @("merriam", "webster", "merriamwebster"); exclude = @(); strip = $true; stable = $cfg_merriamwebster_stable },
+                @{ id = "7"; name = "Mimo"; package = "com.getmimo"; keys = @("mimo"); exclude = @(); strip = $true; stable = $cfg_mimo_stable },
+                @{ id = "8"; name = "MyFitnessPal"; package = "com.myfitnesspal.android"; keys = @("myfitnesspal"); exclude = @(); strip = $true; stable = $cfg_myfitnesspal_stable },
+                @{ id = "9"; name = "PyDroid3"; package = "ru.iiec.pydroid3"; keys = @("pydroid", "pydroid3"); exclude = @(); strip = $true; stable = $cfg_pydroid3_stable },
+                @{ id = "10"; name = "Sleep_as_Android"; package = "com.urbandroid.sleep"; keys = @("sleep", "urbandroid"); exclude = @(); strip = $true; stable = $cfg_sleep_stable },
+                @{ id = "11"; name = "Smart_Launcher"; package = "ginlemon.flowerfree"; keys = @("smartlauncher", "smart_launcher", "flowerfree"); exclude = @(); strip = $true; stable = $cfg_smartlauncher_stable },
+                @{ id = "12"; name = "Windy"; package = "com.windyty.android"; keys = @("windy", "windyty"); exclude = @(); strip = $true; stable = $cfg_windy_stable },
+                @{ id = "13"; name = "WPS_Office"; package = "cn.wps.moffice_eng"; keys = @("wps", "moffice"); exclude = @(); strip = $true; stable = $cfg_wps_stable },
+                @{ id = "14"; name = "Xodo"; package = "com.xodo.pdf.reader"; keys = @("xodo"); exclude = @(); strip = $true; stable = $cfg_xodo_stable },
+                @{ id = "15"; name = "XRecorder"; package = "videoeditor.videorecorder.screenrecorder"; keys = @("xrecorder", "screenrecorder"); exclude = @(); strip = $true; stable = $cfg_xrecorder_stable }
             )
         } elseif ($projectName -eq "hxreborn") {
             Write-Host "1. Projectivy Launcher"
@@ -660,13 +672,13 @@ function Invoke-PatchingWorkflow {
                 @{ id = "14"; name = "Timestamp_Camera"; package = "com.jeyluta.timestampcamerafree"; keys = @("timestamp"); exclude = @(); strip = $true; stable = $cfg_timestampcam_stable }
             )
         } elseif ($projectName -eq "Morphe") {
-            Write-Host "1. YouTube`n2. YouTube Music`n3. Reddit`n4. All Applications"
+            Write-Host "1. Reddit`n2. YouTube`n3. YouTube Music`n4. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 4]" -RegexPattern "^[1-4](,[1-4])*$" -ErrorMessage "Invalid input. Enter numbers 1-4 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "YouTube"; package = "com.google.android.youtube"; keys = @("youtube"); exclude = @("music"); strip = $true; stable = $cfg_youtube_stable },
-                @{ id = "2"; name = "YouTube_Music"; package = "com.google.android.apps.youtube.music"; keys = @("music", "ytmusic"); exclude = @(); strip = $true; stable = $cfg_youtube_music_stable },
-                @{ id = "3"; name = "Reddit"; package = "com.reddit.frontpage"; keys = @("reddit"); exclude = @(); strip = $true; stable = $cfg_reddit_stable }
+                @{ id = "1"; name = "Reddit"; package = "com.reddit.frontpage"; keys = @("reddit"); exclude = @(); strip = $true; stable = $cfg_reddit_stable },
+                @{ id = "2"; name = "YouTube"; package = "com.google.android.youtube"; keys = @("youtube"); exclude = @("music"); strip = $true; stable = $cfg_youtube_stable },
+                @{ id = "3"; name = "YouTube_Music"; package = "com.google.android.apps.youtube.music"; keys = @("music", "ytmusic"); exclude = @(); strip = $true; stable = $cfg_youtube_music_stable }
             )
         } elseif ($projectName -eq "PathxmOp") {
             Write-Host "1. Chess.com"
@@ -677,12 +689,12 @@ function Invoke-PatchingWorkflow {
                 @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{6,8}(?=_)"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
             )
         } elseif ($projectName -eq "Piko") {
-            Write-Host "1. X (Twitter)`n2. Instagram`n3. All Applications"
+            Write-Host "1. Instagram`n2. X (Twitter)`n3. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
             
             $masterApps = @(
-                @{ id = "1"; name = "X_Twitter"; package = "com.twitter.android"; keys = @("twitter", "x"); exclude = @(); strip = $true; stable = $cfg_x_stable },
-                @{ id = "2"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable }
+                @{ id = "1"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable },
+                @{ id = "2"; name = "X_Twitter"; package = "com.twitter.android"; keys = @("twitter", "x"); exclude = @(); strip = $true; stable = $cfg_x_stable }
             )
         } elseif ($projectName -eq "rushiranpise") {
             Write-Host "1. 1.1.1.1"
@@ -781,7 +793,7 @@ function Invoke-PatchingWorkflow {
             "BholeyKaBhakt" {"7"} 
             "browzomje" {"3"} 
             "De-Vanced" {"2"} 
-            "hoo-dles" {"12"} 
+            "hoo-dles" {"16"} 
             "hxreborn" {"4"}
             "icysymmetra" {"2"} 
             "kiraio-moe" {"15"} 
@@ -1380,14 +1392,14 @@ function Invoke-UtilityWorkflow {
                 
                 $apps = if ($eco.Name -eq "ajstrick81") {
                     @(@{pkg="com.disney.disneyplus"; name="disneyplus"},
-                      @{pkg="com.amazon.amazonvideo.livingroom"; name="prime-video"},
-                      @{pkg="com.netflix.ninja"; name="netflix"},
                       @{pkg="com.wbd.hbomax"; name="hbo-max"},
+                      @{pkg="com.netflix.ninja"; name="netflix"},
+                      @{pkg="com.cbs.ott"; name="paramountplus"},
                       @{pkg="com.peacocktv.peacockandroid"; name="peacock"},
-                      @{pkg="com.tubitv"; name="tubi"},
-                      @{pkg="com.univision.prendetv"; name="vix"},
                       @{pkg="tv.pluto.android"; name="pluto-tv"},
-                      @{pkg="com.cbs.ott"; name="paramountplus"})
+                      @{pkg="com.amazon.amazonvideo.livingroom"; name="prime-video"},
+                      @{pkg="com.tubitv"; name="tubi"},
+                      @{pkg="com.univision.prendetv"; name="vix"})
                 } elseif ($eco.Name -eq "arandomhooman") {
                     @(@{pkg="com.dv.adm"; name="advanced-download-manager"},
                       @{pkg="com.alphaprogression.alphaprogression"; name="alpha-progression"},
@@ -1407,29 +1419,33 @@ function Invoke-UtilityWorkflow {
                       @{pkg="app.remux.video.converter"; name="video-converter"},
                       @{pkg="com.naver.linewebtoon"; name="webtoon"})
                 } elseif ($eco.Name -eq "BholeyKaBhakt") {
-                    @(@{pkg="org.zwanoo.android.speedtest"; name="speedtest"},
-                      @{pkg="com.noctuasoftware.stellarium_free"; name="stellarium"},
+                    @(@{pkg="com.backdrops.wallpapers"; name="backdrops"},
                       @{pkg="com.proto.circuitsimulator"; name="proto"},
-                      @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"},
-                      @{pkg="com.backdrops.wallpapers"; name="backdrops"},
-                      @{pkg="pl.solidexplorer2"; name="solid-explorer"})
+                      @{pkg="pl.solidexplorer2"; name="solid-explorer"},
+                      @{pkg="org.zwanoo.android.speedtest"; name="speedtest"},
+                      @{pkg="com.noctuasoftware.stellarium_free"; name="stellarium"},
+                      @{pkg="com.vpn.free.hotspot.secure.vpnify"; name="vpnify"})
                 } elseif ($eco.Name -eq "browzomje") {
-                    @(@{pkg="com.pinterest"; name="pinterest"},
-                      @{pkg="easy.sudoku.puzzle.solver.free"; name="easy-sudoku"})
+                    @(@{pkg="easy.sudoku.puzzle.solver.free"; name="easy-sudoku"},
+                      @{pkg="com.pinterest"; name="pinterest"})
                 } elseif ($eco.Name -eq "De-Vanced") {
                     @(@{pkg="com.google.android.apps.photos"; name="google-photos"})
                 } elseif ($eco.Name -eq "hoo-dles") {
                     @(@{pkg="com.adguard.android"; name="adguard"},
-                      @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
-                      @{pkg="cn.wps.moffice_eng"; name="wps-office"},
                       @{pkg="com.intsig.camscanner"; name="camscanner"},
-                      @{pkg="com.urbandroid.sleep"; name="sleep-as-android"},
                       @{pkg="com.duolingo"; name="duolingo"},
+                      @{pkg="jp.ne.ibis.ibispaintx.app"; name="ibispaint-x"},
+                      @{pkg="com.adobe.lrmobile"; name="lightroom-mobile"},
                       @{pkg="com.merriamwebster"; name="merriam-webster"},
                       @{pkg="com.getmimo"; name="mimo"},
+                      @{pkg="com.myfitnesspal.android"; name="myfitnesspal"},
+                      @{pkg="ru.iiec.pydroid3"; name="pydroid3"},
+                      @{pkg="com.urbandroid.sleep"; name="sleep-as-android"},
+                      @{pkg="ginlemon.flowerfree"; name="smart-launcher"},
                       @{pkg="com.windyty.android"; name="windy"},
-                      @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"},
-                      @{pkg="com.xodo.pdf.reader"; name="xodo"})
+                      @{pkg="cn.wps.moffice_eng"; name="wps-office"},
+                      @{pkg="com.xodo.pdf.reader"; name="xodo"},
+                      @{pkg="videoeditor.videorecorder.screenrecorder"; name="xrecorder"})
                 } elseif ($eco.Name -eq "hxreborn") {
                     @(@{pkg="com.spocky.projengmenu"; name="projectivy-launcher"},
                       @{pkg="ch.protonmail.android"; name="proton-mail"},
@@ -1452,14 +1468,14 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.imaginstudio.imagetools.pixellab"; name="pixellab"},
                       @{pkg="com.jeyluta.timestampcamerafree"; name="timestamp-camera"})
                 } elseif ($eco.Name -eq "Morphe") {
-                    @(@{pkg="com.google.android.youtube"; name="youtube"}, 
-                      @{pkg="com.google.android.apps.youtube.music"; name="youtube-music"}, 
-                      @{pkg="com.reddit.frontpage"; name="reddit"})
+                    @(@{pkg="com.reddit.frontpage"; name="reddit"},
+                      @{pkg="com.google.android.youtube"; name="youtube"}, 
+                      @{pkg="com.google.android.apps.youtube.music"; name="youtube-music"})
                 } elseif ($eco.Name -eq "PathxmOp") {
                     @(@{pkg="com.chess"; name="chess"})
                 } elseif ($eco.Name -eq "Piko") {
-                    @(@{pkg="com.twitter.android"; name="x-twitter"}, 
-                      @{pkg="com.instagram.android"; name="instagram"}) 
+                    @(@{pkg="com.instagram.android"; name="instagram"},
+                      @{pkg="com.twitter.android"; name="x-twitter"}) 
                 } elseif ($eco.Name -eq "rushiranpise") {
                     @(@{pkg="com.cloudflare.onedotonedotonedotone"; name="1dot1dot1dot1"},
                       @{pkg="com.digibites.accubattery"; name="accubattery"},
