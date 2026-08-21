@@ -92,6 +92,10 @@ $cfg_pinterest_stable       = @("14.23.0", "14.28.0")
 # De-Vanced
 $cfg_photos_stable          = @("Any")
 
+# dh6k
+$cfg_quettadirect_stable    = @("Any")
+$cfg_quettaplay_stable      = @("Any")
+
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
@@ -132,6 +136,9 @@ $cfg_mangaplus_stable       = @("2.4.1")
 $cfg_nekopoi_stable         = @("2.5.3-build01", "2.5.3")
 $cfg_pixellab_stable        = @("2.1.9")
 $cfg_timestampcam_stable    = @("1.252")
+
+# kveld9
+$cfg_brave_stable           = @("1.93.137")
 
 # Morphe
 $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
@@ -311,16 +318,18 @@ function Resolve-Ecosystem {
     Write-Host "3. BholeyKaBhakt (Backdrops, PROTO, Solid Explorer, Speedtest, Stellarium, vpnify)"
     Write-Host "4. browzomje (Easy Sudoku, Pinterest)"
     Write-Host "5. De-Vanced (Google Photos)"
-    Write-Host "6. hoo-dles (AdGuard, CamScanner, Duolingo, IbisPaint X, Lightroom Mobile, Merriam-Webster, Mimo, MyFitnessPal, PyDroid3, Sleep as Android, Smart Launcher, Windy, WPS Office, Xodo, XRecorder)"
-    Write-Host "7. hxreborn (Projectivy Launcher, Proton Mail, Symfonium)"
-    Write-Host "8. icysymmetra (TikTok Global)"
-    Write-Host "9. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
-    Write-Host "10. Morphe (Reddit, YouTube, YT Music)"
-    Write-Host "11. PathxmOp (Chess.com)"
-    Write-Host "12. Piko (Instagram, X/Twitter)"
-    Write-Host "13. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm: Sleep & Meditation, Canva, ColorNote, CPU-Z, Electron, Hola VPN Proxy Plus, HTTP Sniffer, Inure App Manager, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown App Store, Wallverse, Waze, Windscribe VPN, WolframAlpha)"
+    Write-Host "6. dh6k (Quetta Browser Direct, Quetta Browser Play Store)"
+    Write-Host "7. hoo-dles (AdGuard, CamScanner, Duolingo, IbisPaint X, Lightroom Mobile, Merriam-Webster, Mimo, MyFitnessPal, PyDroid3, Sleep as Android, Smart Launcher, Windy, WPS Office, Xodo, XRecorder)"
+    Write-Host "8. hxreborn (Projectivy Launcher, Proton Mail, Symfonium)"
+    Write-Host "9. icysymmetra (TikTok Global)"
+    Write-Host "10. kiraio-moe (Atomic, AudioRelay, Boorusama, Epic!, Fake GPS, Hermit, Hidden Settings, iLovePDF, Key Mapper, Keymate, Manga Plus, Nekopoi, PixelLab, Timestamp Camera)"
+    Write-Host "11. kveld9 (Brave Browser)"
+    Write-Host "12. Morphe (Reddit, YouTube, YT Music)"
+    Write-Host "13. PathxmOp (Chess.com)"
+    Write-Host "14. Piko (Instagram, X/Twitter)"
+    Write-Host "15. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm: Sleep & Meditation, Canva, ColorNote, CPU-Z, Electron, Hola VPN Proxy Plus, HTTP Sniffer, Inure App Manager, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown App Store, Wallverse, Waze, Windscribe VPN, WolframAlpha)"
     
-    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,13]" -RegexPattern "^(1[0-3]|[1-9])(,(1[0-3]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-13 separated by commas."
+    $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,15]" -RegexPattern "^(1[0-5]|[1-9])(,(1[0-5]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-15 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
     $ecosystems = @()
@@ -332,14 +341,16 @@ function Resolve-Ecosystem {
             "3"  { "BholeyKaBhakt" }
             "4"  { "browzomje" }
             "5"  { "De-Vanced" }
-            "6"  { "hoo-dles" }
-            "7"  { "hxreborn" }
-            "8"  { "icysymmetra" }
-            "9"  { "kiraio-moe" }
-            "10" { "Morphe" }
-            "11" { "PathxmOp" }
-            "12" { "Piko" }
-            "13" { "rushiranpise" }
+            "6"  { "dh6k" }
+            "7"  { "hoo-dles" }
+            "8"  { "hxreborn" }
+            "9"  { "icysymmetra" }
+            "10" { "kiraio-moe" }
+            "11" { "kveld9" }
+            "12" { "Morphe" }
+            "13" { "PathxmOp" }
+            "14" { "Piko" }
+            "15" { "rushiranpise" }
         }
         
         $workspace = Join-Path $PSScriptRoot $projectName
@@ -581,6 +592,16 @@ function Invoke-PatchingWorkflow {
             $masterApps = @(
                 @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable }
             )
+        } elseif ($projectName -eq "dh6k") {
+            Write-Host "1. Quetta Browser (Direct APK edition)"
+            Write-Host "2. Quetta Browser (Play Store edition)"
+            Write-Host "3. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Quetta_Browser_Direct"; package = "net.quetta.browser.official"; keys = @("quetta", "official"); exclude = @(); strip = $true; stable = $cfg_quettadirect_stable },
+                @{ id = "2"; name = "Quetta_Browser_PlayStore"; package = "net.quetta.browser"; keys = @("quetta"); exclude = @("official"); strip = $true; stable = $cfg_quettaplay_stable }
+            )
         } elseif ($projectName -eq "hoo-dles") {
             Write-Host "1. AdGuard"
             Write-Host "2. CamScanner"
@@ -670,6 +691,14 @@ function Invoke-PatchingWorkflow {
                 @{ id = "12"; name = "Nekopoi"; package = "com.kcstream.cing"; keys = @("nekopoi", "cing", "^app\d{5}"); exclude = @(); strip = $true; stable = $cfg_nekopoi_stable },
                 @{ id = "13"; name = "PixelLab"; package = "com.imaginstudio.imagetools.pixellab"; keys = @("pixellab"); exclude = @(); strip = $true; stable = $cfg_pixellab_stable },
                 @{ id = "14"; name = "Timestamp_Camera"; package = "com.jeyluta.timestampcamerafree"; keys = @("timestamp"); exclude = @(); strip = $true; stable = $cfg_timestampcam_stable }
+            )
+        } elseif ($projectName -eq "kveld9") {
+            Write-Host "1. Brave Browser"
+            Write-Host "2. All Applications"
+            $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
+            
+            $masterApps = @(
+                @{ id = "1"; name = "Brave_Browser"; package = "com.brave.browser"; keys = @("brave"); exclude = @(); strip = $true; stable = $cfg_brave_stable }
             )
         } elseif ($projectName -eq "Morphe") {
             Write-Host "1. Reddit`n2. YouTube`n3. YouTube Music`n4. All Applications"
@@ -792,11 +821,13 @@ function Invoke-PatchingWorkflow {
             "arandomhooman" {"18"} 
             "BholeyKaBhakt" {"7"} 
             "browzomje" {"3"} 
-            "De-Vanced" {"2"} 
+            "De-Vanced" {"2"}
+            "dh6k" {"3"}
             "hoo-dles" {"16"} 
             "hxreborn" {"4"}
             "icysymmetra" {"2"} 
-            "kiraio-moe" {"15"} 
+            "kiraio-moe" {"15"}
+            "kveld9" {"2"}
             "Morphe" {"4"} 
             "PathxmOp" {"2"} 
             "Piko" {"3"} 
@@ -1430,6 +1461,9 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.pinterest"; name="pinterest"})
                 } elseif ($eco.Name -eq "De-Vanced") {
                     @(@{pkg="com.google.android.apps.photos"; name="google-photos"})
+                } elseif ($eco.Name -eq "dh6k") {
+                    @(@{pkg="net.quetta.browser.official"; name="quetta-browser-direct"},
+                      @{pkg="net.quetta.browser"; name="quetta-browser-playstore"})
                 } elseif ($eco.Name -eq "hoo-dles") {
                     @(@{pkg="com.adguard.android"; name="adguard"},
                       @{pkg="com.intsig.camscanner"; name="camscanner"},
@@ -1467,6 +1501,8 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.kcstream.cing"; name="nekopoi"},
                       @{pkg="com.imaginstudio.imagetools.pixellab"; name="pixellab"},
                       @{pkg="com.jeyluta.timestampcamerafree"; name="timestamp-camera"})
+                } elseif ($eco.Name -eq "kveld9") {
+                    @(@{pkg="com.brave.browser"; name="brave-browser"})
                 } elseif ($eco.Name -eq "Morphe") {
                     @(@{pkg="com.reddit.frontpage"; name="reddit"},
                       @{pkg="com.google.android.youtube"; name="youtube"}, 
