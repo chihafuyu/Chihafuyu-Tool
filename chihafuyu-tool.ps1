@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
     Chihafuyu Tool
-    A comprehensive utility to automate Android app patching and manage ADB installations 
+    A comprehensive utility to automate Android app patching and manage ADB installations
     using standard CLI patchers.
 
 .DESCRIPTION
-    Simplifies the Android application patching workflow and ADB utility operations. 
-    Automates artifact discovery, enforces version validation, manages secure credentials, 
-    optimizes APK size via architecture stripping, and acts as an ADB frontend for 
+    Simplifies the Android application patching workflow and ADB utility operations.
+    Automates artifact discovery, enforces version validation, manages secure credentials,
+    optimizes APK size via architecture stripping, and acts as an ADB frontend for
     both root and non-root device installations.
 
 .AUTHOR
@@ -209,7 +209,7 @@ $cfg_wolfram_stable         = @("1.0.8.20260601651")
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw "Java is missing or not recognized." }
-    
+
     $regex = '"(?:1\.)?(\d+)'
     if ($javaVerOutput -match $regex) {
         $version = [int]$Matches[1]
@@ -236,15 +236,15 @@ try {
 
 function Get-ApkVersion {
     param([string]$FileName, [string[]]$AppKeywords)
-    
+
     if ($FileName -notmatch '\.(apk|apkm|xapk|apks)$') { return $null }
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
-    
+
     # Match standard versioning and 7+ digit date codes using lookarounds to bypass trailing underscores.
     $vPat = "((?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
-    
+
     $foundVersions = @()
-    
+
     # Evaluate all keywords to ensure the highest weighted match is not skipped
     foreach ($AppKeyword in $AppKeywords) {
         # Weight-based pattern matching to isolate version strings from architecture tags.
@@ -254,21 +254,21 @@ function Get-ApkVersion {
             @{ P = "v$vPat(?=[-_]|$)"; W = 7 }
             @{ P = "(?<!\d)$vPat(?=[-_]|$)"; W = 5 }
         )
-        
+
         foreach ($regex in $patterns) {
             if ($baseName -match $regex.P) {
                 $ext = $Matches[1]
-                
+
                 # Normalize version delimiter string from hyphens or underscores to periods.
                 $ext = [regex]::Replace($ext, '(?<=\d)[-_](?=\d)', '.')
-                
+
                 $foundVersions += [PSCustomObject]@{ Ver = $ext; Weight = $regex.W }
             }
         }
     }
-    
+
     if ($foundVersions.Count -eq 0) { return $null }
-    
+
     # Select the absolute highest weighted regex match across all evaluated keywords.
     $best = $foundVersions | Sort-Object Weight -Descending | Select-Object -First 1
     return $best.Ver
@@ -280,13 +280,13 @@ function Test-IsUniversalApk {
     try {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
         if ([System.IO.Path]::GetExtension($ApkPath) -ne ".apk") { return $false }
-        
+
         # Validate minimum Android package requirements directly via ZipFile header parsing.
         # This approach is significantly faster than using Expand-Archive for simple existence checks.
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ApkPath)
         $hasDex = $null -ne ($zip.Entries | Where-Object Name -eq "classes.dex")
         $hasManifest = $null -ne ($zip.Entries | Where-Object FullName -eq "AndroidManifest.xml")
-        
+
         return ($hasDex -and $hasManifest)
     } catch {
         return $true
@@ -299,11 +299,11 @@ function Get-YesNoPrompt {
     param([string]$Prompt)
     while ($true) {
         # Global abort trigger allows the user to navigate back safely.
-        $input = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
-        
-        if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
-        if ($input -match '^[yYnN]$') { return ($input -match '^[yY]$') }
-        
+        $userInput = (Read-Host "$Prompt (Y/N or 'B' to go back)").Trim()
+
+        if ($userInput -match '^[bB]$') { throw "BACK_TO_MAIN" }
+        if ($userInput -match '^[yYnN]$') { return ($userInput -match '^[yY]$') }
+
         Write-Host "  Invalid input. Please enter Y, N, or B." -ForegroundColor Red
     }
 }
@@ -311,11 +311,11 @@ function Get-YesNoPrompt {
 function Read-ValidatedInput {
     param([string]$Prompt, [string]$RegexPattern, [string]$ErrorMessage)
     while ($true) {
-        $input = (Read-Host "$Prompt (or 'B' to go back)").Trim()
-        
-        if ($input -match '^[bB]$') { throw "BACK_TO_MAIN" }
-        if ($input -match $RegexPattern) { return $input }
-        
+        $userInput = (Read-Host "$Prompt (or 'B' to go back)").Trim()
+
+        if ($userInput -match '^[bB]$') { throw "BACK_TO_MAIN" }
+        if ($userInput -match $RegexPattern) { return $userInput }
+
         Write-Host "  $ErrorMessage" -ForegroundColor Red
     }
 }
@@ -340,7 +340,7 @@ function Resolve-Ecosystem {
     Write-Host "16. PathxmOp (Chess.com)"
     Write-Host "17. Piko (Instagram, X/Twitter)"
     Write-Host "18. rushiranpise (1.1.1.1, AccuBattery, AccuWeather, Adobe Scan, AIDA64, AmoledPix, Ampere, Anime Depth Wallpapers, APKMirror Installer, Calm: Sleep & Meditation, Canva, ColorNote, CPU-Z, Electron, Hola VPN Proxy Plus, HTTP Sniffer, Inure App Manager, Kahoot!, KineMaster, Lark Player, Life360, ML Manager, MobiOffice, NetGuard, Network Guru, Ninja VPN, Proton VPN, Proxyman, Psiphon Pro, RAR, SD Maid SE, Stargazing Hub, Sticker.ly, Strava, TeraBox, TurboScan, Uptodown App Store, Wallverse, Waze, Windscribe VPN, WolframAlpha)"
-    
+
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,18]" -RegexPattern "^(1[0-8]|[1-9])(,(1[0-8]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-18 separated by commas."
 
     $choices = $ecoChoice.Split(',') | Select-Object -Unique
@@ -367,7 +367,7 @@ function Resolve-Ecosystem {
             "17" { "Piko" }
             "18" { "rushiranpise" }
         }
-        
+
         $workspace = Join-Path $PSScriptRoot $projectName
 
         # Scaffold workspace directories if they do not exist.
@@ -375,21 +375,21 @@ function Resolve-Ecosystem {
             New-Item -ItemType Directory -Path $workspace -Force | Out-Null
             Write-Host "  -> Created new workspace: .\$projectName" -ForegroundColor Green
         }
-        
+
         foreach ($dir in @("Input", "Output")) {
             $dirPath = Join-Path $workspace $dir
             if (-not (Test-Path -LiteralPath $dirPath)) { New-Item -ItemType Directory -Path $dirPath -Force | Out-Null }
         }
-        
+
         $ecosystems += @{ Name = $projectName; Workspace = $workspace }
     }
 
     return $ecosystems
 }
 
-function Resolve-EnvironmentArtifacts {
+function Resolve-EnvironmentArtifact {
     param([string]$Workspace, [string]$ProjectName, [bool]$RequirePatches)
-    
+
     # Push-Location preserves the original root path to prevent terminal drift.
     Push-Location -LiteralPath $Workspace -ErrorAction Stop
 
@@ -407,7 +407,7 @@ function Resolve-EnvironmentArtifacts {
         if ($cliStableDisplay -eq "[Not Found]") { Write-Host $cliStableDisplay -ForegroundColor Red } else { Write-Host $cliStableDisplay -ForegroundColor Green }
         Write-Host -NoNewline "2. Latest Pre-release "
         if ($cliDevDisplay -eq "[Not Found]") { Write-Host $cliDevDisplay -ForegroundColor Red } else { Write-Host $cliDevDisplay -ForegroundColor Green }
-        
+
         $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
 
         $patchesChoice = "1"
@@ -424,16 +424,16 @@ function Resolve-EnvironmentArtifacts {
             if ($patchStableDisplay -eq "[Not Found]") { Write-Host $patchStableDisplay -ForegroundColor Red } else { Write-Host $patchStableDisplay -ForegroundColor Green }
             Write-Host -NoNewline "2. Latest Pre-release Patches "
             if ($patchDevDisplay -eq "[Not Found]") { Write-Host $patchDevDisplay -ForegroundColor Red } else { Write-Host $patchDevDisplay -ForegroundColor Green }
-            
+
             $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
         }
 
         $cliJar = if ($cliChoice -eq "1") { $cliStableSearch } else { $cliDevSearch }
         $patchesFile = $null
-        
+
         if ($RequirePatches) {
             $patchesFile = if ($patchesChoice -eq "1") { $patchStableSearch } else { $patchDevSearch }
-            
+
             # Discover secondary/shim companion patches implicitly based on nomenclature.
             if ($patchesFile) {
                 $extraPatches = Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -ne $patchesFile.FullName -and $_.Name -match "shim" }
@@ -445,9 +445,9 @@ function Resolve-EnvironmentArtifacts {
             Write-Host "`n[!] Required environment artifacts are missing!" -ForegroundColor Red
             if (-not $cliJar) { Write-Host "  - Missing Morphe Desktop (.jar) in the Root or .\$ProjectName directory." -ForegroundColor Yellow }
             if ($RequirePatches -and -not $patchesFile) { Write-Host "  - Missing Patches (.mpp) in the .\$ProjectName directory." -ForegroundColor Yellow }
-            
+
             Write-Host "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
-            
+
             $cliPrefix = if ($cliChoice -eq "1") { "morphe-desktop-*-all.jar" } else { "morphe-desktop-*-dev.*-all.jar" }
             $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
 
@@ -455,7 +455,7 @@ function Resolve-EnvironmentArtifacts {
             while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
                 if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
                 Start-Sleep -Seconds 2
-                
+
                 $cliJar = Get-ChildItem -Path "..\$cliPrefix", ".\$cliPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($cliChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
                 if ($RequirePatches) {
                     $patchesFile = Get-ChildItem -Path ".\$patchPrefix" -File -ErrorAction SilentlyContinue | Where-Object { ($patchesChoice -eq "2") -or ($_.Name -notmatch "-dev") } | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending | Select-Object -First 1
@@ -473,7 +473,7 @@ function Resolve-EnvironmentArtifacts {
             Write-Host "`n[WARNING] Pre-Release Environment Detected for $ProjectName" -ForegroundColor Yellow
             if (-not (Get-YesNoPrompt "Proceed with the pre-release track?")) { return $null }
         }
-        
+
         return @{ Cli = $cliJar; Patches = $patchesFile; ExtraPatches = $extraPatches; Track = $patchTrack }
     } finally {
         Pop-Location
@@ -481,11 +481,13 @@ function Resolve-EnvironmentArtifacts {
 }
 
 function Invoke-PatchingWorkflow {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+    param()
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "          CHIHAFUYU TOOL - PATCHING           " -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
-    
+
     $ecosystems = Resolve-Ecosystem
     if (-not $ecosystems) { return }
 
@@ -494,19 +496,19 @@ function Invoke-PatchingWorkflow {
     # PHASE 1: Build the execution queue per ecosystem.
     foreach ($eco in $ecosystems) {
         $projectName = $eco.Name; $workspace = $eco.Workspace
-        
+
         Write-Host "`n==============================================" -ForegroundColor Magenta
         Write-Host "       PREPARING ECOSYSTEM: $($projectName.ToUpper())" -ForegroundColor Magenta
         Write-Host "==============================================" -ForegroundColor Magenta
 
-        $envArt = Resolve-EnvironmentArtifacts -Workspace $workspace -ProjectName $projectName -RequirePatches $true
-        if (-not $envArt) { 
+        $envArt = Resolve-EnvironmentArtifact -Workspace $workspace -ProjectName $projectName -RequirePatches $true
+        if (-not $envArt) {
             Write-Host "  [!] Skipping $projectName due to aborted artifact selection." -ForegroundColor Red
-            continue 
+            continue
         }
 
         Write-Host "`n[+] Select Target Application(s):" -ForegroundColor Yellow
-        
+
         if ($projectName -eq "ajstrick81") {
             Write-Host "1. Disney+"
             Write-Host "2. HBO Max"
@@ -519,7 +521,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "9. ViX"
             Write-Host "10. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 3, or 10]" -RegexPattern "^(10|[1-9])(,(10|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-10 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "DisneyPlus"; package = "com.disney.disneyplus"; keys = @("disney", "disneyplus"); exclude = @(); strip = $true; stable = $cfg_disneyplus_stable },
                 @{ id = "2"; name = "HBO_Max"; package = "com.wbd.hbomax"; keys = @("hbo", "max", "hbomax"); exclude = @(); strip = $true; stable = $cfg_hbomax_stable },
@@ -535,7 +537,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. Alight Motion"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Alight_Motion"; package = "com.alightcreative.motion"; keys = @("alight", "motion"); exclude = @(); strip = $true; stable = $cfg_alightmotion_stable }
             )
@@ -559,7 +561,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "17. WEBTOON"
             Write-Host "18. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 16, or 18]" -RegexPattern "^(1[0-8]|[1-9])(,(1[0-8]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-18 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Advanced_Download_Manager"; package = "com.dv.adm"; keys = @("adm", "advanced_download_manager"); exclude = @(); strip = $true; stable = $cfg_adm_stable },
                 @{ id = "2"; name = "Alpha_Progression"; package = "com.alphaprogression.alphaprogression"; keys = @("alphaprogression"); exclude = @(); strip = $true; stable = $cfg_alphaprog_stable },
@@ -588,7 +590,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "6. vpnify"
             Write-Host "7. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 7]" -RegexPattern "^[1-7](,[1-7])*$" -ErrorMessage "Invalid input. Enter numbers 1-7 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Backdrops"; package = "com.backdrops.wallpapers"; keys = @("backdrops"); exclude = @(); strip = $true; stable = $cfg_backdrops_stable },
                 @{ id = "2"; name = "PROTO"; package = "com.proto.circuitsimulator"; keys = @("proto", "circuit", "simulator"); exclude = @(); strip = $true; stable = $cfg_proto_stable },
@@ -602,7 +604,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "2. Pinterest"
             Write-Host "3. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Easy_Sudoku"; package = "easy.sudoku.puzzle.solver.free"; keys = @("easysudoku", "sudoku"); exclude = @(); strip = $true; stable = $cfg_easysudoku_stable },
                 @{ id = "2"; name = "Pinterest"; package = "com.pinterest"; keys = @("pinterest"); exclude = @(); strip = $true; stable = $cfg_pinterest_stable }
@@ -611,7 +613,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. Google Photos"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Google_Photos"; package = "com.google.android.apps.photos"; keys = @("photos"); exclude = @(); strip = $true; stable = $cfg_photos_stable }
             )
@@ -620,7 +622,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "2. Quetta Browser (Play Store edition)"
             Write-Host "3. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Quetta_Browser_Direct"; package = "net.quetta.browser.official"; keys = @("quetta", "official"); exclude = @(); strip = $true; stable = $cfg_quettadirect_stable },
                 @{ id = "2"; name = "Quetta_Browser_PlayStore"; package = "net.quetta.browser"; keys = @("quetta"); exclude = @("official"); strip = $true; stable = $cfg_quettaplay_stable }
@@ -643,7 +645,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "15. XRecorder"
             Write-Host "16. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 16]" -RegexPattern "^(1[0-6]|[1-9])(,(1[0-6]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-16 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "AdGuard"; package = "com.adguard.android"; keys = @("adguard"); exclude = @(); strip = $true; stable = $cfg_adguard_stable },
                 @{ id = "2"; name = "CamScanner"; package = "com.intsig.camscanner"; keys = @("camscanner"); exclude = @(); strip = $true; stable = $cfg_camscanner_stable },
@@ -667,7 +669,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "3. Symfonium"
             Write-Host "4. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 4]" -RegexPattern "^[1-4](,[1-4])*$" -ErrorMessage "Invalid input. Enter numbers 1-4 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Projectivy_Launcher"; package = "com.spocky.projengmenu"; keys = @("projectivy", "projengmenu"); exclude = @(); strip = $true; stable = $cfg_projectivy_stable },
                 @{ id = "2"; name = "Proton_Mail"; package = "ch.protonmail.android"; keys = @("proton", "protonmail"); exclude = @("vpn"); strip = $true; stable = $cfg_protonmail_stable },
@@ -677,7 +679,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. TikTok Global"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "TikTok"; package = "com.zhiliaoapp.musically"; keys = @("tiktok", "musically"); exclude = @(); strip = $true; stable = $cfg_tiktok_stable }
             )
@@ -685,7 +687,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. Gboard"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Gboard"; package = "com.google.android.inputmethod.latin"; keys = @("gboard", "inputmethod"); exclude = @(); strip = $true; stable = $cfg_gboard_stable }
             )
@@ -706,7 +708,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "14. Timestamp Camera Free"
             Write-Host "15. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 12, or 15]" -RegexPattern "^(1[0-5]|[1-9])(,(1[0-5]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-15 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Atomic"; package = "com.jlindemann.science"; keys = @("atomic", "science"); exclude = @(); strip = $true; stable = $cfg_atomic_stable },
                 @{ id = "2"; name = "Boorusama"; package = "com.degenk.boorusama"; keys = @("boorusama"); exclude = @(); strip = $true; stable = $cfg_boorusama_stable },
@@ -727,7 +729,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. iPusnas"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "iPusnas"; package = "mam.reader.ipusnas"; keys = @("ipusnas"); exclude = @(); strip = $true; stable = $cfg_ipusnas_stable }
             )
@@ -735,14 +737,14 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. Brave Browser"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Brave_Browser"; package = "com.brave.browser"; keys = @("brave"); exclude = @(); strip = $true; stable = $cfg_brave_stable }
             )
         } elseif ($projectName -eq "Morphe") {
             Write-Host "1. Reddit`n2. YouTube`n3. YouTube Music`n4. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 4]" -RegexPattern "^[1-4](,[1-4])*$" -ErrorMessage "Invalid input. Enter numbers 1-4 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Reddit"; package = "com.reddit.frontpage"; keys = @("reddit"); exclude = @(); strip = $true; stable = $cfg_reddit_stable },
                 @{ id = "2"; name = "YouTube"; package = "com.google.android.youtube"; keys = @("youtube"); exclude = @("music"); strip = $true; stable = $cfg_youtube_stable },
@@ -752,14 +754,14 @@ function Invoke-PatchingWorkflow {
             Write-Host "1. Chess.com"
             Write-Host "2. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1 or 2]" -RegexPattern "^[1-2](,[1-2])*$" -ErrorMessage "Invalid input. Enter numbers 1-2 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Chess"; package = "com.chess"; keys = @("chess", "^\d{6,8}(?=_)"); exclude = @(); strip = $true; stable = $cfg_chess_stable }
             )
         } elseif ($projectName -eq "Piko") {
             Write-Host "1. Instagram`n2. X (Twitter)`n3. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 3]" -RegexPattern "^[1-3](,[1-3])*$" -ErrorMessage "Invalid input. Enter numbers 1-3 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "Instagram"; package = "com.instagram.android"; keys = @("instagram", "ig"); exclude = @(); strip = $true; stable = $cfg_ig_stable },
                 @{ id = "2"; name = "X_Twitter"; package = "com.twitter.android"; keys = @("twitter", "x"); exclude = @(); strip = $true; stable = $cfg_x_stable }
@@ -808,7 +810,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "41. WolframAlpha"
             Write-Host "42. All Applications"
             $appSelection = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 30, or 42]" -RegexPattern "^(4[0-2]|[1-3][0-9]|[1-9])(,(4[0-2]|[1-3][0-9]|[1-9]))*$" -ErrorMessage "Invalid input. Enter numbers 1-42 separated by commas."
-            
+
             $masterApps = @(
                 @{ id = "1"; name = "1dot1dot1dot1"; package = "com.cloudflare.onedotonedotonedotone"; keys = @("1.1.1.1", "cloudflare", "onedot"); exclude = @(); strip = $true; stable = $cfg_1dot1dot1dot1_stable },
                 @{ id = "2"; name = "AccuBattery"; package = "com.digibites.accubattery"; keys = @("accubattery"); exclude = @(); strip = $true; stable = $cfg_accubattery_stable },
@@ -894,7 +896,7 @@ function Invoke-PatchingWorkflow {
         }
 
         Write-Host "`n[+] Validating Dependencies..." -ForegroundColor Yellow
-        
+
         # Bypass PowerShell's buggy -Include wildcard resolution by using LiteralPath and Regex filtering.
         $inputDir = Join-Path $workspace "Input"
         $allApks = Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object { 
@@ -914,7 +916,7 @@ function Invoke-PatchingWorkflow {
                     Write-Host "  -> Skipping Nekopoi deployment by user request." -ForegroundColor DarkGray
                     continue
                 }
-                
+
                 Write-Host "`n[!] RED GATES: INDEMNITY & LIABILITY DISCLAIMER" -ForegroundColor Red
                 Write-Host "I assume absolutely no responsibility or liability for any psychological issues, addiction, dependencies, or potential legal violations arising from the use of this un-censored software." -ForegroundColor Yellow
                 if (-not (Get-YesNoPrompt "Do you explicitly understand the risks and wish to continue anyway?")) {
@@ -922,7 +924,7 @@ function Invoke-PatchingWorkflow {
                     continue
                 }
             }
-            
+
             $matched = @($allApks | Where-Object { 
                 $n = $_.Name.ToLower()
                 $matchKey = $false
@@ -939,7 +941,7 @@ function Invoke-PatchingWorkflow {
 
             $chosenApk = if ($matched.Count -eq 1) { 
                 $v = Get-ApkVersion -FileName $matched[0].Name -AppKeywords $app.keys
-                
+
                 $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                 $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                 Write-Host "  [✓] $($app.name) -> $($matched[0].Name)$tag" -ForegroundColor $color
@@ -948,7 +950,7 @@ function Invoke-PatchingWorkflow {
                 Write-Host "`nMultiple files detected for $($app.name):" -ForegroundColor Cyan
                 for ($i = 0; $i -lt $matched.Count; $i++) {
                     $v = Get-ApkVersion -FileName $matched[$i].Name -AppKeywords $app.keys
-                    
+
                     $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                     $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                     Write-Host "  $($i + 1). $($matched[$i].Name)$tag" -ForegroundColor $color
@@ -964,7 +966,7 @@ function Invoke-PatchingWorkflow {
             }
 
             $ver = Get-ApkVersion -FileName $chosenApk.Name -AppKeywords $app.keys
-            
+
             # Prompt for manual entry if version extraction fails.
             if (-not $ver) {
                 $ver = Read-ValidatedInput -Prompt "Enter version manually for $($chosenApk.Name)" -RegexPattern "^[a-zA-Z0-9\-\.\+ _\(\)]+$" -ErrorMessage "Use format x.x.x, or a build tag (e.g., build-1025-uni, 2.0.3 (41-d04e542))"
@@ -972,7 +974,7 @@ function Invoke-PatchingWorkflow {
 
             $app.TargetApk = $chosenApk.FullName
             $app.TargetVersion = $ver
-            
+
             if ("Any" -notin $app.stable -and $ver -notin $app.stable) { 
                 $hasMismatch = $true; $app.RequiresForce = $true 
             }
@@ -984,11 +986,11 @@ function Invoke-PatchingWorkflow {
             Start-Sleep -Seconds 2
             continue
         }
-        
+
         if ($missingApps -gt 0) {
             if (-not (Get-YesNoPrompt "`nSome selected apps are missing in $projectName. Continue patching the available ones?")) { continue }
         }
-        
+
         if ($hasMismatch -and -not (Get-YesNoPrompt "`nVersion mismatches detected in $projectName. Force patch?")) { continue }
 
         $validApps = $selectedApps | Where-Object { $null -ne $_.TargetApk }
@@ -1018,7 +1020,7 @@ function Invoke-PatchingWorkflow {
     Write-Host "`n[+] Global Keystore Configuration:" -ForegroundColor Yellow
     $useCustomKeystore = Get-YesNoPrompt "Use custom keystore?"
     $keystoreFile = $null; $keystoreAlias = $null; $securePass = $null; $secureEntryPass = $null; $customSigner = $null
-    
+
     if ($useCustomKeystore) {
         Write-Host "  1. Enter credentials manually"
         Write-Host "  2. Load from 'custom-keystore.txt'"
@@ -1034,30 +1036,30 @@ function Invoke-PatchingWorkflow {
                 $null = Read-Host
                 return
             }
-            
+
             $ksConfig = @{}
             Get-Content -LiteralPath $ksConfigFile | Where-Object { $_ -match '=' -and $_ -notmatch '^\s*#' } | ForEach-Object {
                 $split = $_ -split '=', 2
                 $ksConfig[$split[0].Trim()] = $split[1].Trim()
             }
-            
+
             $ks = $ksConfig['KeystorePath']
             if (-not [string]::IsNullOrWhiteSpace($ks)) {
                 if (-not [System.IO.Path]::IsPathRooted($ks)) { $ks = Join-Path $PSScriptRoot $ks }
                 if (Test-Path -LiteralPath $ks -PathType Leaf) { $keystoreFile = $ks } else { return }
             } else { return }
-            
+
             $rawAlias = $ksConfig['KeystoreAlias']
             $keystoreAlias = if (-not [string]::IsNullOrWhiteSpace($rawAlias)) { $rawAlias } else { "Morphe" }
-            
+
             $rawPass = if ($null -ne $ksConfig['KeystorePassword']) { $ksConfig['KeystorePassword'] } else { "" }
             $securePass = ConvertTo-SecureString $rawPass -AsPlainText -Force
             $rawPass = $null
-            
+
             $rawEntryPass = if ($null -ne $ksConfig['KeystoreEntryPassword']) { $ksConfig['KeystoreEntryPassword'] } else { "" }
             $secureEntryPass = ConvertTo-SecureString $rawEntryPass -AsPlainText -Force
             $rawEntryPass = $null
-            
+
             $rawSigner = $ksConfig['SignerName']
             if (-not [string]::IsNullOrWhiteSpace($rawSigner)) {
                 $customSigner = ($rawSigner -replace '[^a-zA-Z0-9_\-]', '').Substring(0, [math]::Min($rawSigner.Length, 8))
@@ -1074,7 +1076,7 @@ function Invoke-PatchingWorkflow {
             $keystoreAlias = Read-ValidatedInput -Prompt "Alias" -RegexPattern "^[a-zA-Z0-9_\-\s]+$" -ErrorMessage "Alphanumeric, spaces, underscores, and dashes only."
             $securePass = Read-Host "Password" -AsSecureString
             $secureEntryPass = Read-Host "Entry Password" -AsSecureString
-            
+
             if (Get-YesNoPrompt "Use custom signer?") { 
                 $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
             }
@@ -1083,7 +1085,7 @@ function Invoke-PatchingWorkflow {
 
     $isWindowsOS = ($env:OS -eq 'Windows_NT')
     $bytecodeMode = $null
-    
+
     Write-Host "`n[+] Global Execution Preferences:" -ForegroundColor Yellow
     if ($isWindowsOS) {
         Write-Host "  [i] Bytecode Mode: Forced FULL (Windows compatibility requirement)." -ForegroundColor DarkGray
@@ -1095,12 +1097,12 @@ function Invoke-PatchingWorkflow {
             $bytecodeMode = switch ($bcChoice) { "1" { "FULL" } "2" { "STRIP_FAST" } "3" { "STRIP_SAFE" } }
         }
     }
-    
+
     # Prompt the user to include experimental versions in the output generation (e.g. options JSON & list patches).
     $includeExperimental = Get-YesNoPrompt "Include experimental app versions in the patch lists? (--include-experimental)"
 
     $disableSigning = Get-YesNoPrompt "Disable signing of the final apk? (--unsigned)"
-    
+
     # SDK Verification Gate
     $verifyWithSdk = Get-YesNoPrompt "Verify the patched apps with a local Android SDK? (--verify-with-sdk) [DEV ONLY]"
     if ($verifyWithSdk) {
@@ -1108,7 +1110,7 @@ function Invoke-PatchingWorkflow {
         Write-Host "      Many apps attempt to try/catch imports of classes that may or may not be available at runtime." -ForegroundColor Yellow
         Write-Host "      This causes 'missing class' FALSE NEGATIVES during verification, which is intentional and expected." -ForegroundColor Yellow
         Write-Host "      End users should NOT use this unless requested as part of a bug report.`n" -ForegroundColor Yellow
-        
+
         $confirmVerify = Get-YesNoPrompt "  Are you sure you want to proceed with verification? (For Developers Only)"
         if (-not $confirmVerify) {
             $verifyWithSdk = $false
@@ -1117,7 +1119,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "  [i] SDK verification enabled. Prepare for potential false negatives." -ForegroundColor DarkGray
         }
     }
-    
+
     $continueOnError = Get-YesNoPrompt "Skip failed patches and continue? (--continue-on-error)"
 
     # PHASE 3: Generate reference lists and JSON option files for all queued jobs.
@@ -1134,12 +1136,12 @@ function Invoke-PatchingWorkflow {
 
         $patchesListFile = Join-Path $workspace "list-patches-$patchTrack.txt"
         if (Test-Path -LiteralPath $patchesListFile) { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction SilentlyContinue }
-        
+
         # Build array dynamically by appending string elements sequentially to safely bind CLI args.
         $listArgs = @("-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out", $patchesListFile, "--patches", $patchAbsPath)
         if ($includeExperimental) { $listArgs += "--include-experimental" }
         if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches"; $listArgs += $ep.FullName } }
-        
+
         $null = & java $listArgs 2>&1
         if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
             Write-Host "  [✓] Reference list created: $(Split-Path $patchesListFile -Leaf) ($($job.Eco.Name))" -ForegroundColor Green
@@ -1148,11 +1150,11 @@ function Invoke-PatchingWorkflow {
         foreach ($app in $job.Apps) {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
             if (Test-Path -LiteralPath $jsonFileName) { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction SilentlyContinue }
-            
+
             $optArgs = @("-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
             if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
             $optArgs += @("--out", $jsonFileName, "--filter-package-name", $app.package)
-            
+
             $null = & java $optArgs 2>&1
             if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
                 Write-Host "  [✓] Options generated for $($app.name) ($($job.Eco.Name))" -ForegroundColor Green
@@ -1178,7 +1180,7 @@ function Invoke-PatchingWorkflow {
                 if (Test-Path -LiteralPath $jsonFileName) {
                     try {
                         $jsonContent = Get-Content -LiteralPath $jsonFileName -Raw | ConvertFrom-Json
-                        
+
                         # Constraint 1: Block redirecting to X Lite
                         $verMatch = [regex]::Match($app.TargetVersion, "^(\d+)\.(\d+)")
                         if ($verMatch.Success) {
@@ -1193,7 +1195,7 @@ function Invoke-PatchingWorkflow {
                                 }
                             }
                         }
-                    } catch { }
+                    } catch { Write-Debug $_.Exception.Message }
                 }
             }
         }
@@ -1213,12 +1215,12 @@ function Invoke-PatchingWorkflow {
             if ($sysRamGB -ge 8) { $heapSize = "4G" } elseif ($sysRamGB -ge 6) { $heapSize = "3G" }
             Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
         }
-    } catch { }
+    } catch { Write-Debug $_.Exception.Message }
     
     try {
         $plainPass = $null; $plainEntryPass = $null
         $bstr1 = [IntPtr]::Zero; $bstr2 = [IntPtr]::Zero
-        
+
         if ($useCustomKeystore) {
             $bstr1 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePass)
             $plainPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr1)
@@ -1241,34 +1243,34 @@ function Invoke-PatchingWorkflow {
                 
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
                 $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
-                
+
                 $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -Force -ErrorAction Ignore }
-                
+
                 Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) [$projectName] <<<" -ForegroundColor Magenta
-                
+
                 $logHeader = "`n" + ("=" * 60) + "`n>>> LOG FOR: $($app.name) (v$($app.TargetVersion)) <<<`n" + ("=" * 60) + "`n"
                 Add-Content -LiteralPath $tempLogFile -Value $logHeader -Encoding UTF8
-                
+
                 # Append discrete array components to prevent flag concatenation failures in the upstream JVM parser.
                 $baseArgs = @("-Xmx$heapSize", "-jar", $cliAbsPath, "patch", "--patches", $patchAbsPath)
                 if ($extraPatches) { foreach ($ep in $extraPatches) { $baseArgs += "--patches"; $baseArgs += $ep.FullName } }
-                
+
                 # The --options-update flag is omitted here because options-create generates a fresh JSON file during Phase 3.
                 # The deprecated --purge flag is also omitted as the CLI purges temp files by default.
                 $baseArgs += @("--options-file", $jsonFileName, "--out", $outputApkAbs, "--result-file", $tempResultFile)
-                
+
                 if ($bytecodeMode) { $baseArgs += "--bytecode-mode"; $baseArgs += $bytecodeMode }
                 if ($patchTrack -eq "dev" -or $app.RequiresForce) { $baseArgs += "--force" }
                 if ($verifyWithSdk) { $baseArgs += "--verify-with-sdk" }
-                
+
                 if ($disableSigning) {
                     $baseArgs += "--unsigned"
                 } elseif ($useCustomKeystore) { 
                     $baseArgs += "--keystore", $keystoreFile, "--keystore-entry-alias", $keystoreAlias, "--keystore-password", $plainPass, "--keystore-entry-password", $plainEntryPass 
                     if ($customSigner) { $baseArgs += "--signer"; $baseArgs += $customSigner }
                 }
-                
+
                 if ($app.strip -and ($targetArch -ne "universal")) { $baseArgs += "--striplibs"; $baseArgs += $targetArch }
                 if ($continueOnError) { $baseArgs += "--continue-on-error" }
 
@@ -1337,17 +1339,19 @@ function Invoke-PatchingWorkflow {
     if (Get-YesNoPrompt "Open output directories?") { 
         foreach ($job in $batchJobs) { Invoke-Item "$($job.Eco.Workspace)\Output" } 
     }
-    
+
     Write-Host "`nPress Enter to return to the Main Menu..." -ForegroundColor Magenta
     $null = Read-Host
 }
 
 function Invoke-UtilityWorkflow {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+    param()
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "           CHIHAFUYU TOOL - UTILITY           " -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
-    
+
     Write-Host "`nSelect Utility Action:" -ForegroundColor Yellow
     Write-Host "1. Install app to device (adb)"
     Write-Host "2. Uninstall app from device (adb)"
@@ -1356,39 +1360,39 @@ function Invoke-UtilityWorkflow {
     Write-Host "5. Generate Custom Keystore (PKCS12)"
     Write-Host "6. Clear Morphe Cache (Downloaded patches, logs, temp)"
     Write-Host "X. Close Tool"
-    
+
     $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-6xX]$" -ErrorMessage "Invalid input. Please enter 1-6, or X."
-    
+
     if ($utilChoice -match '^[xX]$') { exit 0 }
-    
+
     if ($utilChoice -in @('1', '2')) {
         Write-Host "`n  [i] HEADS UP: This feature relies on ADB. Make sure you have Android 'platform-tools' installed and added to your system PATH!" -ForegroundColor Cyan
-        
+
         $ecosystems = Resolve-Ecosystem
         if (-not $ecosystems) { return }
         $eco = $ecosystems[0] # ADB utilities only require a single valid CLI environment.
-        
-        $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
+
+        $envArt = Resolve-EnvironmentArtifact -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
         if (-not $envArt) { return }
         $cliAbsPath = $envArt.Cli.FullName
-        
+
         if ($utilChoice -eq '1') {
             Write-Host "`n[INSTALL] Select Install Mode:" -ForegroundColor Yellow
             Write-Host "1. Non-Root (Standard Install via --apk)"
             Write-Host "2. Root (Mount Install via --mount)"
             $installMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
-            
+
             $apkPath = Read-Host "Drag and drop the APK file here, or enter the full path (or 'B' to go back)"
             $apkPath = $apkPath.Trim().Trim('"').Trim("'")
             if ($apkPath -match '^[bB]$') { throw "BACK_TO_MAIN" }
-            
+
             $apkItem = Get-Item -LiteralPath $apkPath -Force -ErrorAction SilentlyContinue
             if ($apkItem -and ($apkItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
                 Write-Host "  [!] Symlinks or ReparsePoints are not allowed for security reasons." -ForegroundColor Red
                 Start-Sleep -Seconds 2
                 return
             }
-            
+
             if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) {
                 Write-Host "  [!] APK file not found at: $apkPath" -ForegroundColor Red
             } else {
@@ -1400,7 +1404,7 @@ function Invoke-UtilityWorkflow {
                 }
 
                 Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
-                
+
                 $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "install", "-a", $apkPath)
                 if ($installMode -eq '2') {
                     $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^(?:[a-zA-Z][a-zA-Z0-9_]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)+$" -ErrorMessage "Invalid Android package name format."
@@ -1415,7 +1419,7 @@ function Invoke-UtilityWorkflow {
                     $baseArgs += "--disable-stock"
                     $baseArgs += $stockPkg
                 }
-                
+
                 Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
                 & java $baseArgs
                 if ($LASTEXITCODE -ne 0) {
@@ -1430,16 +1434,16 @@ function Invoke-UtilityWorkflow {
             Write-Host "1. Non-Root (Standard Uninstall via --package-name)"
             Write-Host "2. Root (Unmount via --unmount)"
             $uninstallMode = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
-            
+
             $pkg = Read-ValidatedInput -Prompt "Target Package Name (e.g., com.google.android.youtube)" -RegexPattern "^(?:[a-zA-Z][a-zA-Z0-9_]*)(?:\.[a-zA-Z][a-zA-Z0-9_]*)+$" -ErrorMessage "Invalid Android package name format."
-            
+
             Write-Host "  [i] Ensure your device is connected via USB and ADB debugging is authorized." -ForegroundColor DarkGray
-            
+
             $baseArgs = @("-Xmx2G", "-jar", $cliAbsPath, "utility", "uninstall", "-p", $pkg)
             if ($uninstallMode -eq '2') {
                 $baseArgs += "--unmount"
             }
-            
+
             Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
             & java $baseArgs
             if ($LASTEXITCODE -ne 0) {
@@ -1452,20 +1456,20 @@ function Invoke-UtilityWorkflow {
     elseif ($utilChoice -in @('3', '4')) {
         $ecosystems = Resolve-Ecosystem
         if (-not $ecosystems) { return }
-        
+
         foreach ($eco in $ecosystems) {
             Write-Host "`n>>> PROCESSING ECOSYSTEM: $($eco.Name.ToUpper()) <<<" -ForegroundColor Cyan
-            
-            $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $true
+
+            $envArt = Resolve-EnvironmentArtifact -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $true
             if (-not $envArt) { continue }
-            
+
             $cliAbsPath = $envArt.Cli.FullName
             $patchAbsPath = $envArt.Patches.FullName
             $extraPatches = $envArt.ExtraPatches
-            
+
             if ($utilChoice -eq '3') {
                 Write-Host "`n[GENERATE OPTIONS] Running for all supported apps in $($eco.Name)..." -ForegroundColor Yellow
-                
+
                 $apps = if ($eco.Name -eq "ajstrick81") {
                     @(@{pkg="com.disney.disneyplus"; name="disneyplus"},
                       @{pkg="com.wbd.hbomax"; name="hbo-max"},
@@ -1609,19 +1613,19 @@ function Invoke-UtilityWorkflow {
                 
                 foreach ($app in $apps) {
                     $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
-                    
+
                     if (Test-Path -LiteralPath $jsonFileName) {
                         try { Remove-Item -LiteralPath $jsonFileName -Force -ErrorAction Stop }
                         catch { Write-Host "  [!] Warning: Could not remove existing options JSON. It may be locked." -ForegroundColor Yellow }
                     }
-                    
+
                     $optArgs = @("-Xmx2G", "-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
                     if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
                     $optArgs += @("--out", $jsonFileName, "--filter-package-name", $app.pkg)
-                    
+
                     Write-Host "  Generating for $($app.pkg)..." -ForegroundColor DarkGray
                     & java $optArgs
-                    
+
                     if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $jsonFileName)) {
                         Write-Host "  [✓] Saved to $(Split-Path $jsonFileName -Leaf)" -ForegroundColor Green
                     } else {
@@ -1632,20 +1636,20 @@ function Invoke-UtilityWorkflow {
             elseif ($utilChoice -eq '4') {
                 $patchesListFile = Join-Path $eco.Workspace "list-patches-$($envArt.Track).txt"
                 Write-Host "`n[GENERATE LIST] Exporting patches reference to $(Split-Path $patchesListFile -Leaf)..." -ForegroundColor Yellow
-                
+
                 if (Test-Path -LiteralPath $patchesListFile) {
                     try { Remove-Item -LiteralPath $patchesListFile -Force -ErrorAction Stop }
                     catch { Write-Host "  [!] Warning: Could not remove existing patches list. It may be locked." -ForegroundColor Yellow }
                 }
 
                 $incExp = Get-YesNoPrompt "Include experimental app versions in the output? (--include-experimental)"
-                
+
                 $listArgs = @("-Xmx2G", "-jar", $cliAbsPath, "list-patches", "--with-packages", "--with-versions", "--with-options", "--out", $patchesListFile, "--patches", $patchAbsPath)
                 if ($incExp) { $listArgs += "--include-experimental" }
                 if ($extraPatches) { foreach ($ep in $extraPatches) { $listArgs += "--patches"; $listArgs += $ep.FullName } }
-                
+
                 & java $listArgs
-                
+
                 if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $patchesListFile)) {
                     Write-Host "  [✓] Reference file created successfully in .\$($eco.Name)\" -ForegroundColor Green
                 } else {
@@ -1657,7 +1661,7 @@ function Invoke-UtilityWorkflow {
     elseif ($utilChoice -eq '5') {
         Write-Host "`n[GENERATE KEYSTORE] Creating a new PKCS12 Keystore..." -ForegroundColor Yellow
         $ksName = Read-ValidatedInput -Prompt "Enter filename (e.g., my-key.keystore)" -RegexPattern "^[\w\-\.]+$" -ErrorMessage "Alphanumeric, dashes, and dots only."
-        
+
         if ($ksName -notmatch '\.[a-zA-Z0-9]+$') {
             if ($env:OS -eq 'Windows_NT') {
                 $ksName += ".keystore"
@@ -1669,10 +1673,10 @@ function Invoke-UtilityWorkflow {
 
         $ksAlias = Read-ValidatedInput -Prompt "Enter Alias" -RegexPattern "^[\w\-\s]+$" -ErrorMessage "Alphanumeric, spaces, and dashes only."
         $ksPass = Read-ValidatedInput -Prompt "Enter Password (min 6 chars)" -RegexPattern "^.{6,}$" -ErrorMessage "Password must be at least 6 characters."
-        
+
         Write-Host "  [i] Android limits META-INF signatures (SignerName) to max 8 characters, NO spaces." -ForegroundColor DarkGray
         $ksSigner = Read-ValidatedInput -Prompt "Enter Signer Name (CN)" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces."
-        
+
         $ksOU = Read-ValidatedInput -Prompt "Enter Organizational Unit (OU) [e.g., IT, Modder]" -RegexPattern "^[\w\-\.\s]+$" -ErrorMessage "Alphanumeric, spaces, dots, and dashes only."
         $ksOrg = Read-ValidatedInput -Prompt "Enter Organization (O) [e.g., MyCompany]" -RegexPattern "^[\w\-\.\s]+$" -ErrorMessage "Alphanumeric, spaces, dots, and dashes only."
         $ksCountry = Read-ValidatedInput -Prompt "Enter 2-letter Country Code (C) [e.g., ID, US]" -RegexPattern "^[a-zA-Z]{2}$" -ErrorMessage "Must be exactly 2 letters."
@@ -1682,7 +1686,7 @@ function Invoke-UtilityWorkflow {
             Write-Host "  [!] File '$ksName' already exists in the root folder!" -ForegroundColor Red
         } else {
             Write-Host "  Generating keystore using Java keytool..." -ForegroundColor DarkGray
-            
+
             $keytoolArgs = @(
                 "-genkeypair",
                 "-v",
@@ -1696,9 +1700,9 @@ function Invoke-UtilityWorkflow {
                 "-dname", "CN=$ksSigner, OU=$ksOU, O=$ksOrg, C=$($ksCountry.ToUpper())",
                 "-storetype", "PKCS12"
             )
-            
+
             & keytool @keytoolArgs 2>&1 | Out-Null
-            
+
             if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $ksPath)) {
                 Write-Host "  [✓] Keystore generated successfully at: $ksPath" -ForegroundColor Green
             } else {
@@ -1708,33 +1712,33 @@ function Invoke-UtilityWorkflow {
     }
     elseif ($utilChoice -eq '6') {
         Write-Host "`n[CLEAR CACHE] Clearing Morphe temporary files and cache..." -ForegroundColor Yellow
-        
+
         $ecosystems = Resolve-Ecosystem
         if (-not $ecosystems) { return }
         $eco = $ecosystems[0]
-        
+
         $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
         if (-not $envArt) { return }
-        
+
         $cliAbsPath = $envArt.Cli.FullName
         $baseArgs = @("-jar", $cliAbsPath, "utility", "clear-cache", "--info")
-        
+
         Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
-        
+
         # Capture the standard output of a Java process
         $javaOutput = & java $baseArgs 2>&1
         $exitStatus = $LASTEXITCODE
-        
+
         # Print the output (including the byte count) to the screen
         $javaOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-        
+
         if ($exitStatus -eq 0) {
             Write-Host "  [✓] Cache cleared successfully." -ForegroundColor Green
         } else {
             Write-Host "  [!] Failed to clear cache." -ForegroundColor Red
         }
     }
-    
+
     Write-Host "`nPress Enter to return to the Main Menu..." -ForegroundColor Magenta
     $null = Read-Host
 }
@@ -1744,7 +1748,7 @@ function Invoke-MainMenu {
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "                CHIHAFUYU TOOL                " -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
-    
+
     Write-Host "`nWhat do you want to do?" -ForegroundColor Yellow
     Write-Host "1. Patch apps"
     Write-Host "2. Use utilities"
@@ -1752,7 +1756,7 @@ function Invoke-MainMenu {
 
     while ($true) {
         $choice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[12xX]$" -ErrorMessage "Invalid input. Please enter 1, 2, or X."
-        
+
         if ($choice -match '^[xX]$') { 
             return $false 
         }
