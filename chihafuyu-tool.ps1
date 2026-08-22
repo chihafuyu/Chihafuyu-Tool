@@ -857,24 +857,24 @@ function Invoke-PatchingWorkflow {
         }
 
         $choices = $appSelection.Split(',')
-        $selectAllId = switch ($projectName) { 
+        $selectAllId = switch ($projectName) {
             "ajstrick81" {"10"}
             "anxyis" {"2"}
-            "arandomhooman" {"18"} 
-            "BholeyKaBhakt" {"7"} 
-            "browzomje" {"3"} 
-            "De-Vanced" {"2"} 
+            "arandomhooman" {"18"}
+            "BholeyKaBhakt" {"7"}
+            "browzomje" {"3"}
+            "De-Vanced" {"2"}
             "dh6k" {"3"}
-            "hoo-dles" {"16"} 
+            "hoo-dles" {"16"}
             "hxreborn" {"4"}
-            "icysymmetra" {"2"} 
+            "icysymmetra" {"2"}
             "jasonwu1994" {"2"}
-            "kiraio-moe" {"15"} 
+            "kiraio-moe" {"15"}
             "kuchingneko28" {"2"}
             "kveld9" {"2"}
-            "Morphe" {"4"} 
-            "PathxmOp" {"2"} 
-            "Piko" {"3"} 
+            "Morphe" {"4"}
+            "PathxmOp" {"2"}
+            "Piko" {"3"}
             "rushiranpise" {"42"}
         }
         $selectedApps = @(if ($selectAllId -in $choices) { $masterApps } else { $masterApps | Where-Object { $_.id -in $choices } })
@@ -899,9 +899,9 @@ function Invoke-PatchingWorkflow {
 
         # Bypass PowerShell's buggy -Include wildcard resolution by using LiteralPath and Regex filtering.
         $inputDir = Join-Path $workspace "Input"
-        $allApks = Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object { 
-            $_.Extension -match '(?i)^\.(apk|apkm|xapk|apks)$' -and 
-            -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) 
+        $allApks = Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object {
+            $_.Extension -match '(?i)^\.(apk|apkm|xapk|apks)$' -and
+            -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint)
         }
         $hasMismatch = $false
         $missingApps = 0
@@ -925,7 +925,7 @@ function Invoke-PatchingWorkflow {
                 }
             }
 
-            $matched = @($allApks | Where-Object { 
+            $matched = @($allApks | Where-Object {
                 $n = $_.Name.ToLower()
                 $matchKey = $false
                 foreach ($k in $app.keys) { if ($n -match $k) { $matchKey = $true; break } }
@@ -939,13 +939,13 @@ function Invoke-PatchingWorkflow {
                 continue
             }
 
-            $chosenApk = if ($matched.Count -eq 1) { 
+            $chosenApk = if ($matched.Count -eq 1) {
                 $v = Get-ApkVersion -FileName $matched[0].Name -AppKeywords $app.keys
 
                 $tag = if ("Any" -in $app.stable) { " [SUPPORTED]" } elseif ($v -in $app.stable) { " [RECOMMENDED]" } else { " [MISMATCH]" }
                 $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                 Write-Host "  [✓] $($app.name) -> $($matched[0].Name)$tag" -ForegroundColor $color
-                $matched[0] 
+                $matched[0]
             } else {
                 Write-Host "`nMultiple files detected for $($app.name):" -ForegroundColor Cyan
                 for ($i = 0; $i -lt $matched.Count; $i++) {
@@ -975,8 +975,8 @@ function Invoke-PatchingWorkflow {
             $app.TargetApk = $chosenApk.FullName
             $app.TargetVersion = $ver
 
-            if ("Any" -notin $app.stable -and $ver -notin $app.stable) { 
-                $hasMismatch = $true; $app.RequiresForce = $true 
+            if ("Any" -notin $app.stable -and $ver -notin $app.stable) {
+                $hasMismatch = $true; $app.RequiresForce = $true
             }
         }
 
@@ -1077,8 +1077,8 @@ function Invoke-PatchingWorkflow {
             $securePass = Read-Host "Password" -AsSecureString
             $secureEntryPass = Read-Host "Entry Password" -AsSecureString
 
-            if (Get-YesNoPrompt "Use custom signer?") { 
-                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes." 
+            if (Get-YesNoPrompt "Use custom signer?") {
+                $customSigner = Read-ValidatedInput -Prompt "Signer name" -RegexPattern "^[a-zA-Z0-9_\-]{1,8}$" -ErrorMessage "Max 8 chars, no spaces. Use alphanumeric or dashes."
             }
         }
     }
@@ -1216,7 +1216,7 @@ function Invoke-PatchingWorkflow {
             Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
         }
     } catch { Write-Debug $_.Exception.Message }
-    
+
     try {
         $plainPass = $null; $plainEntryPass = $null
         $bstr1 = [IntPtr]::Zero; $bstr2 = [IntPtr]::Zero
@@ -1240,7 +1240,7 @@ function Invoke-PatchingWorkflow {
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
             foreach ($app in $job.Apps) {
-                
+
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
                 $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
 
@@ -1266,8 +1266,8 @@ function Invoke-PatchingWorkflow {
 
                 if ($disableSigning) {
                     $baseArgs += "--unsigned"
-                } elseif ($useCustomKeystore) { 
-                    $baseArgs += "--keystore", $keystoreFile, "--keystore-entry-alias", $keystoreAlias, "--keystore-password", $plainPass, "--keystore-entry-password", $plainEntryPass 
+                } elseif ($useCustomKeystore) {
+                    $baseArgs += "--keystore", $keystoreFile, "--keystore-entry-alias", $keystoreAlias, "--keystore-password", $plainPass, "--keystore-entry-password", $plainEntryPass
                     if ($customSigner) { $baseArgs += "--signer"; $baseArgs += $customSigner }
                 }
 
@@ -1304,8 +1304,8 @@ function Invoke-PatchingWorkflow {
         foreach ($job in $batchJobs) {
             $logPath = Join-Path $job.Eco.Workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
             $tempLogFile = Join-Path $job.Eco.Workspace "Output\temp_patch_log.txt"
-            if (Test-Path -LiteralPath $tempLogFile) { 
-                Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf) 
+            if (Test-Path -LiteralPath $tempLogFile) {
+                Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf)
                 Write-Host "  -> Log exported: .\$($job.Eco.Name)\Output\$(Split-Path $logPath -Leaf)" -ForegroundColor Green
             }
         }
@@ -1336,8 +1336,8 @@ function Invoke-PatchingWorkflow {
         }
     }
 
-    if (Get-YesNoPrompt "Open output directories?") { 
-        foreach ($job in $batchJobs) { Invoke-Item "$($job.Eco.Workspace)\Output" } 
+    if (Get-YesNoPrompt "Open output directories?") {
+        foreach ($job in $batchJobs) { Invoke-Item "$($job.Eco.Workspace)\Output" }
     }
 
     Write-Host "`nPress Enter to return to the Main Menu..." -ForegroundColor Magenta
@@ -1428,7 +1428,7 @@ function Invoke-UtilityWorkflow {
                     Write-Host "  [✓] Command SUCCEEDED" -ForegroundColor Green
                 }
             }
-        } 
+        }
         elseif ($utilChoice -eq '2') {
             Write-Host "`n[UNINSTALL] Select Uninstall Mode:" -ForegroundColor Yellow
             Write-Host "1. Non-Root (Standard Uninstall via --package-name)"
@@ -1560,13 +1560,13 @@ function Invoke-UtilityWorkflow {
                     @(@{pkg="com.brave.browser"; name="brave-browser"})
                 } elseif ($eco.Name -eq "Morphe") {
                     @(@{pkg="com.reddit.frontpage"; name="reddit"},
-                      @{pkg="com.google.android.youtube"; name="youtube"}, 
+                      @{pkg="com.google.android.youtube"; name="youtube"},
                       @{pkg="com.google.android.apps.youtube.music"; name="youtube-music"})
                 } elseif ($eco.Name -eq "PathxmOp") {
                     @(@{pkg="com.chess"; name="chess"})
                 } elseif ($eco.Name -eq "Piko") {
                     @(@{pkg="com.instagram.android"; name="instagram"},
-                      @{pkg="com.twitter.android"; name="x-twitter"}) 
+                      @{pkg="com.twitter.android"; name="x-twitter"})
                 } elseif ($eco.Name -eq "rushiranpise") {
                     @(@{pkg="com.cloudflare.onedotonedotonedotone"; name="1dot1dot1dot1"},
                       @{pkg="com.digibites.accubattery"; name="accubattery"},
@@ -1610,7 +1610,7 @@ function Invoke-UtilityWorkflow {
                       @{pkg="com.windscribe.vpn"; name="windscribe-vpn"},
                       @{pkg="com.wolfram.android.alphapro"; name="wolframalpha"})
                 }
-                
+
                 foreach ($app in $apps) {
                     $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
 
@@ -1717,7 +1717,7 @@ function Invoke-UtilityWorkflow {
         if (-not $ecosystems) { return }
         $eco = $ecosystems[0]
 
-        $envArt = Resolve-EnvironmentArtifacts -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
+        $envArt = Resolve-EnvironmentArtifact -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
         if (-not $envArt) { return }
 
         $cliAbsPath = $envArt.Cli.FullName
@@ -1757,8 +1757,8 @@ function Invoke-MainMenu {
     while ($true) {
         $choice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[12xX]$" -ErrorMessage "Invalid input. Please enter 1, 2, or X."
 
-        if ($choice -match '^[xX]$') { 
-            return $false 
+        if ($choice -match '^[xX]$') {
+            return $false
         }
         elseif ($choice -eq '1') {
             try {
@@ -1795,7 +1795,7 @@ function Invoke-MainMenu {
     }
 }
 
-while (Invoke-MainMenu) { 
+while (Invoke-MainMenu) {
 }
 
 Write-Host "`nSession ended. Have a great day!" -ForegroundColor Cyan
