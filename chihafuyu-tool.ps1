@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Chihafuyu Tool
     A comprehensive utility to automate Android app patching and manage ADB installations
