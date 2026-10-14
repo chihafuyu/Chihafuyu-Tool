@@ -38,12 +38,18 @@
 #>
 
 #Requires -Version 5.1
-Set-StrictMode -Version Latest
+Set-StrictMode -Version 3.0
 
 if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
     Write-Host "Cannot determine the script root directory. Please run the script directly." -ForegroundColor Red
     exit 1
 }
+
+# Script-scoped state for options backup decision:
+#   $null  = ask per file
+#   $true  = always backup
+#   $false = always overwrite
+$script:OptionsBackupMode = $null
 
 # ==============================================================================
 # RECOMMENDED APP VERSIONS (SORTED A-Z)
@@ -112,10 +118,10 @@ $cfg_x_stable               = @("12.17.0-release.0")
 # Validate Java environment compliance. Morphe requires Java 25 or higher due to a Windows file lock bug.
 try {
     $javaVerOutput = (& java -version 2>&1) -join "`n"
-    if ($LASTEXITCODE -ne 0) { throw "Java is missing or not recognized." }
+    if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw "Java is missing or not recognized." }
 
-    $regex = '"(?:1\.)?(\d+)'
-    if ($javaVerOutput -match $regex) {
+    # Target the version string that appears after the "version" keyword, not just any number in quotes.
+    if ($javaVerOutput -match 'version\s+"(?:1\.)?(\d+)') {
         $version = [int]$Matches[1]
         if ($version -lt 25) {
             Clear-Host
@@ -193,7 +199,8 @@ function Test-IsUniversalApk {
 
         return ($hasDex -and $hasManifest)
     } catch {
-        return $true
+        # If we can't open the archive, treat it as NOT a valid universal APK so caller warns the user.
+        return $false
     } finally {
         if ($null -ne $zip) { $zip.Dispose() }
     }
@@ -224,12 +231,46 @@ function Read-ValidatedInput {
     }
 }
 
+function Read-ValidatedIndex {
+    # Safe numeric-range prompt that does not break for counts >= 10.
+    param([int]$Min, [int]$Max)
+
+    while ($true) {
+        $raw = (Read-Host "Select File ($Min-$Max) (or 'B' to go back)").Trim()
+        if ($raw -match '^[bB]$') { throw "BACK_TO_MAIN" }
+
+        $parsed = 0
+        if ([int]::TryParse($raw, [ref]$parsed) -and $parsed -ge $Min -and $parsed -le $Max) {
+            return $parsed
+        }
+
+        Write-Host "  Invalid selection. Enter a number between $Min and $Max." -ForegroundColor Red
+    }
+}
+
 function Backup-Or-ReplaceOptionsFile {
     param([string]$FilePath, [string]$Label)
 
-    if (-not (Test-Path -LiteralPath $FilePath)) { return }
+    # Returns $true if caller may proceed to write the file, $false if the caller should skip this app.
 
-    if (Get-YesNoPrompt "Existing options file found for $Label. Create backup?") {
+    if (-not (Test-Path -LiteralPath $FilePath)) { return $true }
+
+    $doBackup = $script:OptionsBackupMode
+    if ($null -eq $doBackup) {
+        Write-Host "`n[!] Existing options file found: $(Split-Path $FilePath -Leaf) ($Label)" -ForegroundColor Yellow
+        while ($true) {
+            $ans = (Read-Host "  Backup? [Y=backup this, N=overwrite this, A=backup all, X=overwrite all]").Trim()
+            switch -Regex ($ans) {
+                '^[yY]$' { $doBackup = $true;  break }
+                '^[nN]$' { $doBackup = $false; break }
+                '^[aA]$' { $doBackup = $true;  $script:OptionsBackupMode = $true;  break }
+                '^[xX]$' { $doBackup = $false; $script:OptionsBackupMode = $false; break }
+                default  { Write-Host "  Invalid input. Please enter Y, N, A, or X." -ForegroundColor Red }
+            }
+        }
+    }
+
+    if ($doBackup) {
         $dir = Split-Path $FilePath -Parent
         $base = [System.IO.Path]::GetFileNameWithoutExtension($FilePath)
         $backupName = "$base.$(Get-Date -Format 'yyyyMMdd_HHmmss').bak.json"
@@ -237,12 +278,20 @@ function Backup-Or-ReplaceOptionsFile {
         try {
             Move-Item -LiteralPath $FilePath -Destination $backupPath -Force -ErrorAction Stop
             Write-Host "  [✓] Backed up: $backupName" -ForegroundColor Green
+            return $true
         } catch {
-            Write-Host "  [!] Backup failed: $($_.Exception.Message). Overwriting instead." -ForegroundColor Yellow
-            Remove-Item -LiteralPath $FilePath -Force -ErrorAction SilentlyContinue
+            Write-Host "  [!] Backup failed: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "      Skipping this app to avoid data loss." -ForegroundColor Red
+            return $false
         }
     } else {
-        Remove-Item -LiteralPath $FilePath -Force -ErrorAction SilentlyContinue
+        try {
+            Remove-Item -LiteralPath $FilePath -Force -ErrorAction Stop
+            return $true
+        } catch {
+            Write-Host "  [!] Failed to remove existing file: $($_.Exception.Message). Skipping this app." -ForegroundColor Red
+            return $false
+        }
     }
 }
 
@@ -260,7 +309,7 @@ function Resolve-Ecosystem {
 
     $ecoChoice = Read-ValidatedInput -Prompt "Enter choice(s) [e.g., 1, 2, or 1,2,9]" -RegexPattern "^[1-9](,[1-9])*$" -ErrorMessage "Invalid input. Enter numbers 1-9 separated by commas."
 
-    $choices = $ecoChoice.Split(',') | Select-Object -Unique
+    $choices = $ecoChoice.Split(',') | ForEach-Object { $_.Trim() } | Select-Object -Unique
     $ecosystems = @()
 
     foreach ($c in $choices) {
@@ -388,13 +437,31 @@ function Resolve-EnvironmentArtifact {
     }
 }
 
+function Find-StandaloneCliJar {
+    # Locate a morphe-desktop CLI jar from the script root without requiring ecosystem selection.
+    param([string]$SearchRoot)
+
+    $cliStable = Get-ChildItem -Path (Join-Path $SearchRoot "morphe-desktop-*-all.jar") -File -ErrorAction SilentlyContinue |
+                 Where-Object { $_.Name -notmatch "-dev" } |
+                 Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending |
+                 Select-Object -First 1
+    $cliDev = Get-ChildItem -Path (Join-Path $SearchRoot "morphe-desktop-*-dev.*-all.jar") -File -ErrorAction SilentlyContinue |
+              Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(4, '0') }) } -Descending |
+              Select-Object -First 1
+
+    return @{ Stable = $cliStable; Dev = $cliDev }
+}
+
 function Invoke-PatchingWorkflow {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
     param()
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host "          CHIHAFUYU TOOL - PATCHING           " -ForegroundColor Cyan
     Write-Host "==============================================" -ForegroundColor Cyan
+
+    # Reset backup decision at workflow start
+    $script:OptionsBackupMode = $null
 
     $ecosystems = Resolve-Ecosystem
     if (-not $ecosystems) { return }
@@ -552,7 +619,7 @@ function Invoke-PatchingWorkflow {
             )
         }
 
-        $choices = $appSelection.Split(',')
+        $choices = $appSelection.Split(',') | ForEach-Object { $_.Trim() }
         $selectAllId = switch ($projectName) {
             "De-Vanced" {"2"}
             "hoo-dles" {"16"}
@@ -640,8 +707,9 @@ function Invoke-PatchingWorkflow {
                     $color = if ($tag -match "MISMATCH") { "Yellow" } else { "Green" }
                     Write-Host "  $($i + 1). $($matched[$i].Name)$tag" -ForegroundColor $color
                 }
-                $idx = Read-ValidatedInput -Prompt "Select File (1-$($matched.Count))" -RegexPattern "^[1-$($matched.Count)]$" -ErrorMessage "Invalid selection."
-                $matched[[int]$idx - 1]
+                # Numeric-range validated prompt that supports counts >= 10 correctly.
+                $idx = Read-ValidatedIndex -Min 1 -Max $matched.Count
+                $matched[$idx - 1]
             }
 
             $isBundle = [System.IO.Path]::GetExtension($chosenApk.FullName) -match "\.(apkm|xapk|apks)$"
@@ -842,8 +910,11 @@ function Invoke-PatchingWorkflow {
         foreach ($app in $job.Apps) {
             $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
 
-            # Backup prompt for existing options file
-            Backup-Or-ReplaceOptionsFile -FilePath $jsonFileName -Label $app.name
+            # Backup prompt for existing options file. If the caller can't safely proceed, skip this app.
+            if (-not (Backup-Or-ReplaceOptionsFile -FilePath $jsonFileName -Label $app.name)) {
+                Write-Host "  [!] Skipping $($app.name) due to file operation failure." -ForegroundColor Yellow
+                continue
+            }
 
             $optArgs = @("-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
             if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
@@ -863,11 +934,12 @@ function Invoke-PatchingWorkflow {
     if (Get-YesNoPrompt "Modify JSON files before patching?") {
         Write-Host "  [TIP] Check the 'list-patches-xxx.txt' files in each workspace for reference." -ForegroundColor DarkGray
         Write-Host "Awaiting manual modifications. Setup your workspaces, then press any key to initiate the Batch Sequence..." -ForegroundColor Magenta
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+        $null = [System.Console]::ReadKey($true)
     }
 
     $abortBatch = $false
     foreach ($job in $batchJobs) {
+        if ($abortBatch) { break }
         foreach ($app in $job.Apps) {
             if ($app.name -eq "X_Twitter") {
                 $jsonFileName = Join-Path $job.Eco.Workspace "$($app.name.ToLower().Replace('_','-'))-options-$($job.Env.Track).json"
@@ -885,11 +957,11 @@ function Invoke-PatchingWorkflow {
                                     Write-Host "`n[!] CRITICAL WARNING FOR X (TWITTER):" -ForegroundColor Red
                                     Write-Host "    You enabled the 'Block redirecting to X Lite' patch, but your APK is v$($app.TargetVersion)." -ForegroundColor Red
                                     Write-Host "    This specific patch requires v11.98.0-release.0 or higher." -ForegroundColor Red
-                                    if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true }
+                                    if (-not (Get-YesNoPrompt "    Force continue anyway? (Highly likely to crash)")) { $abortBatch = $true; break }
                                 }
                             }
                         }
-                    } catch { Write-Debug $_.Exception.Message }
+                    } catch { Write-Verbose $_.Exception.Message }
                 }
             }
         }
@@ -910,7 +982,7 @@ function Invoke-PatchingWorkflow {
                 if ($sysRamGB -ge 8) { $heapSize = "4G" } elseif ($sysRamGB -ge 6) { $heapSize = "3G" }
                 Write-Host "  [i] Detected System RAM: ${sysRamGB}GB. Auto-adjusting Java Heap Space to: -$heapSize" -ForegroundColor DarkGray
             }
-        } catch { Write-Debug $_.Exception.Message }
+        } catch { Write-Verbose $_.Exception.Message }
     }
 
     try {
@@ -924,7 +996,10 @@ function Invoke-PatchingWorkflow {
             $plainEntryPass = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr2)
         }
 
+        $abortAll = $false
         foreach ($job in $batchJobs) {
+            if ($abortAll) { break }
+
             $workspace = $job.Eco.Workspace
             $projectName = $job.Eco.Name
             $cliAbsPath = $job.Env.Cli.FullName
@@ -932,15 +1007,17 @@ function Invoke-PatchingWorkflow {
             $extraPatches = $job.Env.ExtraPatches
             $patchTrack = $job.Env.Track
 
-            $tempLogFile = Join-Path $workspace "Output\temp_patch_log.txt"
+            $outputDir = Join-Path $workspace "Output"
+            $tempLogFile = Join-Path $outputDir "temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -Force -ErrorAction Ignore }
 
             foreach ($app in $job.Apps) {
+                if ($abortAll) { break }
 
                 $jsonFileName = Join-Path $workspace "$($app.name.ToLower().Replace('_','-'))-options-$patchTrack.json"
-                $outputApkAbs = Join-Path $workspace "Output\$($app.name)_$($projectName)_$($app.TargetVersion)-$targetArch.apk"
+                $outputApkAbs = Join-Path $outputDir "$($app.name)_${projectName}_$($app.TargetVersion)-$targetArch.apk"
 
-                $tempResultFile = Join-Path $workspace "Output\temp_result_$($app.name).json"
+                $tempResultFile = Join-Path $outputDir "temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -Force -ErrorAction Ignore }
 
                 Write-Host "`n>>> PATCHING: $($app.name) (v$($app.TargetVersion)) [$projectName] <<<" -ForegroundColor Magenta
@@ -977,7 +1054,7 @@ function Invoke-PatchingWorkflow {
 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "  [!] Patching FAILED (Exit Code: $LASTEXITCODE)" -ForegroundColor Red
-                    if (-not $continueOnError) { break }
+                    if (-not $continueOnError) { $abortAll = $true; break }
                 } else {
                     Write-Host "  [✓] Patching SUCCEEDED" -ForegroundColor Green
                 }
@@ -998,8 +1075,9 @@ function Invoke-PatchingWorkflow {
 
     if (Get-YesNoPrompt "`nExport patching logs?") {
         foreach ($job in $batchJobs) {
-            $logPath = Join-Path $job.Eco.Workspace "Output\Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-            $tempLogFile = Join-Path $job.Eco.Workspace "Output\temp_patch_log.txt"
+            $outputDir = Join-Path $job.Eco.Workspace "Output"
+            $logPath = Join-Path $outputDir "Patch_Log_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+            $tempLogFile = Join-Path $outputDir "temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) {
                 Rename-Item -LiteralPath $tempLogFile -NewName (Split-Path $logPath -Leaf)
                 Write-Host "  -> Log exported: .\$($job.Eco.Name)\Output\$(Split-Path $logPath -Leaf)" -ForegroundColor Green
@@ -1007,7 +1085,7 @@ function Invoke-PatchingWorkflow {
         }
     } else {
         foreach ($job in $batchJobs) {
-            $tempLogFile = Join-Path $job.Eco.Workspace "Output\temp_patch_log.txt"
+            $tempLogFile = Join-Path (Join-Path $job.Eco.Workspace "Output") "temp_patch_log.txt"
             if (Test-Path -LiteralPath $tempLogFile) { Remove-Item -LiteralPath $tempLogFile -ErrorAction Ignore }
         }
     }
@@ -1015,7 +1093,8 @@ function Invoke-PatchingWorkflow {
     if (Get-YesNoPrompt "Export patching result JSONs? (--result-file)") {
         foreach ($job in $batchJobs) {
             foreach ($app in $job.Apps) {
-                $tempResultFile = Join-Path $job.Eco.Workspace "Output\temp_result_$($app.name).json"
+                $outputDir = Join-Path $job.Eco.Workspace "Output"
+                $tempResultFile = Join-Path $outputDir "temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) {
                     $finalResultName = "Result_$($app.name)_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
                     Rename-Item -LiteralPath $tempResultFile -NewName $finalResultName
@@ -1026,14 +1105,14 @@ function Invoke-PatchingWorkflow {
     } else {
         foreach ($job in $batchJobs) {
             foreach ($app in $job.Apps) {
-                $tempResultFile = Join-Path $job.Eco.Workspace "Output\temp_result_$($app.name).json"
+                $tempResultFile = Join-Path (Join-Path $job.Eco.Workspace "Output") "temp_result_$($app.name).json"
                 if (Test-Path -LiteralPath $tempResultFile) { Remove-Item -LiteralPath $tempResultFile -ErrorAction Ignore }
             }
         }
     }
 
     if (Get-YesNoPrompt "Open output directories?") {
-        foreach ($job in $batchJobs) { Invoke-Item "$($job.Eco.Workspace)\Output" }
+        foreach ($job in $batchJobs) { Invoke-Item (Join-Path $job.Eco.Workspace "Output") }
     }
 
     Write-Host "`nPress Enter to return to the Main Menu..." -ForegroundColor Magenta
@@ -1041,7 +1120,6 @@ function Invoke-PatchingWorkflow {
 }
 
 function Invoke-UtilityWorkflow {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
     param()
     Clear-Host
     Write-Host "==============================================" -ForegroundColor Cyan
@@ -1059,18 +1137,28 @@ function Invoke-UtilityWorkflow {
 
     $utilChoice = Read-ValidatedInput -Prompt "Enter choice" -RegexPattern "^[1-6xX]$" -ErrorMessage "Invalid input. Please enter 1-6, or X."
 
-    if ($utilChoice -match '^[xX]$') { exit 0 }
+    if ($utilChoice -match '^[xX]$') { return }
 
     if ($utilChoice -in @('1', '2')) {
         Write-Host "`n  [i] HEADS UP: This feature relies on ADB. Make sure you have Android 'platform-tools' installed and added to your system PATH!" -ForegroundColor Cyan
 
-        $ecosystems = Resolve-Ecosystem
-        if (-not $ecosystems) { return }
-        $eco = $ecosystems[0] # ADB utilities only require a single valid CLI environment.
+        # Standalone CLI discovery — no ecosystem prompt needed for ADB-only utilities.
+        $cliBundle = Find-StandaloneCliJar -SearchRoot $PSScriptRoot
 
-        $envArt = Resolve-EnvironmentArtifact -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
-        if (-not $envArt) { return }
-        $cliAbsPath = $envArt.Cli.FullName
+        Write-Host "`n[SELECT] Morphe Desktop Environment:" -ForegroundColor Yellow
+        Write-Host -NoNewline "1. Latest Stable Release "
+        if ($cliBundle.Stable) { Write-Host "[$($cliBundle.Stable.Name)]" -ForegroundColor Green } else { Write-Host "[Not Found]" -ForegroundColor Red }
+        Write-Host -NoNewline "2. Latest Pre-release "
+        if ($cliBundle.Dev) { Write-Host "[$($cliBundle.Dev.Name)]" -ForegroundColor Green } else { Write-Host "[Not Found]" -ForegroundColor Red }
+
+        $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+        $cliJar = if ($cliChoice -eq "1") { $cliBundle.Stable } else { $cliBundle.Dev }
+        if (-not $cliJar) {
+            Write-Host "  [!] Selected CLI not found. Place 'morphe-desktop-*-all.jar' in $PSScriptRoot." -ForegroundColor Red
+            Start-Sleep -Seconds 2
+            return
+        }
+        $cliAbsPath = $cliJar.FullName
 
         if ($utilChoice -eq '1') {
             Write-Host "`n[INSTALL] Select Install Mode:" -ForegroundColor Yellow
@@ -1150,6 +1238,8 @@ function Invoke-UtilityWorkflow {
         }
     }
     elseif ($utilChoice -in @('3', '4')) {
+        $script:OptionsBackupMode = $null
+
         $ecosystems = Resolve-Ecosystem
         if (-not $ecosystems) { return }
 
@@ -1222,8 +1312,11 @@ function Invoke-UtilityWorkflow {
                 foreach ($app in $apps) {
                     $jsonFileName = Join-Path $eco.Workspace "$($app.name)-options-$($envArt.Track).json"
 
-                    # Backup prompt for existing options file
-                    Backup-Or-ReplaceOptionsFile -FilePath $jsonFileName -Label $app.name
+                    # Backup prompt for existing options file.
+                    if (-not (Backup-Or-ReplaceOptionsFile -FilePath $jsonFileName -Label $app.name)) {
+                        Write-Host "  [!] Skipping $($app.name) due to file operation failure." -ForegroundColor Yellow
+                        continue
+                    }
 
                     $optArgs = @("-Xmx2G", "-jar", $cliAbsPath, "options-create", "--patches", $patchAbsPath)
                     if ($extraPatches) { foreach ($ep in $extraPatches) { $optArgs += "--patches"; $optArgs += $ep.FullName } }
@@ -1319,14 +1412,22 @@ function Invoke-UtilityWorkflow {
     elseif ($utilChoice -eq '6') {
         Write-Host "`n[CLEAR CACHE] Clearing Morphe temporary files and cache..." -ForegroundColor Yellow
 
-        $ecosystems = Resolve-Ecosystem
-        if (-not $ecosystems) { return }
-        $eco = $ecosystems[0]
+        # Standalone CLI discovery — no ecosystem prompt needed.
+        $cliBundle = Find-StandaloneCliJar -SearchRoot $PSScriptRoot
+        Write-Host "`n[SELECT] Morphe Desktop Environment:" -ForegroundColor Yellow
+        Write-Host -NoNewline "1. Latest Stable Release "
+        if ($cliBundle.Stable) { Write-Host "[$($cliBundle.Stable.Name)]" -ForegroundColor Green } else { Write-Host "[Not Found]" -ForegroundColor Red }
+        Write-Host -NoNewline "2. Latest Pre-release "
+        if ($cliBundle.Dev) { Write-Host "[$($cliBundle.Dev.Name)]" -ForegroundColor Green } else { Write-Host "[Not Found]" -ForegroundColor Red }
 
-        $envArt = Resolve-EnvironmentArtifact -Workspace $eco.Workspace -ProjectName $eco.Name -RequirePatches $false
-        if (-not $envArt) { return }
-
-        $cliAbsPath = $envArt.Cli.FullName
+        $cliChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
+        $cliJar = if ($cliChoice -eq "1") { $cliBundle.Stable } else { $cliBundle.Dev }
+        if (-not $cliJar) {
+            Write-Host "  [!] Selected CLI not found. Place 'morphe-desktop-*-all.jar' in $PSScriptRoot." -ForegroundColor Red
+            Start-Sleep -Seconds 2
+            return
+        }
+        $cliAbsPath = $cliJar.FullName
         $baseArgs = @("-jar", $cliAbsPath, "utility", "clear-cache", "--info")
 
         Write-Host "`nExecuting Morphe Utility..." -ForegroundColor Magenta
