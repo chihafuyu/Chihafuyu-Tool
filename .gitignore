@@ -1,0 +1,34 @@
+# Credentials & local keystores (never commit secrets)
+custom-keystore.txt
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# Patcher binaries, bundles, and Android packages
+*.jar
+*.mpp
+*.apk
+*.apkm
+*.xapk
+*.apks
+
+# Ecosystem workspaces & generated logs/options/outputs
+De-Vanced/
+hoo-dles/
+hxreborn/
+jasonwu1994/
+kiraio-moe/
+kuchingneko28/
+kveld9/
+Morphe/
+Piko/
+Input/
+Output/
+*-options-*.json
+*.bak.json
+list-patches-*.txt
+temp_patch_log.txt
+temp_result_*.json
+Patch_Log_*.txt
+Result_*.json

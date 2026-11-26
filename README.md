@@ -1,8 +1,8 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **ajstrick81**, **anxyis**, **arandomhooman**, **BholeyKaBhakt**, **browzomje**, **De-Vanced**, **dh6k**, **hoo-dles**, **hxreborn**, **icysymmetra**, **jasonwu1994**, **kiraio-moe**, **kuchingneko28**, **kveld9**, **Morphe**, **PathxmOp**, **Piko**, and **rushiranpise** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **De-Vanced**, **hoo-dles**, **hxreborn**, **jasonwu1994**, **kiraio-moe**, **kuchingneko28**, **kveld9**, **Morphe**, and **Piko** ecosystems via **Morphe Desktop**.
 
-Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Download Manager`, `Reddit`, `X (Twitter)`, `Instagram`, `Alight Motion`, `Brave Browser`, `Gboard`, `iPusnas`, `Quetta Browser`, `AdGuard`, `Lightroom Mobile`, `Pinterest`, `Easy Sudoku`, `Chess.com`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
+Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `TikTok Global`, `X (Twitter)`, `Instagram`, `Brave Browser`, `Google Photos`, `Gboard`, `Proton Mail`, `AdGuard`, `Lightroom Mobile`, `iPusnas`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
 > [!IMPORTANT]
 > **📱 Root vs. Non-Root Devices**
@@ -13,25 +13,40 @@ Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Dow
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between ajstrick81 (`Disney+`, `HBO Max`, `Netflix`, `Paramount+`, `Peacock`, `Pluto TV`, `Prime Video`, `Tubi`, `ViX`), anxyis (`Alight Motion`), arandomhooman (`ADM`, `Alpha Progression`, `BandLab`, `Battery Guru`, `Cronometer`, `DirectChat`, `Finch`, `Flightradar24`, `FolderSync`, `InShot`, `Liquid Gallery`, `Poweramp`, `Smart AudioBook Player`, `Symfonium`, `Tumblr`, `Video Converter`, `WEBTOON`), BholeyKaBhakt (`Backdrops`, `PROTO`, `Solid Explorer`, `Speedtest`, `Stellarium`, `vpnify`), browzomje (`Easy Sudoku`, `Pinterest`), De-Vanced (`Google Photos`), dh6k (`Quetta Browser (Direct APK edition)`, `Quetta Browser (Play Store edition)`), hoo-dles (`AdGuard`, `CamScanner`, `Duolingo`, `IbisPaint X`, `Lightroom Mobile`, `Merriam-Webster`, `Mimo`, `MyFitnessPal`, `PyDroid3`, `Sleep as Android`, `Smart Launcher`, `Windy`, `WPS Office`, `Xodo`, `XRecorder`), hxreborn (`Projectivy Launcher`, `Proton Mail`, `Symfonium`), icysymmetra (`TikTok Global`), jasonwu1994 (`Gboard`), kiraio-moe (`Atomic`, `Boorusama`, `Epic!`, `Fake GPS`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Pixiv`, `Timestamp Camera`), kuchingneko28 (`iPusnas`), kveld9 (`Brave Browser`), Morphe (`Reddit`, `YouTube`, `YouTube Music`), PathxmOp (`Chess.com`), Piko (`Instagram`, `X/Twitter`), and rushiranpise (`1.1.1.1`, `AccuBattery`, `AccuWeather`, `Adobe Scan`, `AIDA64`, `AmoledPix`, `Ampere`, `Anime Depth Wallpapers`, `APKMirror Installer`, `Calm: Sleep & Meditation`, `Canva`, `ColorNote`, `CPU-Z`, `Electron`, `Hola VPN Proxy Plus`, `HTTP Sniffer`, `Inure App Manager`, `Kahoot!`, `KineMaster`, `Lark Player`, `Life360`, `ML Manager`, `MobiOffice`, `NetGuard`, `Network Guru`, `Ninja VPN`, `Proton VPN`, `Proxyman`, `Psiphon Pro`, `RAR`, `SD Maid SE`, `Stargazing Hub`, `Sticker.ly`, `Strava`, `TeraBox`, `TurboScan`, `Uptodown App Store`, `Wallverse`, `Waze`, `Windscribe VPN`, `WolframAlpha`) workspaces in a single script. Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
-- **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features. Install/Uninstall apps via ADB directly from the script (supports standard, root-mount modes, and automatic link routing), clear Morphe cache, or quickly generate `options.json`/`list-patches.txt` files without running the entire patching loop.
-- **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files.
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between 9 curated ecosystems in a single script:
+  - **De-Vanced**: `Google Photos`
+  - **hoo-dles**: `AdGuard`, `CamScanner`, `Duolingo`, `IbisPaint X`, `Lightroom Mobile`, `Merriam-Webster`, `Mimo`, `MyFitnessPal`, `PyDroid3`, `Sleep as Android`, `Smart Launcher`, `Windy`, `WPS Office`, `Xodo`, `XRecorder`
+  - **hxreborn**: `Projectivy Launcher`, `Proton Mail`, `Symfonium`
+  - **jasonwu1994**: `Gboard`
+  - **kiraio-moe**: `Atomic`, `Boorusama`, `Epic!`, `Fake GPS Location`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Pixiv`, `Timestamp Camera Free`
+  - **kuchingneko28**: `iPusnas`
+  - **kveld9**: `Brave Browser`, `TikTok Global`
+  - **Morphe**: `Reddit`, `YouTube`, `YouTube Music`
+  - **Piko**: `Instagram`, `X (Twitter)`
+
+  Select multiple ecosystems at once to queue up batch patching across different platforms in a single run.
+- **🛠️ Integrated Utility Menu**: Acts as a frontend for Morphe Desktop's utility features:
+  - Install/Uninstall apps via ADB directly from the script (supports standard `--apk`, root-mount `--mount`, and link routing `--route-links` / `--disable-stock`).
+  - Generate `options.json` (with per-file or batch `[Y/N/A/X]` backup/overwrite prompts) or `list-patches.txt` without running the entire patching loop.
+  - Generate custom PKCS12 Android keystores (`keytool`) with masked password confirmation and environment-passed credentials.
+  - Clear Morphe cache (`clear-cache`) cleanly.
+- **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files, and validates `.apk` archives for required core entries (`classes.dex` & `AndroidManifest.xml`).
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
-- **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? No problem! The script automatically detects secondary patches (e.g., `*shim*.mpp`) and dynamically chains them into the patching sequence.
-- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, extracts exact versions ignoring messy build numbers or weird version formats (like `x-y-z`, `x_y_z`, or even abstract names like `app25301.apk`), and validates them against an array of supported versions.
-- **🧠 JSON Logic Constraints & Content Warnings**: Safely inspects your customized `options.json` before patching to prevent fatal crashes (e.g., blocking the execution if specific Twitter patches are forced on incompatible versions). The script also enforces mandatory indemnity warnings before processing NSFW/21+ targeted applications.
-- **⚙️ Auto Architecture & Memory Management**: Automatically detects if an APK is already architecture-specific and skips redundant library stripping. Dynamically scales JVM heap size (`-Xmx`) based on your system's physical RAM to prevent `OutOfMemory` crashes.
-- **🔐 Memory-Safe Keystore Handling**: Uses `SecureString` and unmanaged memory pointers to aggressively prevent password leaks within the script's internal memory space.
-- **📊 Stealth JSON Results**: Automatically captures the patching result output and offers to export it as a clean JSON file at the end of the session.
-- **🔙 Global Abort / Back Navigation**: Made a mistake? Just type `B` at any prompt to safely cancel the operation and return to the main menu without breaking the script.
+- **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? The script automatically detects companion `*shim*.mpp` files in the ecosystem workspace and chains them into the patching sequence.
+- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, matches package/app identifiers cleanly without cross-app false positives, extracts exact versions (including special tags like `4.7.0m`, `8.3_arm64`, `6.6 build 016`, `18.0.3.954559732-release-arm64-v8a`, `12.17.0-release.0`), and validates them against configured supported versions.
+- **🧠 JSON Logic Constraints & Content Warnings**: Safely inspects customized `options.json` files before patching to warn on incompatible patch/version combinations (e.g., `Block redirecting to X Lite` on older X/Twitter APKs), and enforces mandatory indemnity disclaimers before processing NSFW/21+ targeted applications.
+- **⚙️ Targeted Architecture Stripping & Memory Management**: Supports architecture-specific library stripping (`--striplibs` for `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`, or `universal`) and dynamically scales JVM heap size (`-Xmx2G` to `-Xmx4G`) based on detected physical RAM.
+- **🔐 Memory-Safe Keystore Handling**: Uses `SecureString`, immediate unmanaged `BSTR` zeroing, and cleanup in `finally` blocks on every exit path to prevent password leaks in script memory.
+- **📊 Logs & Stealth JSON Results**: Streams UTF-8 execution logs and `--result-file` outputs cleanly and lets you export them at the end of the session (cleaning up temporary files automatically).
+- **🔙 Global Abort / Back Navigation**: Made a mistake? Type `B` at any sub-prompt to safely cancel the operation and return to the main menu without leaking credentials or temporary files.
 
 > [!WARNING]
 > **🚨 Keystore Password Exposure Notice**
-> 
-> While this script uses advanced memory-handling to protect your passwords internally, the upstream `morphe-desktop` Java engine currently requires passwords to be passed via standard command-line arguments (e.g., `--keystore-password`). 
-> 
-> This means your plaintext password **may be momentarily visible to system monitoring tools** (like Windows Task Manager or Process Explorer) while the patching process is actively running in the background. 
-> 
+>
+> While this script uses `SecureString` and immediate unmanaged memory zeroing to protect your passwords internally, the upstream `morphe-desktop` Java engine currently requires patching keystore passwords to be passed via command-line arguments (e.g., `--keystore-password`).
+>
+> This means your patching keystore password **may be momentarily visible to system monitoring tools** (like Windows Task Manager or Process Explorer) while the patching process is actively running in the background.
+>
 > **Recommendation:** Never use high-value personal passwords (like your bank or primary email password) for your Android keystores, especially if you are running this tool on a shared or enterprise machine!
 
 ---
@@ -41,212 +56,117 @@ Whether you're patching `YouTube`, `TikTok`, `Disney+`, `Netflix`, `Advanced Dow
 Before spinning up the tool, make sure you have these ready:
 
 1. **OS**: Windows 10/11. PowerShell 5.1+ is required (PowerShell 7+ is highly recommended). Download [here](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
-2. **Java Development Kit (JDK) 25**: The latest Morphe Desktop utilizes FFM APIs to natively resolve file locking issues on Windows, which strictly requires JDK 25 or higher (a standard JRE or older JDK 21 won't cut it). Pick and install **JUST ONE** of these reliable builds:
+2. **Java Development Kit (JDK) 25**: Morphe Desktop utilizes FFM APIs to natively resolve file locking issues on Windows, which strictly requires JDK 25 or higher (a standard JRE or older JDK won't cut it). Pick and install **JUST ONE** of these reliable builds:
    * [Azul Zulu JDK 25 (LTS)](https://www.azul.com/downloads/?version=java-25-lts&package=jdk)
    * **OR** [Eclipse Temurin JDK 25 (LTS)](https://adoptium.net/temurin/releases/?version=25)
-   
+
    > **Important:** Make sure to check the **"Add to PATH"** option during installation.
-3. **Android SDK Platform-Tools (For Utility Menu)**: If you want to use the script's install/uninstall features, you must have `adb` installed. Download [SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) and add it to your system PATH.
-4. **Android SDK (For Verification)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed on your machine and properly configured. Otherwise, the script will throw a fatal error.
-5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe Desktop) and the patch bundles (`.mpp`) for your target ecosystem. Download the latest releases from the links below:
+3. **Android SDK Platform-Tools (For Utility Menu)**: If you want to use the script's ADB install/uninstall features, you must have `adb` installed. Download [SDK Platform-Tools](https://developer.android.com/studio/releases/platform-tools) and add it to your system PATH.
+4. **Android SDK (For Verification)**: If you intend to use the `--verify-with-sdk` feature during patching, you must have an Android SDK (specifically `build-tools` and `platforms`) installed and properly configured.
+5. **Patcher CLI & Patches**: You'll need the patching engine (Morphe Desktop) and the patch bundles (`.mpp`) for your target ecosystem:
    * **Morphe Desktop (Required for all)**: [morphe-desktop releases](https://github.com/MorpheApp/morphe-desktop/releases)
-   * **ajstrick81 Patches**: [morphe-androidtv-patches releases](https://github.com/ajstrick81/morphe-androidtv-patches/releases)
-   * **anxyis Patches**: [anxy-patches releases](https://github.com/anxyis/anxy-patches/releases)
-   * **arandomhooman Patches**: [hoomans-morphe-patches releases](https://github.com/arandomhooman/hoomans-morphe-patches/releases)
-   * **BholeyKaBhakt Patches**: [android-patches-xtra releases](https://github.com/BholeyKaBhakt/android-patches-xtra/releases)
-   * **browzomje Patches**: [browzomje-patches releases](https://github.com/browzomje/browzomje-patches/releases)
    * **De-Vanced Patches**: [De-Vanced releases](https://github.com/RookieEnough/De-Vanced/releases)
-   * **dh6k Patches**: [morphe-patches releases](https://github.com/dh6k/morphe-patches/releases)
    * **hoo-dles Patches**: [morphe-patches releases](https://github.com/hoo-dles/morphe-patches/releases)
    * **hxreborn Patches**: [morphe-patches releases](https://github.com/hxreborn/morphe-patches/releases)
-   * **icysymmetra Patches**: [tiktok-patches-for-morphe releases](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases)
    * **jasonwu1994 Patches**: [Gboard-patches releases](https://github.com/jasonwu1994/Gboard-patches/releases)
    * **kiraio-moe Patches**: [Lain-Patches releases](https://github.com/kiraio-moe/Lain-Patches/releases)
    * **kuchingneko28 Patches**: [ipusnas-patches releases](https://github.com/kuchingneko28/ipusnas-patches/releases)
    * **kveld9 Patches**: [kveld-morphe-patches releases](https://github.com/kveld9/kveld-morphe-patches/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
-   * **PathxmOp Patches**: [Prathxm-Patches releases](https://github.com/PrathxmOp/Prathxm-Patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
-   * **rushiranpise Patches**: [morphe-patches releases](https://github.com/rushiranpise/morphe-patches/releases)
-6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is highly recommended for most apps). **Note for Nekopoi:** Please download the raw APK directly from their official source (`https://linkpoi.me/app`). There are many fake and scam sites out there impersonating them, so stay safe!
+6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is recommended for most apps). **Note for Nekopoi:** Download the raw APK directly from their official source (`https://linkpoi.me/app`).
 
 > [!NOTE]
 > **📱 File Format & Naming Support:**
 >
 > * While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also natively supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
-> * **Don't worry about messy file names!** If you download directly from APKMirror or external CDNs, your file might look something like this:
->     `com.google.android.youtube_20.51.39-1558707648_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`.
->     Just drop it as is. The script's regex engine is smart enough to ignore the garbage tags and extract the correct version natively. 
-> * **Abstract File Names:** If you download a file with a completely abstract name (e.g., `app25301.apk`), **you must rename it** to include the app's name (e.g., `nekopoi_2.5.3.apk`) so the script can identify which app it belongs to. Once identified, if the regex engine still struggles to parse the version from your custom name, the script will gracefully fallback and ask you to enter the version manually!
+> * **Don't worry about messy file names!** If you download directly from APKMirror or external CDNs, your file might look like:
+>   `com.google.android.youtube_21.04.223-1559103232_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`.
+>   Just drop it as is — the regex engine extracts the version natively.
+> * **Abstract File Names:** If you download a file with a completely abstract name (e.g., `app25301.apk`), **rename it** to include the app name (e.g., `nekopoi_2.5.3.apk`) so the script can identify which app it belongs to (note: `appNNNNN.apk` is also matched automatically for Nekopoi). If version extraction cannot determine a version from a custom name, the script falls back to prompting you manually!
 
-7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and then sign in to your `Google account`. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+7. **MicroG-RE**: If you're patching `YouTube` and/or `YouTube Music` via `Morphe`, you'll need to install MicroG-RE on your device and sign in to your Google account. Download it here: [MicroG-RE releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
 ## 🚀 How to Use
 
-1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Tool/releases) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Tool/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-desktop-*.jar` right next to the script, and drop the `.mpp` patch files into their respective folders.
-2. **Folder Structure**: The script uses a smart multi-workspace architecture. When you run it, it will auto-create the necessary folders for you. Your root directory should look like this:
+1. **Set the Stage**: Grab the script from the [Releases page](https://github.com/chihafuyu/Chihafuyu-Tool/releases) (Recommended) or download the [Main branch source code](https://github.com/chihafuyu/Chihafuyu-Tool/archive/refs/heads/main.zip). Extract the ZIP and place `chihafuyu-tool.ps1` into an empty working directory. Next, place your downloaded `morphe-desktop-*-all.jar` right next to the script (or inside an ecosystem folder), and drop the `.mpp` patch files into their respective folders.
+2. **Folder Structure**: The script uses a multi-workspace architecture and auto-creates the folders for you as you select ecosystems:
+
 ```text
 📁 Your-Working-Directory/
  ├── 📄 chihafuyu-tool.ps1           (The main script)
- ├── ☕ morphe-desktop-x.x.x-all.jar (CLI - Place here or inside the ecosystem folder)
- ├── 📄 custom-keystore.txt          (Optional - Auto-generated for bulk credentials)
- ├── 🔑 my-custom-key.keystore       (Optional - Place your custom keystore here)
- ├── 📁 ajstrick81/                  (ajstrick81 Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 anxyis/                      (anxyis Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 arandomhooman/               (arandomhooman Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 BholeyKaBhakt/               (BholeyKaBhakt Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 browzomje/                   (browzomje Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
+ ├── ☕ morphe-desktop-x.x.x-all.jar (CLI - Place here or inside an ecosystem folder)
+ ├── 📄 custom-keystore.txt          (Optional - Auto-generated template for bulk credentials)
+ ├── 🔑 my-custom-key.keystore       (Optional - Place or generate your custom keystore here)
  ├── 📁 De-Vanced/                   (De-Vanced Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 dh6k/                        (dh6k Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 hoo-dles/                    (hoo-dles Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 hxreborn/                    (hxreborn Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 icysymmetra/                 (icysymmetra Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 jasonwu1994/                 (jasonwu1994 Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 kiraio-moe/                  (kiraio-moe Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 kuchingneko28/               (kuchingneko28 Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 kveld9/                      (kveld9 Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 Morphe/                      (Morphe Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
  │    └── 📁 Output/
- ├── 📁 PathxmOp/                    (PathxmOp Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- ├── 📁 Piko/                        (Piko Workspace)
- │    ├── 📦 patches-x.x.x.mpp       
- │    ├── 📁 Input/                  
- │    └── 📁 Output/
- └── 📁 rushiranpise/                (rushiranpise Workspace)
-      ├── 📦 patches-x.x.x.mpp       
-      ├── 📁 Input/                  
+ └── 📁 Piko/                        (Piko Workspace)
+      ├── 📦 patches-x.x.x.mpp
+      ├── 📁 Input/
       └── 📁 Output/
 ```
-3. **Load your Apps**: Move the target files (`.apk`, `.apkm`, etc.) into the `Input` folder of the ecosystem you want to patch.
-4. **Run the script**:
-   * Double click `chihafuyu-tool.ps1`, OR
-   * Right-click `chihafuyu-tool.ps1` and select "Run with PowerShell", OR
-   * Open a PowerShell terminal in the folder and type: `.\chihafuyu-tool.ps1`, then press `Enter`.
-5. **Main Menu**: You will be greeted with the Main Menu. Select `1` for Patching apps or `2` for the ADB Utility features.
-6. **Follow the Prompts**: The script will interactively guide you through selecting the ecosystem, environment track, target apps, architecture, and other configurations.
-7. **Grab your patched apps**: Once you hit that `[SUCCESS]` message, just open the `Output` folder (and save the logs if you want). Your fresh patched APK(s) are ready to be installed!
 
-> **💡 Pro Tip:** By default, the script applies the standard set of patches. Want to customize them? Hit `Y` when asked to modify the JSON files. Open the generated file (e.g., `youtube-options-stable.json`), set the patch values to `true` or `false` as needed, save your changes, and press any key in the terminal to resume patching!
+3. **Load your Apps**: Move the target files (`.apk`, `.apkm`, `.xapk`, `.apks`) into the `Input` folder of the ecosystem you want to patch.
+4. **Run the script**:
+   * Right-click `chihafuyu-tool.ps1` and select **"Run with PowerShell"**, OR
+   * Open a PowerShell terminal in the folder and run: `.\chihafuyu-tool.ps1`.
+5. **Main Menu**: Select `1` for Patching apps or `2` for the Utility menu.
+6. **Follow the Prompts**: The script interactively guides you through selecting ecosystems, environment tracks, target apps, architecture, signing/keystore options, and flags.
+7. **Grab your patched apps**: Once patching completes, export logs/JSON results if desired and open the `Output` folder. Your fresh patched APK(s) are ready to install!
+
+> **💡 Pro Tip:** By default, the script generates fresh options files with standard defaults. Want to customize patches? Hit `Y` when asked to modify the JSON files, edit the generated file (e.g., `youtube-options-stable.json`), save your changes, and press any key in the terminal to resume patching!
 
 > [!WARNING]
 > **🚨 UNIVERSAL PATCHES LIMITATION 🚨**
 >
-> Inside your generated `options.json`, you might notice patches like `Override certificate pinning`, `Clone app`, `Change installer source` and `Disable Play Store updates`. These are **Universal Patches** designed to work on *any* app.
-> 
-> Keep in mind: Each ecosystem (Morphe, Piko, hoo-dles, etc.) explicitly bundles its *own* specific set of universal patches inside their respective `.mpp` files. They are not globally shared across different patchers.
+> Inside your generated `options.json`, you might notice patches like `Override certificate pinning`, `Clone app`, `Change installer source`, and `Disable Play Store updates`. These are **Universal Patches** designed to work on *any* app.
 >
-> Furthermore, they have a major weakness: **they do NOT support every app out there**. For example, applying them to random, unsupported apps (like banking apps or heavily secured games) will likely fail or cause crashes. Use them with caution!
+> Keep in mind: Each ecosystem bundles its *own* set of universal patches inside its `.mpp` file — they are not globally shared across patchers, and **they do NOT support every app out there** (e.g., banking apps or heavily protected games will likely fail or crash). Use them with caution!
 
 ---
 
 ## 🛠️ Configuration (Optional)
 
-Whenever new stable patch bundles are released with updated app version targets, just open `chihafuyu-tool.ps1` in your favorite text editor ([Notepad++](https://notepad-plus-plus.org/downloads/) is highly recommended) and update the versions at the very top of the file:
+Whenever new stable patch bundles are released with updated app version targets, open `chihafuyu-tool.ps1` in your text editor ([Notepad++](https://notepad-plus-plus.org/downloads/) or VS Code) and update the versions near the top of the file:
 
 ```powershell
 # ==============================================================================
-# RECOMMENDED APP VERSIONS
+# RECOMMENDED APP VERSIONS (SORTED A-Z)
 # ==============================================================================
-# ajstrick81
-$cfg_disneyplus_stable      = @("26.12.1+rc1-2026.07.15")
-$cfg_hbomax_stable          = @("7.7.0.78", "7.5.0.73")
-$cfg_netflix_stable         = @("13.0.1 build 25028")
-$cfg_paramount_stable       = @("16.17.0", "16.8.0")
-$cfg_peacock_stable         = @("7.6.100")
-$cfg_plutotv_stable         = @("5.66.0-leanback")
-$cfg_primevideo_stable      = @("6.23.23+v15.5.0.70-armv7a")
-$cfg_tubi_stable            = @("10.28.5000")
-$cfg_vix_stable             = @("4.47.2_tv")
-
-# anxyis
-$cfg_alightmotion_stable    = @("5.0.273.1028425")
-
-# arandomhooman
-$cfg_adm_stable             = @("14.0.39")
-$cfg_alphaprog_stable       = @("7.1.1")
-$cfg_bandlab_stable         = @("11.25.3")
-$cfg_batteryguru_stable     = @("2.4.8.1", "2.5.0.2-beta1")
-$cfg_cronometer_stable      = @("4.56.0")
-$cfg_directchat_stable      = @("1.9.8")
-$cfg_finch_stable           = @("3.73.179")
-$cfg_flightradar_stable     = @("11.6.1")
-$cfg_foldersync_stable      = @("4.9.3")
-$cfg_inshot_stable          = @("2.214.1539")
-$cfg_liquidgallery_stable   = @("2.1.11")
-$cfg_poweramp_stable        = @("build-1025-bundle-play", "build-1025-uni")
-$cfg_smartaudiobook_stable  = @("11.7.8")
-$cfg_symfonium_stable       = @("14.1.0")
-$cfg_tumblr_stable          = @("45.0.0.109")
-$cfg_videoconverter_stable  = @("3.2.2")
-$cfg_webtoon_stable         = @("3.9.5")
-
-# BholeyKaBhakt
-$cfg_backdrops_stable       = @("6.1.2")
-$cfg_proto_stable           = @("1.49.0", "1.48.0")
-$cfg_solidexplorer_stable   = @("3.4.10")
-$cfg_speedtest_stable       = @("7.0.4")
-$cfg_stellarium_stable      = @("1.16.3", "1.16.2")
-$cfg_vpnify_stable          = @("2.2.9")
-
-# browzomje
-$cfg_easysudoku_stable      = @("5.70.0")
-$cfg_pinterest_stable       = @("14.23.0", "14.28.0")
-
 # De-Vanced
 $cfg_photos_stable          = @("Any")
-
-# dh6k
-$cfg_quettadirect_stable    = @("Any")
-$cfg_quettaplay_stable      = @("Any")
 
 # hoo-dles
 $cfg_adguard_stable         = @("4.13.1")
@@ -269,9 +189,6 @@ $cfg_xrecorder_stable       = @("2.5.1.1")
 $cfg_projectivy_stable      = @("Any")
 $cfg_protonmail_stable      = @("7.10.4")
 $cfg_symfonium_stable       = @("14.1.0")
-
-# icysymmetra
-$cfg_tiktok_stable          = @("46.2.3")
 
 # jasonwu1994
 $cfg_gboard_stable          = @("18.0.3.954559732-release-arm64-v8a")
@@ -297,81 +214,40 @@ $cfg_ipusnas_stable         = @("2.1.4")
 
 # kveld9
 $cfg_brave_stable           = @("1.93.137")
+$cfg_tiktok_kveld9_stable   = @("47.1.4")
 
 # Morphe
 $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
 $cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.31.42", "20.21.37")
 $cfg_youtube_music_stable   = @("9.15.51")
 
-# PathxmOp
-$cfg_chess_stable           = @("4.10.0", "4.10.0-googleplay", "4.9.49", "4.9.49-googleplay")
-
 # Piko
 $cfg_ig_stable              = @("439.0.0.37.89")
 $cfg_x_stable               = @("12.17.0-release.0")
-
-# rushiranpise
-$cfg_1dot1dot1dot1_stable   = @("6.38.8")
-$cfg_accubattery_stable     = @("2.1.8")
-$cfg_accuweather_stable     = @("21.1.14-5-rc")
-$cfg_adobescan_stable       = @("26.08.01")
-$cfg_aida64_stable          = @("2.21")
-$cfg_amoledpix_stable       = @("7.3")
-$cfg_ampere_stable          = @("v4.37.0")
-$cfg_animedepth_stable      = @("1.0.4")
-$cfg_apkmirror_stable       = @("2.0.3 (41-d04e542)")
-$cfg_calm_stable            = @("6.101.1")
-$cfg_canva_stable           = @("2.372.0")
-$cfg_colornote_stable       = @("4.8.6")
-$cfg_cpuz_stable            = @("1.60")
-$cfg_electron_stable        = @("3.0.3")
-$cfg_holavpn_stable         = @("AARCH64_1.248.400")
-$cfg_httpsniffer_stable     = @("2.11.7-ad_mob")
-$cfg_inure_stable           = @("build107.2.0")
-$cfg_kahoot_stable          = @("6.6.7")
-$cfg_kinemaster_stable      = @("8.1.13.36552.GP")
-$cfg_larkplayer_stable      = @("2026.12.5")
-$cfg_life360_stable         = @("26.29.0")
-$cfg_mlmanager_stable       = @("5.0")
-$cfg_mobioffice_stable      = @("16.5.60515")
-$cfg_netguard_stable        = @("2.337")
-$cfg_networkguru_stable     = @("2.0")
-$cfg_ninjavpn_stable        = @("1.4.7")
-$cfg_protonvpn_stable       = @("5.19.78.0")
-$cfg_proxyman_stable        = @("1.21.0")
-$cfg_psiphon_stable         = @("479")
-$cfg_rar_stable             = @("7.23.build134")
-$cfg_sdmaid_stable          = @("1.7.5-rc0")
-$cfg_stargazing_stable      = @("3.3.3")
-$cfg_stickerly_stable       = @("3.36.1")
-$cfg_strava_stable          = @("474.14")
-$cfg_terabox_stable         = @("4.22.6")
-$cfg_turboscan_stable       = @("1.7.3")
-$cfg_uptodown_stable        = @("7.37")
-$cfg_wallverse_stable       = @("4.2")
-$cfg_waze_stable            = @("5.22.0.3")
-$cfg_windscribe_stable      = @("4.2.2328")
-$cfg_wolfram_stable         = @("1.0.8.20260601651")
 # ==============================================================================
 ```
 
+---
+
 ## ⚠️ Troubleshooting
 
-**Script closing instantly or throwing a bunch of red errors on your first try? (Windows Only)**
-Don't panic. That's usually just Windows being overprotective with its default Execution Policy. Here's a quick fix:
+**Script closing instantly or throwing execution policy errors on your first try? (Windows Only)**
+That's usually Windows blocking unsigned local scripts via its default Execution Policy:
 
-1. Open PowerShell as Administrator.
-2. Run this exact command:
+1. Open PowerShell as Administrator (or run for CurrentUser without admin).
+2. Run:
 
-	```powershell
-	Set-ExecutionPolicy RemoteSigned
-	```
-	
-3. Type `Y` and press Enter. You're good to go, run the patching script again!
+   ```powershell
+   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+   ```
+
+3. Type `Y` and press Enter, then run `.\chihafuyu-tool.ps1` again.
+
+---
 
 ## 📜 Legal & License
 
-Distributed under the MIT License.
+Distributed under the MIT License. See [LICENSE](LICENSE) for full details.
 
 **Copyright (c) 2026 chihafuyu**
 
@@ -379,4 +255,4 @@ Distributed under the MIT License.
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and code from ajstrick81, anxyis, arandomhooman, BholeyKaBhakt, browzomje, De-Vanced, dh6k, hoo-dles, hxreborn, icysymmetra, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, Morphe, PathxmOp, Piko, rushiranpise, and inotia00. To learn more, visit [ajstrick81](https://github.com/ajstrick81/morphe-androidtv-patches/releases), [anxyis](https://github.com/anxyis/anxy-patches/releases), [arandomhooman](https://github.com/arandomhooman/hoomans-morphe-patches/releases), [BholeyKaBhakt](https://github.com/BholeyKaBhakt/android-patches-xtra/releases), [browzomje](https://github.com/browzomje/browzomje-patches/releases), [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [dh6k](https://github.com/dh6k/morphe-patches/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [icysymmetra](https://github.com/icysymmetra/tiktok-patches-for-morphe/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://github.com/kveld9/kveld-morphe-patches/releases), [Morphe](https://morphe.software), [PathxmOp](https://github.com/PrathxmOp/Prathxm-Patches/releases), [Piko](https://github.com/crimera/piko/releases), [rushiranpise](https://github.com/rushiranpise/morphe-patches/releases) and [inotia00](https://gitlab.com/inotia00/x-shim/).
+> This tool utilizes patches and tooling from De-Vanced, hoo-dles, hxreborn, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, Morphe, Piko, and inotia00. To learn more, visit [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://github.com/kveld9/kveld-morphe-patches/releases), [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko/releases), and [inotia00](https://gitlab.com/inotia00/x-shim/).

@@ -40,7 +40,7 @@ jobs:
 
       - name: Create ZIP Archive
         run: |
-          zip -r Chihafuyu-Tool-${{ env.VERSION }}.zip . -x "*.git*" "Output/*" ".github/*"
+          zip -r Chihafuyu-Tool-${{ env.VERSION }}.zip . -x "*.git*" ".gitignore" "Output/*" ".github/*"
 
       - name: Publish Automatic Release
         uses: softprops/action-gh-release@v3
