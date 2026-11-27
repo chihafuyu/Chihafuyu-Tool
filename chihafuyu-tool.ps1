@@ -102,8 +102,23 @@ $cfg_timestampcam_stable    = @("1.252")
 $cfg_ipusnas_stable         = @("2.1.4")
 
 # kveld9
-$cfg_brave_stable           = @("1.93.137")
-$cfg_tiktok_kveld9_stable   = @("47.1.4")
+$cfg_brave_stable            = @("1.100.59")
+$cfg_gboard_kveld9_stable    = @("18.8.0.1022711984-lite_beta-arm64-v8a")
+$cfg_tiktok_kveld9_stable    = @("47.9.3")
+$cfg_tiktok_lite_stable      = @("47.6.51")
+
+# kveld9-extra
+$cfg_capcut_stable           = @("20.3.0")
+$cfg_hevy_stable             = @("3.2.7.1")
+$cfg_ibispaint_kveld9_stable = @("14.1.6")
+$cfg_ig_kveld9_stable        = @("456.0.0.53.78")
+$cfg_moovit_stable           = @("5.205.0.1815")
+$cfg_nokoprint_stable        = @("5.30.2")
+$cfg_sdmaid_stable           = @("2.2.3-rc0")
+$cfg_stride_stable           = @("1.0.16-direct")
+$cfg_sube_stable             = @("2.7.25")
+$cfg_x_kveld9_stable         = @("12.45.1-prod.01")
+$cfg_xiaomi_earbuds_stable   = @("1.39.0i")
 
 # Morphe
 $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
@@ -441,14 +456,34 @@ function Get-EcosystemCatalog {
         @{
             Id          = "7"
             Name        = "kveld9"
-            Summary     = "Brave Browser, TikTok Global"
+            Summary     = "Brave Browser, Gboard Lite, TikTok Global, TikTok Lite"
             Apps        = @(
-                @{ id = "1"; label = "Brave Browser"; name = "Brave_Browser"; package = "com.brave.browser";        keys = @("brave");                exclude = @(); strip = $true; stable = $cfg_brave_stable },
-                @{ id = "2"; label = "TikTok Global"; name = "TikTok";        package = "com.zhiliaoapp.musically"; keys = @("tiktok", "musically");  exclude = @(); strip = $true; stable = $cfg_tiktok_kveld9_stable }
+                @{ id = "1"; label = "Brave Browser"; name = "Brave_Browser"; package = "com.brave.browser";                    keys = @("brave");                                      exclude = @();       strip = $true; stable = $cfg_brave_stable },
+                @{ id = "2"; label = "Gboard Lite";   name = "Gboard_Lite";   package = "com.google.android.inputmethod.latin"; keys = @("gboard", "inputmethod");                      exclude = @();       strip = $true; stable = $cfg_gboard_kveld9_stable },
+                @{ id = "3"; label = "TikTok Global"; name = "TikTok";        package = "com.zhiliaoapp.musically";             keys = @("tiktok", "musically");                        exclude = @("lite"); strip = $true; stable = $cfg_tiktok_kveld9_stable },
+                @{ id = "4"; label = "TikTok Lite";   name = "TikTok_Lite";   package = "com.tiktok.lite.go";                   keys = @("tiktok[-_\s.]?lite", "lite\.go", "tiktok.*lite"); exclude = @();   strip = $true; stable = $cfg_tiktok_lite_stable }
             )
         },
         @{
             Id          = "8"
+            Name        = "kveld9-extra"
+            Summary     = "CapCut, Hevy, IbisPaint X, Instagram, Moovit, NokoPrint, SD Maid SE, Stride, SUBE, X (Twitter), Xiaomi Earbuds"
+            Apps        = @(
+                @{ id = "1";  label = "CapCut";         name = "CapCut";         package = "com.lemon.lvoverseas";       keys = @("capcut", "lvoverseas");                          exclude = @(); strip = $true; stable = $cfg_capcut_stable },
+                @{ id = "2";  label = "Hevy";           name = "Hevy";           package = "com.hevy";                   keys = @("hevy");                                          exclude = @(); strip = $true; stable = $cfg_hevy_stable },
+                @{ id = "3";  label = "IbisPaint X";    name = "IbisPaint_X";    package = "jp.ne.ibis.ibispaintx.app";  keys = @("ibispaint", "ibis", "ibis-paint");               exclude = @(); strip = $true; stable = $cfg_ibispaint_kveld9_stable },
+                @{ id = "4";  label = "Instagram";      name = "Instagram";      package = "com.instagram.android";      keys = @("instagram", "(?<![a-z0-9])ig(?![a-z0-9])");     exclude = @(); strip = $true; stable = $cfg_ig_kveld9_stable },
+                @{ id = "5";  label = "Moovit";         name = "Moovit";         package = "com.tranzmate";              keys = @("moovit", "tranzmate");                           exclude = @(); strip = $true; stable = $cfg_moovit_stable },
+                @{ id = "6";  label = "NokoPrint";      name = "NokoPrint";      package = "com.nokoprint";              keys = @("nokoprint", "noko[-_\s]?print");                 exclude = @(); strip = $true; stable = $cfg_nokoprint_stable },
+                @{ id = "7";  label = "SD Maid SE";     name = "SD_Maid_SE";     package = "eu.darken.sdmse";            keys = @("sd[-_\s]?maid", "sdmse");                        exclude = @(); strip = $true; stable = $cfg_sdmaid_stable },
+                @{ id = "8";  label = "Stride";         name = "Stride";         package = "com.vythera.stride";         keys = @("stride", "vythera");                             exclude = @(); strip = $true; stable = $cfg_stride_stable },
+                @{ id = "9";  label = "SUBE";           name = "SUBE";           package = "com.sube.app";               keys = @("(?<![a-z0-9])sube(?![a-z0-9])");                 exclude = @(); strip = $true; stable = $cfg_sube_stable },
+                @{ id = "10"; label = "X (Twitter)";    name = "X_Twitter";      package = "com.twitter.android";        keys = @("twitter", "(?<![a-z0-9])x(?![a-z0-9])");        exclude = @(); strip = $true; stable = $cfg_x_kveld9_stable },
+                @{ id = "11"; label = "Xiaomi Earbuds"; name = "Xiaomi_Earbuds"; package = "com.mi.earphone";            keys = @("xiaomi[-_\s]?earbuds", "earphone", "earbuds");     exclude = @(); strip = $true; stable = $cfg_xiaomi_earbuds_stable }
+            )
+        },
+        @{
+            Id          = "9"
             Name        = "Morphe"
             Summary     = "Reddit, YouTube, YT Music"
             Apps        = @(
@@ -458,7 +493,7 @@ function Get-EcosystemCatalog {
             )
         },
         @{
-            Id          = "9"
+            Id          = "10"
             Name        = "Piko"
             Summary     = "Instagram, X (Twitter)"
             Apps        = @(
@@ -480,7 +515,7 @@ function Get-ApkVersion {
     $baseName = $FileName -replace '\.(apk|apkm|xapk|apks)$', ''
 
     # Match standard versioning, optional single-letter build tag (e.g. 4.7.0m), and 7+ digit date codes.
-    $vPat = "(?<ver>(?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:[a-zA-Z](?=[-_.\s]|$))?(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?|\d+(?:[-_]\d+)+(?:-(?:release|alpha|beta|rc|ripped|release-ripped)(?:\.\d+)+)?)"
+    $vPat = "(?<ver>(?<!\d)\d{7,}(?!\d)|\d+\.\d+(?:\.\d+)*(?:[a-zA-Z](?=[-_.\s]|$))?(?:-(?:release|prod|direct|alpha|beta|rc\d*|ripped|release-ripped)(?:\.\d+)*)?|\d+(?:[-_]\d+)+(?:-(?:release|prod|direct|alpha|beta|rc\d*|ripped|release-ripped)(?:\.\d+)*)?)"
 
     $foundVersions = [System.Collections.Generic.List[PSCustomObject]]::new()
 
@@ -718,14 +753,18 @@ function Resolve-OptionsFileBackup {
 function Get-LatestVersionedFile {
     param(
         [string[]]$SearchPaths,
-        [switch]$ExcludeDev
+        [switch]$ExcludePreRelease,
+        [switch]$PreReleaseOnly
     )
 
+    $preReleasePattern = '-(?:dev|experimental|alpha|beta|rc)(?:[.\-_]|$)'
     $candidates = Get-ChildItem -Path $SearchPaths -File -ErrorAction SilentlyContinue |
         Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) }
 
-    if ($ExcludeDev) {
-        $candidates = $candidates | Where-Object { $_.Name -notmatch '-dev' }
+    if ($ExcludePreRelease) {
+        $candidates = $candidates | Where-Object { $_.Name -notmatch $preReleasePattern }
+    } elseif ($PreReleaseOnly) {
+        $candidates = $candidates | Where-Object { $_.Name -match $preReleasePattern }
     }
 
     return $candidates |
@@ -786,8 +825,9 @@ function Resolve-EnvironmentArtifact {
 
     try {
         # Scan for `morphe-desktop` executables.
-        $cliStableSearch = Get-LatestVersionedFile -SearchPaths @("..\morphe-desktop-*-all.jar", ".\morphe-desktop-*-all.jar") -ExcludeDev
-        $cliDevSearch = Get-LatestVersionedFile -SearchPaths @("..\morphe-desktop-*-dev.*-all.jar", ".\morphe-desktop-*-dev.*-all.jar")
+        $cliSearchPaths = @("..\morphe-desktop-*-all.jar", ".\morphe-desktop-*-all.jar")
+        $cliStableSearch = Get-LatestVersionedFile -SearchPaths $cliSearchPaths -ExcludePreRelease
+        $cliDevSearch = Get-LatestVersionedFile -SearchPaths $cliSearchPaths -PreReleaseOnly
 
         $cliStableDisplay = if ($cliStableSearch) { "[$($cliStableSearch.Name)]" } else { "[Not Found]" }
         $cliDevDisplay = if ($cliDevSearch) { "[$($cliDevSearch.Name)]" } else { "[Not Found]" }
@@ -806,8 +846,9 @@ function Resolve-EnvironmentArtifact {
         $patchDevSearch = $null
 
         if ($RequirePatches) {
-            $patchStableSearch = Get-LatestVersionedFile -SearchPaths @(".\patches-*.mpp") -ExcludeDev
-            $patchDevSearch = Get-LatestVersionedFile -SearchPaths @(".\patches-*-dev.*.mpp")
+            $patchSearchPaths = @(".\patches-*.mpp")
+            $patchStableSearch = Get-LatestVersionedFile -SearchPaths $patchSearchPaths -ExcludePreRelease
+            $patchDevSearch = Get-LatestVersionedFile -SearchPaths $patchSearchPaths -PreReleaseOnly
 
             $patchStableDisplay = if ($patchStableSearch) { "[$($patchStableSearch.Name)]" } else { "[Not Found]" }
             $patchDevDisplay = if ($patchDevSearch) { "[$($patchDevSearch.Name)]" } else { "[Not Found]" }
@@ -815,7 +856,7 @@ function Resolve-EnvironmentArtifact {
             Write-Ui "`n[SELECT] Patches Environment ($ProjectName):" -ForegroundColor Yellow
             Write-Ui -NoNewline "1. Latest Stable Patches "
             if ($patchStableDisplay -eq "[Not Found]") { Write-Ui $patchStableDisplay -ForegroundColor Red } else { Write-Ui $patchStableDisplay -ForegroundColor Green }
-            Write-Ui -NoNewline "2. Latest Pre-release Patches "
+            Write-Ui -NoNewline "2. Latest Pre-release / Experimental Patches "
             if ($patchDevDisplay -eq "[Not Found]") { Write-Ui $patchDevDisplay -ForegroundColor Red } else { Write-Ui $patchDevDisplay -ForegroundColor Green }
 
             $patchesChoice = Read-ValidatedInput -Prompt "Enter choice (1 or 2)" -RegexPattern "^[12]$" -ErrorMessage "Invalid input."
@@ -846,17 +887,14 @@ function Resolve-EnvironmentArtifact {
 
             Write-Ui "`nWaiting for the missing files to be placed... (Press CTRL+C to abort)" -ForegroundColor Cyan
 
-            $cliPrefix = if ($cliChoice -eq "1") { "morphe-desktop-*-all.jar" } else { "morphe-desktop-*-dev.*-all.jar" }
-            $patchPrefix = if ($patchesChoice -eq "1") { "patches-*.mpp" } else { "patches-*-dev.*.mpp" }
-
             $timeout = (Get-Date).AddMinutes(5)
             while (-not $cliJar -or ($RequirePatches -and -not $patchesFile)) {
                 if ((Get-Date) -gt $timeout) { throw "Timeout reached. Aborting wait for environment artifacts." }
                 Start-Sleep -Seconds 2
 
-                $cliJar = Get-LatestVersionedFile -SearchPaths @("..\$cliPrefix", ".\$cliPrefix") -ExcludeDev:($cliChoice -eq "1")
+                $cliJar = Get-LatestVersionedFile -SearchPaths $cliSearchPaths -ExcludePreRelease:($cliChoice -eq "1") -PreReleaseOnly:($cliChoice -ne "1")
                 if ($RequirePatches) {
-                    $patchesFile = Get-LatestVersionedFile -SearchPaths @(".\$patchPrefix") -ExcludeDev:($patchesChoice -eq "1")
+                    $patchesFile = Get-LatestVersionedFile -SearchPaths @(".\patches-*.mpp") -ExcludePreRelease:($patchesChoice -eq "1") -PreReleaseOnly:($patchesChoice -ne "1")
                     if ($patchesFile) {
                         $extraPatches = @(Get-ChildItem -Path ".\*.mpp" -File -ErrorAction SilentlyContinue |
                             Where-Object {
@@ -900,14 +938,14 @@ function Find-StandaloneCliJar {
     )
 
     # Prefer jars in the script root before scanning ecosystem subfolders.
-    $cliStable = Get-LatestVersionedFile -SearchPaths @($stablePaths[0]) -ExcludeDev
+    $cliStable = Get-LatestVersionedFile -SearchPaths @($stablePaths[0]) -ExcludePreRelease
     if (-not $cliStable) {
-        $cliStable = Get-LatestVersionedFile -SearchPaths @($stablePaths[1]) -ExcludeDev
+        $cliStable = Get-LatestVersionedFile -SearchPaths @($stablePaths[1]) -ExcludePreRelease
     }
 
-    $cliDev = Get-LatestVersionedFile -SearchPaths @($devPaths[0])
+    $cliDev = Get-LatestVersionedFile -SearchPaths @($devPaths[0]) -PreReleaseOnly
     if (-not $cliDev) {
-        $cliDev = Get-LatestVersionedFile -SearchPaths @($devPaths[1])
+        $cliDev = Get-LatestVersionedFile -SearchPaths @($devPaths[1]) -PreReleaseOnly
     }
 
     return @{ Stable = $cliStable; Dev = $cliDev }
@@ -1160,7 +1198,7 @@ function Invoke-PatchingWorkflow {
         if ($selectedApps | Where-Object { $_.name -eq "Gboard" }) {
             Write-Ui "Note for Gboard: jasonwu1994 officially targets the arm64-v8a specific release. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
-        if ($selectedApps | Where-Object { $_.name -eq "Instagram" }) {
+        if ($projectName -eq "Piko" -and ($selectedApps | Where-Object { $_.name -eq "Instagram" })) {
             Write-Ui "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384510827. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {

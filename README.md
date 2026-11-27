@@ -1,6 +1,6 @@
 # 🚀 Chihafuyu Tool
 
-A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **De-Vanced**, **hoo-dles**, **hxreborn**, **jasonwu1994**, **kiraio-moe**, **kuchingneko28**, **kveld9**, **Morphe**, and **Piko** ecosystems via **Morphe Desktop**.
+A comprehensive, menu-driven PowerShell script to automate Android app patching and manage ADB installations utilizing the **De-Vanced**, **hoo-dles**, **hxreborn**, **jasonwu1994**, **kiraio-moe**, **kuchingneko28**, **kveld9**, **kveld9-extra**, **Morphe**, and **Piko** ecosystems via **Morphe Desktop**.
 
 Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `TikTok Global`, `X (Twitter)`, `Instagram`, `Brave Browser`, `Google Photos`, `Gboard`, `Proton Mail`, `AdGuard`, `Lightroom Mobile`, `iPusnas`, `Nekopoi`, or simply managing your device via ADB, just sit back and let the script do the heavy lifting. It handles all the boring chores for you: environment checks, smart APK hunting, secure keystore handling, smart JVM heap allocation, JSON result generation, and proper memory cleanup.
 
@@ -13,14 +13,15 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `TikTok Global`, `
 
 ## ✨ Features
 
-- **🌐 Multi-Ecosystem Support**: Seamlessly switch between 9 curated ecosystems in a single script:
+- **🌐 Multi-Ecosystem Support**: Seamlessly switch between 10 curated ecosystems in a single script:
   - **De-Vanced**: `Google Photos`
   - **hoo-dles**: `AdGuard`, `CamScanner`, `Duolingo`, `IbisPaint X`, `Lightroom Mobile`, `Merriam-Webster`, `Mimo`, `MyFitnessPal`, `PyDroid3`, `Sleep as Android`, `Smart Launcher`, `Windy`, `WPS Office`, `Xodo`, `XRecorder`
   - **hxreborn**: `Projectivy Launcher`, `Proton Mail`, `Symfonium`
   - **jasonwu1994**: `Gboard`
   - **kiraio-moe**: `Atomic`, `Boorusama`, `Epic!`, `Fake GPS Location`, `Hermit`, `Hidden Settings`, `iLovePDF`, `Key Mapper`, `Keymate`, `Manga Plus`, `Nekopoi`, `PixelLab`, `Pixiv`, `Timestamp Camera Free`
   - **kuchingneko28**: `iPusnas`
-  - **kveld9**: `Brave Browser`, `TikTok Global`
+  - **kveld9**: `Brave Browser`, `Gboard Lite`, `TikTok Global`, `TikTok Lite`
+  - **kveld9-extra**: `CapCut`, `Hevy`, `IbisPaint X`, `Instagram`, `Moovit`, `NokoPrint`, `SD Maid SE`, `Stride`, `SUBE`, `X (Twitter)`, `Xiaomi Earbuds`
   - **Morphe**: `Reddit`, `YouTube`, `YouTube Music`
   - **Piko**: `Instagram`, `X (Twitter)`
 
@@ -31,7 +32,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `TikTok Global`, `
   - Generate custom PKCS12 Android keystores (`keytool`) with masked password confirmation and environment-passed credentials.
   - Clear Morphe cache (`clear-cache`) cleanly.
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files, and validates `.apk` archives for required core entries (`classes.dex` & `AndroidManifest.xml`).
-- **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release).
+- **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release / Experimental).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? The script automatically detects companion `*shim*.mpp` files in the ecosystem workspace and chains them into the patching sequence.
 - **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, matches package/app identifiers cleanly without cross-app false positives, extracts exact versions (including special tags like `4.7.0m`, `8.3_arm64`, `6.6 build 016`, `18.0.3.954559732-release-arm64-v8a`, `12.17.0-release.0`), and validates them against configured supported versions.
 - **🧠 JSON Logic Constraints & Content Warnings**: Safely inspects customized `options.json` files before patching to warn on incompatible patch/version combinations (e.g., `Block redirecting to X Lite` on older X/Twitter APKs), and enforces mandatory indemnity disclaimers before processing NSFW/21+ targeted applications.
@@ -71,7 +72,8 @@ Before spinning up the tool, make sure you have these ready:
    * **jasonwu1994 Patches**: [Gboard-patches releases](https://github.com/jasonwu1994/Gboard-patches/releases)
    * **kiraio-moe Patches**: [Lain-Patches releases](https://github.com/kiraio-moe/Lain-Patches/releases)
    * **kuchingneko28 Patches**: [ipusnas-patches releases](https://github.com/kuchingneko28/ipusnas-patches/releases)
-   * **kveld9 Patches**: [kveld-morphe-patches releases](https://github.com/kveld9/kveld-morphe-patches/releases)
+   * **kveld9 Patches**: [kveld-morphe-patches releases](https://git.kvkdns.org/kveld9/kveld-morphe-patches/releases)
+   * **kveld9-extra Patches**: [kveld-extra-morphe-patches releases](https://git.kvkdns.org/kveld9/kveld-extra-morphe-patches/releases)
    * **Morphe Patches**: [morphe-patches releases](https://github.com/MorpheApp/morphe-patches/releases)
    * **Piko Patches**: [piko releases](https://github.com/crimera/piko/releases)
 6. **App Files**: Have your raw, unpatched apps ready ([APKMirror](https://www.apkmirror.com/) is recommended for most apps). **Note for Nekopoi:** Download the raw APK directly from their official source (`https://linkpoi.me/app`).
@@ -125,6 +127,10 @@ Before spinning up the tool, make sure you have these ready:
  │    ├── 📁 Input/
  │    └── 📁 Output/
  ├── 📁 kveld9/                      (kveld9 Workspace)
+ │    ├── 📦 patches-x.x.x.mpp
+ │    ├── 📁 Input/
+ │    └── 📁 Output/
+ ├── 📁 kveld9-extra/                (kveld9-extra Workspace)
  │    ├── 📦 patches-x.x.x.mpp
  │    ├── 📁 Input/
  │    └── 📁 Output/
@@ -213,8 +219,23 @@ $cfg_timestampcam_stable    = @("1.252")
 $cfg_ipusnas_stable         = @("2.1.4")
 
 # kveld9
-$cfg_brave_stable           = @("1.93.137")
-$cfg_tiktok_kveld9_stable   = @("47.1.4")
+$cfg_brave_stable            = @("1.100.59")
+$cfg_gboard_kveld9_stable    = @("18.8.0.1022711984-lite_beta-arm64-v8a")
+$cfg_tiktok_kveld9_stable    = @("47.9.3")
+$cfg_tiktok_lite_stable      = @("47.6.51")
+
+# kveld9-extra
+$cfg_capcut_stable           = @("20.3.0")
+$cfg_hevy_stable             = @("3.2.7.1")
+$cfg_ibispaint_kveld9_stable = @("14.1.6")
+$cfg_ig_kveld9_stable        = @("456.0.0.53.78")
+$cfg_moovit_stable           = @("5.205.0.1815")
+$cfg_nokoprint_stable        = @("5.30.2")
+$cfg_sdmaid_stable           = @("2.2.3-rc0")
+$cfg_stride_stable           = @("1.0.16-direct")
+$cfg_sube_stable             = @("2.7.25")
+$cfg_x_kveld9_stable         = @("12.45.1-prod.01")
+$cfg_xiaomi_earbuds_stable   = @("1.39.0i")
 
 # Morphe
 $cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
@@ -255,4 +276,4 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for full details.
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and tooling from De-Vanced, hoo-dles, hxreborn, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, Morphe, Piko, and inotia00. To learn more, visit [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://github.com/kveld9/kveld-morphe-patches/releases), [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko/releases), and [inotia00](https://gitlab.com/inotia00/x-shim/).
+> This tool utilizes patches and tooling from De-Vanced, hoo-dles, hxreborn, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, Morphe, Piko, and inotia00. To learn more, visit [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://git.kvkdns.org/kveld9/kveld-morphe-patches/releases), [kveld9-extra](https://git.kvkdns.org/kveld9/kveld-extra-morphe-patches/releases), [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko/releases), and [inotia00](https://gitlab.com/inotia00/x-shim/).
