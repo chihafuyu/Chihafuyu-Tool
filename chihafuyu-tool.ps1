@@ -55,32 +55,32 @@ $script:OptionsBackupMode = $null
 # RECOMMENDED APP VERSIONS (SORTED A-Z)
 # ==============================================================================
 # De-Vanced
-$cfg_photos_stable          = @("Any")
+$cfg_photos_stable          = @("7.92.0.977185651")
 
 # hoo-dles
-$cfg_adguard_stable         = @("4.13.1")
+$cfg_adguard_stable         = @("4.14.2")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
-$cfg_duolingo_stable        = @("6.92.5")
-$cfg_ibispaint_stable       = @("14.0.6")
-$cfg_lightroom_stable       = @("11.4.5")
+$cfg_duolingo_stable        = @("6.98.4")
+$cfg_ibispaint_stable       = @("14.1.0")
+$cfg_lightroom_stable       = @("11.5.31")
 $cfg_merriamwebster_stable  = @("Any")
-$cfg_mimo_stable            = @("9.11")
+$cfg_mimo_stable            = @("9.30")
 $cfg_myfitnesspal_stable    = @("26.31.0")
 $cfg_pydroid3_stable        = @("8.3_arm64")
 $cfg_sleep_stable           = @("20260526")
-$cfg_smartlauncher_stable   = @("6.6 build 016")
+$cfg_smartlauncher_stable   = @("6.6 build 020")
 $cfg_windy_stable           = @("51.0.1")
 $cfg_wps_stable             = @("18.24")
-$cfg_xodo_stable            = @("10.15.0")
+$cfg_xodo_stable            = @("11.2.0")
 $cfg_xrecorder_stable       = @("2.5.1.1")
 
 # hxreborn
 $cfg_projectivy_stable      = @("Any")
-$cfg_protonmail_stable      = @("7.10.4")
-$cfg_symfonium_stable       = @("14.1.0")
+$cfg_protonmail_stable      = @("7.12.1")
+$cfg_symfonium_stable       = @("15.1.0")
 
 # jasonwu1994
-$cfg_gboard_stable          = @("18.0.3.954559732-release-arm64-v8a")
+$cfg_gboard_stable          = @("18.5.4.993608717-release-arm64-v8a")
 
 # kiraio-moe
 $cfg_atomic_stable          = @("4.7.0m")
@@ -121,13 +121,13 @@ $cfg_x_kveld9_stable         = @("12.45.1-prod.01")
 $cfg_xiaomi_earbuds_stable   = @("1.39.0i")
 
 # Morphe
-$cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
-$cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable   = @("9.15.51")
+$cfg_reddit_stable          = @("2026.40.0", "2026.14.0", "2026.04.0")
+$cfg_youtube_stable         = @("21.30.216", "21.04.223", "20.51.39", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable   = @("9.30.53", "9.15.51")
 
 # Piko
-$cfg_ig_stable              = @("439.0.0.37.89")
-$cfg_x_stable               = @("12.17.0-release.0")
+$cfg_ig_stable              = @("456.0.0.53.78")
+$cfg_x_stable               = @("12.45.1-prod.01")
 # ==============================================================================
 
 function Write-Ui {
@@ -478,7 +478,7 @@ function Get-EcosystemCatalog {
                 @{ id = "7";  label = "SD Maid SE";     name = "SD_Maid_SE";     package = "eu.darken.sdmse";            keys = @("sd[-_\s]?maid", "sdmse");                        exclude = @(); strip = $true; stable = $cfg_sdmaid_stable },
                 @{ id = "8";  label = "Stride";         name = "Stride";         package = "com.vythera.stride";         keys = @("stride", "vythera");                             exclude = @(); strip = $true; stable = $cfg_stride_stable },
                 @{ id = "9";  label = "SUBE";           name = "SUBE";           package = "com.sube.app";               keys = @("(?<![a-z0-9])sube(?![a-z0-9])");                 exclude = @(); strip = $true; stable = $cfg_sube_stable },
-                @{ id = "10"; label = "X (Twitter)";    name = "X_Twitter";      package = "com.twitter.android";        keys = @("twitter", "(?<![a-z0-9])x(?![a-z0-9])");        exclude = @(); strip = $true; stable = $cfg_x_kveld9_stable },
+                @{ id = "10"; label = "X (Twitter)";    name = "X_Twitter";      package = "com.twitter.android";        keys = @("twitter", "(?<![a-z0-9])x(?![a-z0-9])");        exclude = @("ibis"); strip = $true; stable = $cfg_x_kveld9_stable },
                 @{ id = "11"; label = "Xiaomi Earbuds"; name = "Xiaomi_Earbuds"; package = "com.mi.earphone";            keys = @("xiaomi[-_\s]?earbuds", "earphone", "earbuds");     exclude = @(); strip = $true; stable = $cfg_xiaomi_earbuds_stable }
             )
         },
@@ -1199,7 +1199,7 @@ function Invoke-PatchingWorkflow {
             Write-Ui "Note for Gboard: jasonwu1994 officially targets the arm64-v8a specific release. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($projectName -eq "Piko" -and ($selectedApps | Where-Object { $_.name -eq "Instagram" })) {
-            Write-Ui "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 384510827. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
+            Write-Ui "Note for Instagram: Piko officially tested v$($cfg_ig_stable[0]) specifically on build code 386214534. Make sure to pick 'arm64-v8a'!" -ForegroundColor Magenta
         }
         if ($selectedApps | Where-Object { $_.name -eq "IbisPaint_X" }) {
             Write-Ui "Note for IbisPaint X: Select 'arm64-v8a' in the next step, as it's the only supported architecture!" -ForegroundColor Magenta

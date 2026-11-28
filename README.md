@@ -34,7 +34,7 @@ Whether you're patching `YouTube`, `YouTube Music`, `Reddit`, `TikTok Global`, `
 - **📦 Native Bundle Support**: No need to manually merge Split APKs anymore! Natively processes standard `.apk`, `.apkm`, `.xapk`, and `.apks` files, and validates `.apk` archives for required core entries (`classes.dex` & `AndroidManifest.xml`).
 - **🛡️ Environment Validation**: Smartly checks for JDK 25+ and ensures your CLI (`.jar`) and Patches (`.mpp`) are ready for your chosen track (Stable or Pre-release / Experimental).
 - **🔄 Smart Multi-Patch Processing**: Need to apply third-party shim patches alongside your main patch bundle? The script automatically detects companion `*shim*.mpp` files in the ecosystem workspace and chains them into the patching sequence.
-- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, matches package/app identifiers cleanly without cross-app false positives, extracts exact versions (including special tags like `4.7.0m`, `8.3_arm64`, `6.6 build 016`, `18.0.3.954559732-release-arm64-v8a`, `12.17.0-release.0`), and validates them against configured supported versions.
+- **🔍 Smart APK Discovery & Multi-Version Support**: Scans your `Input` folder, matches package/app identifiers cleanly without cross-app false positives, extracts exact versions (including special tags like `4.7.0m`, `8.3_arm64`, `6.6 build 020`, `18.5.4.993608717-release-arm64-v8a`, `12.45.1-prod.01`), and validates them against configured supported versions.
 - **🧠 JSON Logic Constraints & Content Warnings**: Safely inspects customized `options.json` files before patching to warn on incompatible patch/version combinations (e.g., `Block redirecting to X Lite` on older X/Twitter APKs), and enforces mandatory indemnity disclaimers before processing NSFW/21+ targeted applications.
 - **⚙️ Targeted Architecture Stripping & Memory Management**: Supports architecture-specific library stripping (`--striplibs` for `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`, or `universal`) and dynamically scales JVM heap size (`-Xmx2G` to `-Xmx4G`) based on detected physical RAM.
 - **🔐 Memory-Safe Keystore Handling**: Uses `SecureString`, immediate unmanaged `BSTR` zeroing, and cleanup in `finally` blocks on every exit path to prevent password leaks in script memory.
@@ -83,7 +83,7 @@ Before spinning up the tool, make sure you have these ready:
 >
 > * While fully merged or standalone Universal `.apk` files are highly recommended for the cleanest patching process, the script also natively supports dropping `.apkm`, `.xapk`, or `.apks` bundles directly into the `Input` folder!
 > * **Don't worry about messy file names!** If you download directly from APKMirror or external CDNs, your file might look like:
->   `com.google.android.youtube_21.04.223-1559103232_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`.
+>   `com.google.android.youtube_21.30.216-1561200000_minAPI28(arm64-v8a,armeabi-v7a,x86,x86_64)(nodpi)_apkmirror.com.apk`.
 >   Just drop it as is — the regex engine extracts the version natively.
 > * **Abstract File Names:** If you download a file with a completely abstract name (e.g., `app25301.apk`), **rename it** to include the app name (e.g., `nekopoi_2.5.3.apk`) so the script can identify which app it belongs to (note: `appNNNNN.apk` is also matched automatically for Nekopoi). If version extraction cannot determine a version from a custom name, the script falls back to prompting you manually!
 
@@ -172,32 +172,32 @@ Whenever new stable patch bundles are released with updated app version targets,
 # RECOMMENDED APP VERSIONS (SORTED A-Z)
 # ==============================================================================
 # De-Vanced
-$cfg_photos_stable          = @("Any")
+$cfg_photos_stable          = @("7.92.0.977185651")
 
 # hoo-dles
-$cfg_adguard_stable         = @("4.13.1")
+$cfg_adguard_stable         = @("4.14.2")
 $cfg_camscanner_stable      = @("7.20.0.2606230000")
-$cfg_duolingo_stable        = @("6.92.5")
-$cfg_ibispaint_stable       = @("14.0.6")
-$cfg_lightroom_stable       = @("11.4.5")
+$cfg_duolingo_stable        = @("6.98.4")
+$cfg_ibispaint_stable       = @("14.1.0")
+$cfg_lightroom_stable       = @("11.5.31")
 $cfg_merriamwebster_stable  = @("Any")
-$cfg_mimo_stable            = @("9.11")
+$cfg_mimo_stable            = @("9.30")
 $cfg_myfitnesspal_stable    = @("26.31.0")
 $cfg_pydroid3_stable        = @("8.3_arm64")
 $cfg_sleep_stable           = @("20260526")
-$cfg_smartlauncher_stable   = @("6.6 build 016")
+$cfg_smartlauncher_stable   = @("6.6 build 020")
 $cfg_windy_stable           = @("51.0.1")
 $cfg_wps_stable             = @("18.24")
-$cfg_xodo_stable            = @("10.15.0")
+$cfg_xodo_stable            = @("11.2.0")
 $cfg_xrecorder_stable       = @("2.5.1.1")
 
 # hxreborn
 $cfg_projectivy_stable      = @("Any")
-$cfg_protonmail_stable      = @("7.10.4")
-$cfg_symfonium_stable       = @("14.1.0")
+$cfg_protonmail_stable      = @("7.12.1")
+$cfg_symfonium_stable       = @("15.1.0")
 
 # jasonwu1994
-$cfg_gboard_stable          = @("18.0.3.954559732-release-arm64-v8a")
+$cfg_gboard_stable          = @("18.5.4.993608717-release-arm64-v8a")
 
 # kiraio-moe
 $cfg_atomic_stable          = @("4.7.0m")
@@ -238,13 +238,13 @@ $cfg_x_kveld9_stable         = @("12.45.1-prod.01")
 $cfg_xiaomi_earbuds_stable   = @("1.39.0i")
 
 # Morphe
-$cfg_reddit_stable          = @("2026.14.0", "2026.04.0")
-$cfg_youtube_stable         = @("21.04.223", "20.51.39", "20.31.42", "20.21.37")
-$cfg_youtube_music_stable   = @("9.15.51")
+$cfg_reddit_stable          = @("2026.40.0", "2026.14.0", "2026.04.0")
+$cfg_youtube_stable         = @("21.30.216", "21.04.223", "20.51.39", "20.31.42", "20.21.37")
+$cfg_youtube_music_stable   = @("9.30.53", "9.15.51")
 
 # Piko
-$cfg_ig_stable              = @("439.0.0.37.89")
-$cfg_x_stable               = @("12.17.0-release.0")
+$cfg_ig_stable              = @("456.0.0.53.78")
+$cfg_x_stable               = @("12.45.1-prod.01")
 # ==============================================================================
 ```
 
@@ -276,4 +276,4 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for full details.
 
 **Third-Party Code Attribution:**
 
-> This tool utilizes patches and tooling from De-Vanced, hoo-dles, hxreborn, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, Morphe, Piko, and inotia00. To learn more, visit [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://git.kvkdns.org/kveld9/kveld-morphe-patches/releases), [kveld9-extra](https://git.kvkdns.org/kveld9/kveld-extra-morphe-patches/releases), [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko/releases), and [inotia00](https://gitlab.com/inotia00/x-shim/).
+> This tool utilizes patches and tooling from De-Vanced, hoo-dles, hxreborn, jasonwu1994, kiraio-moe, kuchingneko28, kveld9, kveld9-extra, Morphe, Piko, and inotia00. To learn more, visit [De-Vanced](https://github.com/RookieEnough/De-Vanced/releases), [hoo-dles](https://github.com/hoo-dles/morphe-patches/releases), [hxreborn](https://github.com/hxreborn/morphe-patches/releases), [jasonwu1994](https://github.com/jasonwu1994/Gboard-patches/releases), [kiraio-moe](https://github.com/kiraio-moe/Lain-Patches/releases), [kuchingneko28](https://github.com/kuchingneko28/ipusnas-patches/releases), [kveld9](https://git.kvkdns.org/kveld9/kveld-morphe-patches/releases), [kveld9-extra](https://git.kvkdns.org/kveld9/kveld-extra-morphe-patches/releases), [Morphe](https://morphe.software), [Piko](https://github.com/crimera/piko/releases), and [inotia00](https://gitlab.com/inotia00/x-shim/).
